@@ -242,144 +242,150 @@ const Login: React.FC = () => {
       </div>
 
       {/* Content */}
-      <div className="relative z-10 flex items-center justify-center min-h-screen p-4">
+      <div className="relative min-h-screen flex items-center justify-center px-4">
         <div className="w-full max-w-md">
-          <div className="glass-morphism rounded-2xl overflow-hidden shadow-2xl">
-            <div className="px-8 pt-8 pb-4">
-              <div className="text-center mb-6">
-                <h1 className="text-3xl text-white mb-2">Hostel Staff</h1>
-                <p className="text-white/70 text-sm">
-                  {t('loginSubtitle')}
-                </p>
-              </div>
-              
-              {/* Mostrar botão de login rápido se disponível */}
-              {showQuickLogin && savedLogins.length > 0 && (
-                <div className="mb-6">
-                  <button
-                    onClick={handleQuickLogin}
-                    className="w-full py-3 px-4 bg-blue-600 hover:bg-blue-700 text-white rounded-xl transition flex items-center justify-center gap-2 relative overflow-hidden"
-                  >
-                    <UserCircle size={20} />
-                    <span className="font-light">
-                      {t('quickLogin', { name: savedLogins[0].name || savedLogins[0].email.split('@')[0] })}
-                    </span>
-                  </button>
-                  
-                  <div className="relative flex items-center justify-center mt-4 mb-2">
-                    <div className="flex-grow h-px bg-white/10"></div>
-                    <span className="px-3 text-xs text-white/40">{t('or')}</span>
-                    <div className="flex-grow h-px bg-white/10"></div>
+          {/* Title */}
+          <div className="text-center mb-12">
+            <h1 className="text-5xl text-white mb-4 font-normal tracking-wide">
+              {t('welcome')}
+            </h1>
+            <p className="text-lg text-white/90 font-light tracking-wide">
+              {t('applicationName')}
+            </p>
+          </div>
+
+          {/* Login Form */}
+          <div className="glass-morphism rounded-2xl p-8 space-y-8">
+            {error && (
+              <div className="text-red-400 text-sm text-center bg-black/30 py-2 rounded">{error}</div>
+            )}
+            
+            {/* Login rápido com último usuário */}
+            {showQuickLogin && savedLogins.length > 0 && !loading && (
+              <div className="p-4 bg-blue-600/20 border border-blue-500/40 rounded-lg mb-4">
+                <div className="flex items-center gap-3 mb-3">
+                  <UserCircle className="w-8 h-8 text-white/80" />
+                  <div className="flex-1">
+                    <div className="text-white font-medium">{savedLogins[0].name || savedLogins[0].email}</div>
+                    <div className="text-white/60 text-sm">{savedLogins[0].email}</div>
                   </div>
                 </div>
-              )}
-              
-              {/* Form de login */}
-              <form onSubmit={handleSubmit}>
-                <div className="space-y-4">
-                  {/* Dropdown de logins salvos */}
+                <button
+                  type="button"
+                  onClick={handleQuickLogin}
+                  className="w-full py-2 px-4 bg-blue-600/60 hover:bg-blue-600/80 rounded-lg text-white font-medium transition flex items-center justify-center gap-2"
+                >
+                  <LogIn className="w-4 h-4" />
+                  {t('quickLogin')}
+                </button>
+                <div className="mt-2 text-center">
+                  <button
+                    type="button"
+                    onClick={() => setShowQuickLogin(false)}
+                    className="text-sm text-white/60 hover:text-white/80"
+                  >
+                    {t('useAnotherAccount')}
+                  </button>
+                </div>
+              </div>
+            )}
+            
+            {(!showQuickLogin || loading) && (
+              <form onSubmit={handleSubmit} className="space-y-6">
+                <div className="relative">
                   <div className="relative">
-                    <div className="flex items-center">
-                      <input
-                        type="email"
-                        id="email"
-                        value={email}
-                        onChange={(e) => setEmail(e.target.value)}
-                        placeholder={t('email')}
-                        className="w-full bg-white/5 text-white px-4 py-3 rounded-xl border border-white/10 focus:border-white/30 focus:ring-0 focus:outline-none transition placeholder:text-white/30"
-                        autoComplete="off"
-                        required
-                      />
-                      
-                      {savedLogins.length > 0 && (
-                        <button
-                          type="button"
-                          onClick={() => setShowSavedLogins(!showSavedLogins)}
-                          className="absolute right-3 top-1/2 -translate-y-1/2 p-1 rounded-full text-white/50 hover:text-white transition"
-                          aria-label="Show saved logins"
-                        >
-                          <ChevronDown size={18} className={`transition-transform duration-200 ${showSavedLogins ? 'rotate-180' : ''}`} />
-                        </button>
-                      )}
-                    </div>
-                    
-                    {/* Lista suspensa de logins */}
-                    {showSavedLogins && savedLogins.length > 0 && (
-                      <div className="absolute z-20 left-0 right-0 mt-1 bg-gray-800 rounded-xl border border-white/10 shadow-xl overflow-hidden max-h-60 overflow-y-auto">
-                        {savedLogins.map((saved, index) => (
-                          <button
-                            key={index}
-                            type="button"
-                            onClick={() => selectSavedLogin(saved)}
-                            className="w-full text-left px-4 py-3 hover:bg-white/10 transition flex items-center gap-2 border-t border-white/5 first:border-0"
-                          >
-                            <User size={18} className="text-blue-400" />
-                            <div className="flex-1 min-w-0">
-                              <div className="text-sm text-white truncate">
-                                {saved.name || saved.email.split('@')[0]}
-                              </div>
-                              <div className="text-xs text-white/50 truncate">
-                                {saved.email}
-                              </div>
-                            </div>
-                          </button>
-                        ))}
-                      </div>
+                    <input
+                      type="email"
+                      placeholder={t('email')}
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      className="input-field w-full text-white placeholder-white/50 pr-10"
+                      required
+                    />
+                    {savedLogins.length > 0 && (
+                      <button 
+                        type="button"
+                        onClick={() => setShowSavedLogins(!showSavedLogins)}
+                        className="absolute right-3 top-1/2 transform -translate-y-1/2 text-white/70 hover:text-white"
+                      >
+                        <ChevronDown className={`w-5 h-5 transition-transform ${showSavedLogins ? 'rotate-180' : ''}`} />
+                      </button>
                     )}
                   </div>
                   
-                  {/* Restante do formulário */}
-                  <div>
-                    <input
-                      id="password-field"
-                      type="password"
-                      placeholder={t('password')}
-                      value={password}
-                      onChange={(e) => setPassword(e.target.value)}
-                      className="input-field w-full text-white placeholder-white/50"
-                      required
-                    />
-                  </div>
-
-                  <div className="flex items-center justify-between">
-                    <div className="text-sm">
-                      <Link to="/forgot-password" className="text-yellow-500 hover:text-yellow-400">
-                        {t('forgotPassword')}
-                      </Link>
+                  {/* Lista de logins salvos */}
+                  {showSavedLogins && savedLogins.length > 0 && (
+                    <div className="absolute z-10 mt-1 w-full bg-gray-800/90 backdrop-blur-sm rounded-lg border border-white/10 shadow-lg overflow-hidden">
+                      <ul>
+                        {savedLogins.map((saved, index) => (
+                          <li 
+                            key={index}
+                            onClick={() => selectSavedLogin(saved)}
+                            className="flex items-center gap-3 p-3 text-white hover:bg-gray-700/50 cursor-pointer border-b border-white/5 last:border-0"
+                          >
+                            <UserCircle className="w-6 h-6 text-blue-400" />
+                            <div className="flex-1">
+                              <div className="text-sm font-medium">{saved.email}</div>
+                              {saved.name && <div className="text-xs text-white/60">{saved.name}</div>}
+                            </div>
+                            <LogIn className="w-4 h-4 text-white/40" />
+                          </li>
+                        ))}
+                      </ul>
                     </div>
-                    <div className="text-sm">
-                      <Link to="/register" className="text-yellow-500 hover:text-yellow-400">
-                        {t('register')}
-                      </Link>
-                    </div>
-                  </div>
+                  )}
+                </div>
 
-                  <div>
-                    <button
-                      type="submit"
-                      disabled={loading}
-                      className="w-full bg-black/30 hover:bg-black/40 text-white rounded-lg px-6 py-3 font-light tracking-wide transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
-                    >
-                      {loading ? (
-                        <svg className="w-5 h-5 animate-spin" viewBox="0 0 24 24">
-                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
-                          <path
-                            className="opacity-75"
-                            fill="currentColor"
-                            d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                          />
-                        </svg>
-                      ) : (
-                        <>
-                          <LogIn className="w-5 h-5" />
-                          {t('login')}
-                        </>
-                      )}
-                    </button>
+                <div>
+                  <input
+                    id="password-field"
+                    type="password"
+                    placeholder={t('password')}
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    className="input-field w-full text-white placeholder-white/50"
+                    required
+                  />
+                </div>
+
+                <div className="flex items-center justify-between">
+                  <div className="text-sm">
+                    <Link to="/forgot-password" className="text-yellow-500 hover:text-yellow-400">
+                      {t('forgotPassword')}
+                    </Link>
+                  </div>
+                  <div className="text-sm">
+                    <Link to="/register" className="text-yellow-500 hover:text-yellow-400">
+                      {t('register')}
+                    </Link>
                   </div>
                 </div>
+
+                <div>
+                  <button
+                    type="submit"
+                    disabled={loading}
+                    className="w-full bg-black/30 hover:bg-black/40 text-white rounded-lg px-6 py-3 font-light tracking-wide transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                  >
+                    {loading ? (
+                      <svg className="w-5 h-5 animate-spin" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
+                        <path
+                          className="opacity-75"
+                          fill="currentColor"
+                          d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                        />
+                      </svg>
+                    ) : (
+                      <>
+                        <LogIn className="w-5 h-5" />
+                        {t('login')}
+                      </>
+                    )}
+                  </button>
+                </div>
               </form>
-            </div>
+            )}
           </div>
         </div>
       </div>
