@@ -240,72 +240,44 @@ export default function Staff() {
   const isAdmin = currentUser?.role === 'admin';
 
   return (
-    <div className="space-y-6">
-      {/* Staff List */}
-      <div className="bg-gray-800/50 backdrop-blur-sm rounded-lg p-6">
-        <div className="flex justify-between items-center mb-6">
-          <div className="flex items-center gap-2">
-            <h2 className="text-xl font-semibold text-white">{t('staff.title')}</h2>
-            {isLoading && (
-              <div className="inline-block animate-spin h-4 w-4 border-2 border-white border-t-transparent rounded-full ml-2"></div>
-            )}
-          </div>
-          <div className="flex gap-3">
-            <button
-              onClick={loadUsers}
-              className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-2 rounded-lg flex items-center gap-1"
-              disabled={isLoading}
-            >
-              <RefreshCw size={16} className={isLoading ? "animate-spin" : ""} />
-              <span>{t('refresh')}</span>
-            </button>
-            {isAdmin && (
-              <button
-                onClick={() => {
-                  setFormData(initialFormData);
-                  setEditingId(null);
-                  setShowForm(true);
-                }}
-                className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg flex items-center gap-2"
-              >
-                <Plus size={16} />
-                <span>{t('staff.addUser')}</span>
-              </button>
-            )}
-          </div>
-        </div>
-
-        {/* Refresh button */}
-        <div className="mb-4 flex justify-between items-center">
+    <div className="h-[calc(100vh-6rem)] flex flex-col">
+      <div className="flex flex-wrap items-center justify-between gap-2 mb-4">
+        <h2 className="text-lg xs:text-xl font-extralight text-white">{t('staff.title')}</h2>
+        
+        <div className="flex items-center gap-1.5 xs:gap-2">
           <button 
-            onClick={async () => {
-              setIsLoading(true);
-              try {
-                const loadedUsers = await loadAllUsers();
-                alert(`Atualizado com sucesso. Total de ${loadedUsers.length} usuários no Firestore.`);
-                // Recarregar a página para mostrar os usuários atualizados
-                window.location.reload();
-              } finally {
-                setIsLoading(false);
-              }
-            }}
-            className="text-sm text-blue-400 hover:text-blue-300 flex items-center gap-1"
+            onClick={loadUsers} 
+            className="h-8 xs:h-9 px-2.5 xs:px-3 bg-blue-500 text-white rounded-lg xs:rounded-xl shadow-md hover:bg-blue-600 transition-colors flex items-center gap-1.5 text-xs xs:text-sm font-light"
             disabled={isLoading}
           >
-            <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <path d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-            </svg>
-            Atualizar lista
+            <RefreshCw size={14} className={`transition-transform duration-300 ${isLoading ? 'animate-spin' : ''}`} />
+            <span className="hidden xs:inline">{t('refresh')}</span>
           </button>
           
-          <div className="text-white/60 text-sm">
-            Total de usuários: {users.length} 
-            {isLoading && (
-              <span className="inline-block animate-spin h-3 w-3 border-2 border-white border-t-transparent rounded-full ml-2"></span>
-            )}
-          </div>
+          {isAdmin && (
+            <button 
+              onClick={() => {
+                setShowForm(true);
+                setEditingId(null);
+                setFormData(initialFormData);
+              }}
+              className="h-8 xs:h-9 px-2.5 xs:px-3 bg-green-500 text-white rounded-lg xs:rounded-xl shadow-md hover:bg-green-600 transition-colors flex items-center gap-1.5 text-xs xs:text-sm font-light"
+              disabled={isLoading}
+            >
+              <Plus size={14} />
+              <span className="hidden xs:inline">{t('addUser')}</span>
+              <span className="xs:hidden">Add</span>
+            </button>
+          )}
         </div>
-
+      </div>
+      
+      <p className="text-xs text-center text-white/80 mb-3">
+        Total de usuários: {users.length}
+      </p>
+      
+      {/* Staff List */}
+      <div className="bg-gray-800/50 backdrop-blur-sm rounded-lg p-6">
         {/* Admins Section */}
         <div className="mb-8">
           <h3 className="text-lg font-medium text-white mb-4 flex items-center gap-2">
@@ -319,32 +291,35 @@ export default function Staff() {
                 className="bg-gray-700/50 rounded-lg p-4 border border-purple-500/20"
               >
                 <div className="flex justify-between items-start mb-4">
-                  <h3 className="text-lg font-medium text-white">{admin.name}</h3>
+                  <h3 className="text-base xs:text-lg font-medium text-white">{admin.name}</h3>
                   {isAdmin && (
-                    <div className="flex gap-2">
+                    <div className="flex gap-1 xs:gap-1.5">
                       {admin.id !== currentUser?.id && admins.length > 1 && (
                         <button
                           onClick={() => handleRoleChange(admin.id, 'remove')}
-                          className="p-1 text-purple-400 hover:text-purple-300 transition-colors"
+                          className="h-6 w-6 xs:h-7 xs:w-7 flex items-center justify-center bg-gray-600/50 hover:bg-purple-500/20 text-purple-400 hover:text-purple-300 rounded-full transition-colors"
                           title={t('staff.alerts.onlyAdminEdit')}
                         >
-                          <ShieldOff size={16} />
+                          <ShieldOff size={14} className="xs:hidden" />
+                          <ShieldOff size={16} className="hidden xs:block" />
                         </button>
                       )}
                       <button
                         onClick={() => handleEdit(admin)}
-                        className="p-1 text-blue-400 hover:text-blue-300 transition-colors"
+                        className="h-6 w-6 xs:h-7 xs:w-7 flex items-center justify-center bg-gray-600/50 hover:bg-blue-500/20 text-blue-400 hover:text-blue-300 rounded-full transition-colors"
                         title={t('edit')}
                       >
-                        <Edit size={16} />
+                        <Edit size={14} className="xs:hidden" />
+                        <Edit size={16} className="hidden xs:block" />
                       </button>
                       {admin.id !== currentUser?.id && (
                         <button
                           onClick={() => handleDelete(admin.id)}
-                          className="p-1 text-red-400 hover:text-red-300 transition-colors"
+                          className="h-6 w-6 xs:h-7 xs:w-7 flex items-center justify-center bg-gray-600/50 hover:bg-red-500/20 text-red-400 hover:text-red-300 rounded-full transition-colors"
                           title={t('staff.delete')}
                         >
-                          <Trash2 size={16} />
+                          <Trash2 size={14} className="xs:hidden" />
+                          <Trash2 size={16} className="hidden xs:block" />
                         </button>
                       )}
                     </div>
@@ -369,29 +344,32 @@ export default function Staff() {
                 className="bg-gray-700/50 rounded-lg p-4 border border-white/10"
               >
                 <div className="flex justify-between items-start mb-4">
-                  <h3 className="text-lg font-medium text-white">{staff.name}</h3>
+                  <h3 className="text-base xs:text-lg font-medium text-white">{staff.name}</h3>
                   {isAdmin && (
-                    <div className="flex gap-2">
+                    <div className="flex gap-1 xs:gap-1.5">
                       <button
                         onClick={() => handleRoleChange(staff.id, 'make')}
-                        className="p-1 text-purple-400 hover:text-purple-300 transition-colors"
-                        title={t('staff.alerts.onlyAdminEdit')}
+                        className="h-6 w-6 xs:h-7 xs:w-7 flex items-center justify-center bg-gray-600/50 hover:bg-purple-500/20 text-purple-400 hover:text-purple-300 rounded-full transition-colors"
+                        title={t('staff.makeAdmin')}
                       >
-                        <Shield size={16} />
+                        <Shield size={14} className="xs:hidden" />
+                        <Shield size={16} className="hidden xs:block" />
                       </button>
                       <button
                         onClick={() => handleEdit(staff)}
-                        className="p-1 text-blue-400 hover:text-blue-300 transition-colors"
+                        className="h-6 w-6 xs:h-7 xs:w-7 flex items-center justify-center bg-gray-600/50 hover:bg-blue-500/20 text-blue-400 hover:text-blue-300 rounded-full transition-colors"
                         title={t('edit')}
                       >
-                        <Edit size={16} />
+                        <Edit size={14} className="xs:hidden" />
+                        <Edit size={16} className="hidden xs:block" />
                       </button>
                       <button
                         onClick={() => handleDelete(staff.id)}
-                        className="p-1 text-red-400 hover:text-red-300 transition-colors"
+                        className="h-6 w-6 xs:h-7 xs:w-7 flex items-center justify-center bg-gray-600/50 hover:bg-red-500/20 text-red-400 hover:text-red-300 rounded-full transition-colors"
                         title={t('staff.delete')}
                       >
-                        <Trash2 size={16} />
+                        <Trash2 size={14} className="xs:hidden" />
+                        <Trash2 size={16} className="hidden xs:block" />
                       </button>
                     </div>
                   )}
