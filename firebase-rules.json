@@ -1,0 +1,5 @@
+{
+  "firestore": {
+    "rules": "rules_version = '2';\nservice cloud.firestore {\n  match /databases/{database}/documents {\n    // Regra temporária para permitir acesso durante a fase de desenvolvimento\n    // IMPORTANTE: REMOVER ANTES DE IR PARA PRODUÇÃO!\n    match /{document=**} {\n      allow read, write: if true;\n    }\n  }\n}"
+  }
+} 

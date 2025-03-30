@@ -1,0 +1,80 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --font-rustic: 'Rubik Dirt', system-ui;
+    --font-pirate: 'Pirata One', cursive;
+  }
+
+  body {
+    @apply antialiased;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    font-family: var(--font-rustic);
+    font-weight: normal;
+  }
+
+  .font-rustic {
+    font-family: var(--font-rustic);
+    font-weight: normal;
+  }
+
+  .font-pirate {
+    font-family: var(--font-pirate);
+    font-weight: normal;
+  }
+}
+
+@layer components {
+  .glass-morphism {
+    @apply backdrop-blur-xl bg-white/[0.07] dark:bg-black/[0.15] border border-white/[0.15] dark:border-white/[0.1];
+  }
+
+  .input-field {
+    @apply bg-transparent border-0 border-b-2 border-white/30 dark:border-white/20 px-0 py-2 focus:ring-0 focus:border-white/50 font-arial text-lg;
+  }
+
+  .input-field[type="date"] {
+    @apply text-white;
+  }
+
+  .input-field[type="date"]::-webkit-calendar-picker-indicator {
+    @apply filter invert opacity-50 hover:opacity-75 transition-opacity cursor-pointer;
+  }
+  
+  .hover-lift {
+    @apply transition-transform duration-200;
+  }
+  
+  .hover-lift:hover {
+    @apply transform -translate-y-1;
+  }
+  
+  .stagger-fade {
+    @apply opacity-0 transition-opacity duration-700;
+  }
+}
+
+.grain {
+  position: fixed;
+  top: -150%;
+  left: -50%;
+  right: -50%;
+  bottom: -150%;
+  width: 200%;
+  height: 300vh;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 512 512' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
+  opacity: 0.15;
+  pointer-events: none;
+}
+
+.dark .grain {
+  opacity: 0.2;
+}
+
+.font-arial {
+  font-family: Arial, sans-serif;
+}

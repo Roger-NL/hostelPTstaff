@@ -1,0 +1,406 @@
+import { 
+  createUserWithEmailAndPassword, 
+  signInWithEmailAndPassword, 
+  signOut,
+  updateProfile,
+  deleteUser as firebaseDeleteUser,
+  updateEmail,
+  sendPasswordResetEmail,
+  User as FirebaseUser
+} from 'firebase/auth';
+import { auth, firestore } from '../config/firebase';
+import { 
+  doc, 
+  setDoc,
+  getDoc,
+  updateDoc,
+  deleteDoc,
+  collection,
+  query,
+  getDocs,
+  where,
+  serverTimestamp
+} from 'firebase/firestore';
+import { User } from '../types';
+
+// Tipo estendido para incluir o papel de superadmin
+type ExtendedUserRole = User['role'] | 'superadmin';
+
+// Define o tipo para dados de registro de usuário
+interface UserRegistrationData {
+  email: string;
+  password: string;
+  name: string;
+  country?: string;
+  age: string;
+  relationshipStatus?: 'single' | 'dating' | 'married';
+  gender?: 'male' | 'female' | 'other';
+  phone?: string;
+  arrivalDate?: string;
+  departureDate?: string;
+}
+
+// Coleta Firebase User
+export const getCurrentUser = (): FirebaseUser | null => {
+  return auth.currentUser;
+};
+
+// Verifica se o usuário é o master (super admin)
+export const isMasterUser = async (userId: string): Promise<boolean> => {
+  try {
+    const masterDoc = await getDoc(doc(firestore, 'system', 'master'));
+    if (masterDoc.exists() && masterDoc.data().userId === userId) {
+      return true;
+    }
+    return false;
+  } catch (error) {
+    console.error('Error checking master user:', error);
+    return false;
+  }
+};
+
+// Criar perfil de usuário no Firestore para um usuário já existente no Auth
+export const createUserProfile = async (userId: string, userData: Omit<User, 'id'>): Promise<User> => {
+  try {
+    console.log('Criando perfil para usuário existente:', userId);
+    
+    // Verificar se o perfil já existe
+    const userDoc = await getDoc(doc(firestore, 'users', userId));
+    if (userDoc.exists()) {
+      console.log('Perfil já existe, retornando dados existentes');
+      return userDoc.data() as User;
+    }
+    
+    // Criar documento do usuário no Firestore
+    const userProfile: User = {
+      id: userId,
+      email: userData.email,
+      name: userData.name,
+      role: userData.role || 'user',
+      points: userData.points || 0,
+      country: userData.country || '',
+      age: userData.age || 0,
+      relationshipStatus: userData.relationshipStatus || 'single',
+      gender: userData.gender || 'other',
+      phone: userData.phone || '',
+      arrivalDate: userData.arrivalDate || '',
+      departureDate: userData.departureDate || '',
+    };
+    
+    // Adiciona o campo createdAt apenas aos dados do Firestore
+    const firestoreData = {
+      ...userProfile,
+      createdAt: new Date().toISOString()
+    };
+    
+    await setDoc(doc(firestore, 'users', userId), firestoreData);
+    
+    console.log('Perfil criado com sucesso para:', userId);
+    return userProfile;
+  } catch (error) {
+    console.error('Erro ao criar perfil de usuário:', error);
+    throw error;
+  }
+};
+
+// Registro de novo usuário
+export const register = async (userData: UserRegistrationData): Promise<User | null> => {
+  try {
+    console.log(`Iniciando registro para o email: ${userData.email}`);
+    
+    // 1. Criar usuário no Firebase Auth
+    const userCredential = await createUserWithEmailAndPassword(auth, userData.email, userData.password);
+    const authUser = userCredential.user;
+    
+    console.log(`Usuário criado com sucesso no Firebase Auth, ID: ${authUser.uid}`);
+    
+    // 2. Atualizar o displayName se fornecido
+    if (userData.name) {
+      await updateProfile(authUser, { displayName: userData.name });
+      console.log(`Nome do usuário atualizado: ${userData.name}`);
+    }
+    
+    // 3. Criar objeto com dados do usuário para salvar no Firestore
+    const userDoc: User = {
+      id: authUser.uid,
+      email: userData.email,
+      name: userData.name || '',
+      role: 'user',
+      points: 0,
+      country: userData.country || '',
+      age: parseInt(userData.age) || 0,
+      relationshipStatus: (userData.relationshipStatus as 'single' | 'dating' | 'married') || 'single',
+      gender: (userData.gender as 'male' | 'female' | 'other') || 'other',
+      phone: userData.phone || '',
+      arrivalDate: userData.arrivalDate || '',
+      departureDate: userData.departureDate || ''
+    };
+    
+    // 4. Adicionar timestamp de criação para o Firestore
+    const firestoreData = {
+      ...userDoc,
+      createdAt: serverTimestamp()
+    };
+    
+    console.log('Salvando dados do usuário no Firestore:', userDoc);
+    
+    // 5. Salvar no Firestore
+    await setDoc(doc(firestore, 'users', authUser.uid), firestoreData);
+    console.log('Dados do usuário salvos com sucesso no Firestore');
+    
+    return userDoc;
+  } catch (error) {
+    console.error('Erro ao registrar usuário:', error);
+    return null;
+  }
+};
+
+// Registro de novo usuário (sem afetar o usuário logado atualmente)
+export const registerStaffOnly = async (userData: UserRegistrationData): Promise<User | null> => {
+  try {
+    console.log(`Iniciando registro de staff para o email: ${userData.email}`);
+    
+    // Verificar se tem um usuário autenticado e salvar referência
+    const currentUser = auth.currentUser;
+    
+    // 1. Criar usuário no Firebase Auth
+    const userCredential = await createUserWithEmailAndPassword(auth, userData.email, userData.password);
+    const newUser = userCredential.user;
+    
+    console.log(`Usuário staff criado com sucesso no Firebase Auth, ID: ${newUser.uid}`);
+    
+    // 2. Atualizar o displayName se fornecido
+    if (userData.name) {
+      await updateProfile(newUser, { displayName: userData.name });
+      console.log(`Nome do usuário staff atualizado: ${userData.name}`);
+    }
+    
+    // 3. Criar objeto com dados do usuário para salvar no Firestore
+    const userDoc: User = {
+      id: newUser.uid,
+      email: userData.email,
+      name: userData.name || '',
+      role: 'user', // Sempre criar como usuário normal
+      points: 0,
+      country: userData.country || '',
+      age: parseInt(userData.age) || 0,
+      relationshipStatus: (userData.relationshipStatus as 'single' | 'dating' | 'married') || 'single',
+      gender: (userData.gender as 'male' | 'female' | 'other') || 'other',
+      phone: userData.phone || '',
+      arrivalDate: userData.arrivalDate || '',
+      departureDate: userData.departureDate || ''
+    };
+    
+    // 4. Adicionar timestamp de criação para o Firestore
+    const firestoreData = {
+      ...userDoc,
+      createdAt: serverTimestamp()
+    };
+    
+    console.log('Salvando dados do usuário staff no Firestore:', userDoc);
+    
+    // 5. Salvar no Firestore
+    await setDoc(doc(firestore, 'users', newUser.uid), firestoreData);
+    console.log('Dados do usuário staff salvos com sucesso no Firestore');
+    
+    // 6. Se havia um usuário logado antes, fazer login novamente com ele
+    if (currentUser) {
+      // Fazer logout do usuário recém-criado
+      await signOut(auth);
+      
+      // Não precisamos fazer login novamente, o onAuthStateChanged vai cuidar disso
+      console.log('Voltando ao usuário original após criar staff');
+    }
+    
+    return userDoc;
+  } catch (error) {
+    console.error('Erro ao registrar usuário staff:', error);
+    // Se ocorreu erro, tentar fazer logout para garantir que não ficou o usuário errado
+    try {
+      await signOut(auth);
+    } catch (logoutError) {
+      console.error('Erro ao fazer logout após falha:', logoutError);
+    }
+    return null;
+  }
+};
+
+// Login
+export const login = async (email: string, password: string): Promise<FirebaseUser> => {
+  try {
+    const userCredential = await signInWithEmailAndPassword(auth, email, password);
+    return userCredential.user;
+  } catch (error) {
+    console.error('Error logging in:', error);
+    throw error;
+  }
+};
+
+// Logout
+export const logout = async (): Promise<void> => {
+  try {
+    await signOut(auth);
+  } catch (error) {
+    console.error('Error logging out:', error);
+    throw error;
+  }
+};
+
+// Obter perfil de usuário
+export const getUserProfile = async (userId: string): Promise<User | null> => {
+  try {
+    const userDoc = await getDoc(doc(firestore, 'users', userId));
+    if (userDoc.exists()) {
+      return userDoc.data() as User;
+    }
+    return null;
+  } catch (error) {
+    console.error('Error getting user profile:', error);
+    throw error;
+  }
+};
+
+// Atualizar perfil de usuário
+export const updateUserProfile = async (userId: string, userData: Partial<User>): Promise<void> => {
+  try {
+    // Verificar se é o master user (superadmin)
+    const isMaster = await isMasterUser(userId);
+    
+    // Se for o superadmin, não permitir alterar o papel
+    if (isMaster && userData.role && userData.role !== 'admin') {
+      throw new Error('Cannot change role of the master user');
+    }
+    
+    await updateDoc(doc(firestore, 'users', userId), userData);
+    
+    // Se o e-mail for atualizado, também atualiza no Auth
+    if (userData.email && auth.currentUser) {
+      await updateEmail(auth.currentUser, userData.email);
+    }
+  } catch (error) {
+    console.error('Error updating user profile:', error);
+    throw error;
+  }
+};
+
+// Excluir usuário
+export const deleteUser = async (userId: string): Promise<void> => {
+  try {
+    // Verificar se é o master user (superadmin)
+    const isMaster = await isMasterUser(userId);
+    if (isMaster) {
+      throw new Error('Cannot delete the master user');
+    }
+
+    // Excluir do Firestore
+    await deleteDoc(doc(firestore, 'users', userId));
+    
+    // Se for o usuário atual, também excluir do Auth
+    if (auth.currentUser && auth.currentUser.uid === userId) {
+      await firebaseDeleteUser(auth.currentUser);
+    }
+  } catch (error) {
+    console.error('Error deleting user:', error);
+    throw error;
+  }
+};
+
+// Reset de senha
+export const resetPassword = async (email: string): Promise<void> => {
+  try {
+    await sendPasswordResetEmail(auth, email);
+  } catch (error) {
+    console.error('Error resetting password:', error);
+    throw error;
+  }
+};
+
+// Listar todos os usuários
+export const getAllUsers = async (): Promise<User[]> => {
+  try {
+    console.log('Buscando todos os usuários do Firestore');
+    
+    // Cria uma consulta que busca TODOS os documentos da coleção 'users'
+    // Limitada a 50 usuários para evitar sobrecarga
+    const usersQuery = query(collection(firestore, 'users'));
+    const querySnapshot = await getDocs(usersQuery);
+    
+    const users: User[] = [];
+    querySnapshot.forEach((doc) => {
+      console.log('Usuário encontrado no Firestore:', doc.id);
+      const userData = doc.data() as Record<string, any>;
+      
+      // Filtra para garantir que apenas os campos do tipo User sejam incluídos
+      // e garante valores padrão para campos obrigatórios que podem estar ausentes
+      const user: User = {
+        id: doc.id, // Usar o ID do documento
+        name: userData.name || 'Sem nome',
+        email: userData.email || '',
+        role: (userData.role === 'superadmin' ? 'admin' : userData.role) || 'user',
+        points: typeof userData.points === 'number' ? userData.points : 0,
+        country: userData.country || '',
+        age: typeof userData.age === 'number' ? userData.age : 
+             userData.age ? parseInt(userData.age) : 0,
+        relationshipStatus: userData.relationshipStatus || 'single',
+        gender: userData.gender || 'other',
+        phone: userData.phone || '',
+        arrivalDate: userData.arrivalDate || '',
+        departureDate: userData.departureDate || ''
+      };
+      
+      users.push(user);
+    });
+    
+    console.log(`Total de ${users.length} usuários carregados do Firestore`);
+    return users;
+  } catch (error) {
+    console.error('Error getting all users:', error);
+    throw error;
+  }
+};
+
+// Atualizar papel do usuário
+export const updateUserRole = async (userId: string, role: 'user' | 'admin'): Promise<void> => {
+  try {
+    // Verificar se é o master user (superadmin)
+    const isMaster = await isMasterUser(userId);
+    if (isMaster && role !== 'admin') {
+      throw new Error('Cannot change role of the master user');
+    }
+    
+    const userDocRef = doc(firestore, 'users', userId);
+    const userDoc = await getDoc(userDocRef);
+    
+    if (!userDoc.exists()) {
+      throw new Error('User not found');
+    }
+    
+    // Atualizar o papel no Firestore
+    await updateDoc(userDocRef, { role });
+    
+    console.log(`User ${userId} role updated to ${role}`);
+  } catch (error) {
+    console.error('Error updating user role:', error);
+    throw error;
+  }
+};
+
+// Tornar usuário administrador
+export const makeAdmin = async (userId: string): Promise<void> => {
+  try {
+    await updateUserRole(userId, 'admin');
+  } catch (error) {
+    console.error('Error making user admin:', error);
+    throw error;
+  }
+};
+
+// Remover privilégios de administrador
+export const removeAdmin = async (userId: string): Promise<void> => {
+  try {
+    await updateUserRole(userId, 'user');
+  } catch (error) {
+    console.error('Error removing admin privileges:', error);
+    throw error;
+  }
+}; 

@@ -1,0 +1,170 @@
+/* Estilos customizados para o DayPicker em tema escuro */
+.rdp {
+  --rdp-cell-size: 40px;
+  --rdp-accent-color: #3b82f6;
+  --rdp-background-color: #4b5563;
+  --rdp-accent-color-dark: #2563eb;
+  --rdp-background-color-dark: #374151;
+  --rdp-outline: 2px solid var(--rdp-accent-color);
+  --rdp-outline-selected: 2px solid var(--rdp-accent-color);
+  margin: 0.5em;
+  padding: 0;
+}
+
+/* Layout compacto para dispositivos móveis */
+@media (max-width: 640px) {
+  .rdp {
+    --rdp-cell-size: 30px;
+    margin: 0.15em;
+    font-size: 0.85rem;
+  }
+  
+  .compact-calendar .rdp-month {
+    width: 100%;
+  }
+  
+  .compact-calendar .rdp-caption {
+    padding: 0.15rem 0;
+  }
+  
+  .compact-calendar .rdp-head_cell {
+    font-size: 0.7rem;
+  }
+  
+  .compact-calendar .rdp-nav {
+    padding-inline: 0.2rem;
+  }
+
+  /* Melhor espaçamento para telas pequenas */
+  .compact-calendar .rdp-tbody {
+    padding: 0;
+  }
+
+  .compact-calendar .rdp-tfoot {
+    margin-top: 0.25rem;
+  }
+
+  /* Aumentar área tocável para mobile */
+  .compact-calendar .rdp-button {
+    padding: 0;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+}
+
+.rdp-months {
+  background-color: #1f2937;
+  border-radius: 8px;
+  padding: 5px;
+}
+
+.rdp-caption {
+  color: #f3f4f6;
+  margin-bottom: 0.25rem;
+}
+
+.rdp-caption_label {
+  font-weight: 600;
+  font-size: 0.95rem;
+}
+
+.rdp-nav_button {
+  color: #f3f4f6;
+}
+
+.rdp-table {
+  margin: 0;
+}
+
+.rdp-head_cell {
+  color: #9ca3af;
+  font-weight: 500;
+  font-size: 0.875rem;
+}
+
+.rdp-day {
+  color: #f3f4f6;
+  border-radius: 8px;
+}
+
+.rdp-day_disabled {
+  color: #6b7280;
+}
+
+.rdp-day_today {
+  font-weight: bold;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.rdp-day_selected, 
+.rdp-day_selected:hover {
+  background-color: var(--rdp-accent-color);
+  color: white;
+}
+
+.rdp-day:hover {
+  background-color: rgba(59, 130, 246, 0.2);
+  color: white;
+}
+
+.rdp-day_outside {
+  color: #6b7280;
+  opacity: 0.5;
+}
+
+.rdp-button:hover:not([disabled]):not(.rdp-day_selected) {
+  background-color: rgba(59, 130, 246, 0.2);
+  color: white;
+}
+
+/* Classes adicionais para calendário compacto */
+.compact-calendar {
+  padding: 0;
+}
+
+.compact-calendar .rdp-day {
+  margin: 0;
+}
+
+.calendar-day-today {
+  font-weight: bold;
+  position: relative;
+}
+
+.calendar-day-today::after {
+  content: '';
+  position: absolute;
+  bottom: 2px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 4px;
+  height: 4px;
+  background-color: currentColor;
+  border-radius: 50%;
+}
+
+.calendar-day-selected {
+  background-color: var(--rdp-accent-color);
+  color: white;
+}
+
+/* Melhorias para acessibilidade em dispositivos touch */
+@media (hover: none) {
+  .rdp-day, .rdp-button {
+    min-height: 36px;
+    min-width: 36px;
+  }
+  
+  /* Evitar que o calendário fique grande demais */
+  .rdp-months {
+    max-width: 100%;
+  }
+  
+  /* Adicionar um pouco de espaço entre os dias para evitar toques acidentais */
+  .rdp-cell {
+    padding: 0.5px;
+  }
+} 

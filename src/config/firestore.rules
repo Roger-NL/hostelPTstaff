@@ -1,0 +1,54 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Função para verificar se o usuário é o master
+    function isMaster(userId) {
+      return exists(/databases/$(database)/documents/system/master) && 
+             get(/databases/$(database)/documents/system/master).data.userId == userId;
+    }
+    
+    // Função para verificar se o usuário é administrador
+    function isAdmin(userId) {
+      return exists(/databases/$(database)/documents/users/$(userId)) && 
+             get(/databases/$(database)/documents/users/$(userId)).data.role in ['admin', 'superadmin'];
+    }
+    
+    // Regra temporária para permitir acesso durante a fase de desenvolvimento
+    // IMPORTANTE: REMOVER ANTES DE IR PARA PRODUÇÃO!
+    match /{document=**} {
+      allow read, write: if true;
+    }
+    
+    /* DESCOMENTE ESTAS REGRAS QUANDO FOR PARA PRODUÇÃO
+    // Documento de configuração do master
+    match /system/master {
+      // Apenas o master pode ler ou modificar seu próprio documento
+      allow get: if request.auth != null && request.auth.uid == resource.data.userId;
+      allow write: if false; // Nenhuma modificação permitida via client
+    }
+    
+    // Coleção de usuários
+    match /users/{userId} {
+      // Leitura: usuários autenticados podem ler
+      allow read: if request.auth != null;
+      
+      // Escrita: admins podem editar, ou o próprio usuário (exceto o master)
+      allow create: if request.auth != null && (isAdmin(request.auth.uid) || request.auth.uid == userId);
+      allow update: if request.auth != null && (
+                    // Admin pode editar qualquer usuário que não seja master
+                    (isAdmin(request.auth.uid) && !isMaster(userId)) ||
+                    // Usuário pode editar a si mesmo
+                    (request.auth.uid == userId && !isMaster(userId))
+                   );
+      // Apenas admin pode deletar usuários que não sejam master
+      allow delete: if request.auth != null && isAdmin(request.auth.uid) && !isMaster(userId);
+    }
+    
+    // Outras coleções
+    match /{document=**} {
+      allow read: if request.auth != null;
+      allow write: if request.auth != null && isAdmin(request.auth.uid);
+    }
+    */
+  }
+} 
