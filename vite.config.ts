@@ -7,6 +7,7 @@ export default defineConfig({
   plugins: [react()],
   optimizeDeps: {
     exclude: ['lucide-react'],
+    include: ['firebase/app', 'firebase/auth', 'firebase/firestore', 'firebase/storage']
   },
   build: {
     chunkSizeWarningLimit: 1000,
@@ -16,7 +17,7 @@ export default defineConfig({
           vendor: ['react', 'react-dom', 'react-router-dom'],
           ui: ['lucide-react', 'recharts'],
           utils: ['date-fns', 'zustand'],
-          firebase: ['firebase']
+          firebase: ['firebase/app', 'firebase/auth', 'firebase/firestore']
         },
       },
     },
@@ -24,6 +25,7 @@ export default defineConfig({
   resolve: {
     alias: {
       '@': path.resolve(__dirname, './src'),
+      'firebase': path.resolve(__dirname, './node_modules/firebase')
     },
   }
 });
