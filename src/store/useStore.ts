@@ -568,14 +568,21 @@ export const useStore = create<AppState>((set, get) => ({
         }
       };
       
-      // Save to Firebase with proper error handling
-      const scheduleRef = doc(firestore, 'schedules', 'main');
-      void setDoc(scheduleRef, { data: newSchedule }, { merge: true })
-        .catch(error => {
-          console.error('Error saving schedule to Firebase:', error);
-        });
+      // Salvamento síncrono para atualização local
+      const result = { schedule: newSchedule };
       
-      return { schedule: newSchedule };
+      // Salvamento assíncrono no Firebase
+      (async () => {
+        try {
+          const scheduleRef = doc(firestore, 'schedules', 'main');
+          await setDoc(scheduleRef, { data: newSchedule }, { merge: true });
+          console.log('Schedule updated successfully in Firebase');
+        } catch (error) {
+          console.error('Error saving schedule to Firebase:', error);
+        }
+      })();
+      
+      return result;
     });
   },
   
@@ -602,14 +609,29 @@ export const useStore = create<AppState>((set, get) => ({
         }
       }
       
-      // Save to Firebase with proper error handling
-      const scheduleRef = doc(firestore, 'schedules', 'main');
-      void setDoc(scheduleRef, { data: newSchedule }, { merge: true })
-        .catch(error => {
-          console.error('Error saving schedule to Firebase:', error);
-        });
+      // Salvamento síncrono para atualização local
+      const result = { schedule: newSchedule };
       
-      return { schedule: newSchedule };
+      // Salvamento assíncrono no Firebase
+      (async () => {
+        try {
+          const scheduleRef = doc(firestore, 'schedules', 'main');
+          await setDoc(scheduleRef, { data: newSchedule }, { merge: true });
+          console.log('Schedule updated successfully in Firebase');
+        } catch (error) {
+          console.error('Error saving schedule to Firebase:', error);
+          // Tenta novamente em caso de falha
+          try {
+            const scheduleRef = doc(firestore, 'schedules', 'main');
+            await setDoc(scheduleRef, { data: newSchedule }, { merge: true });
+            console.log('Schedule update retry successful');
+          } catch (retryError) {
+            console.error('Retry failed - Error saving schedule to Firebase:', retryError);
+          }
+        }
+      })();
+      
+      return result;
     });
   },
   
