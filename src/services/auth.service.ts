@@ -199,17 +199,41 @@ export const registerStaffOnly = async (userData: UserRegistrationData): Promise
     
     console.log('Salvando dados do usuário staff no Firestore:', userDoc);
     
-    // 5. Salvar no Firestore
-    await setDoc(doc(firestore, 'users', newUser.uid), firestoreData);
-    console.log('Dados do usuário staff salvos com sucesso no Firestore');
+    // 5. Salvar no Firestore - garantindo que os dados sejam persistidos corretamente
+    try {
+      await setDoc(doc(firestore, 'users', newUser.uid), firestoreData);
+      console.log('Dados do usuário staff salvos com sucesso no Firestore');
+    } catch (firestoreError) {
+      console.error('Erro ao salvar dados no Firestore:', firestoreError);
+      // Tenta novamente com um atraso
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      await setDoc(doc(firestore, 'users', newUser.uid), firestoreData);
+      console.log('Dados do usuário salvos na segunda tentativa');
+    }
     
-    // 6. Se havia um usuário logado antes, fazer login novamente com ele
+    // 6. Se havia um usuário logado antes, fazer logout do novo e voltar para o original
     if (currentUser) {
-      // Fazer logout do usuário recém-criado
-      await signOut(auth);
-      
-      // Não precisamos fazer login novamente, o onAuthStateChanged vai cuidar disso
-      console.log('Voltando ao usuário original após criar staff');
+      try {
+        // Fazer logout do usuário recém-criado
+        await signOut(auth);
+        
+        // Não precisamos fazer login novamente, o onAuthStateChanged vai cuidar disso
+        console.log('Voltando ao usuário original após criar staff');
+      } catch (signOutError) {
+        console.error('Erro ao fazer logout após criar staff:', signOutError);
+      }
+    }
+    
+    // Verifica se os dados foram realmente salvos
+    try {
+      const userDocCheck = await getDoc(doc(firestore, 'users', newUser.uid));
+      if (userDocCheck.exists()) {
+        console.log('Verificação: dados do usuário confirmados no Firestore');
+      } else {
+        console.error('Verificação falhou: documento do usuário não encontrado após salvar');
+      }
+    } catch (checkError) {
+      console.error('Erro ao verificar dados do usuário:', checkError);
     }
     
     return userDoc;
@@ -228,10 +252,52 @@ export const registerStaffOnly = async (userData: UserRegistrationData): Promise
 // Login
 export const login = async (email: string, password: string): Promise<FirebaseUser> => {
   try {
+    console.log(`Tentando fazer login com email: ${email}`);
+    
+    // Tenta autenticar o usuário no Firebase Auth
     const userCredential = await signInWithEmailAndPassword(auth, email, password);
-    return userCredential.user;
+    const authUser = userCredential.user;
+    
+    console.log(`Usuário autenticado com sucesso: ${authUser.uid}`);
+    
+    // Verifica se o perfil do usuário existe no Firestore
+    const userDoc = await getDoc(doc(firestore, 'users', authUser.uid));
+    
+    if (!userDoc.exists()) {
+      console.warn(`Perfil do usuário não encontrado no Firestore: ${authUser.uid}, criando perfil básico...`);
+      
+      // Se não existir, cria um perfil básico no Firestore
+      const basicProfile: User = {
+        id: authUser.uid,
+        email: authUser.email || email,
+        name: authUser.displayName || email.split('@')[0],
+        role: 'user',
+        points: 0,
+        country: '',
+        age: 0,
+        relationshipStatus: 'single',
+        gender: 'other',
+        phone: '',
+        arrivalDate: '',
+        departureDate: ''
+      };
+      
+      // Adiciona o campo createdAt
+      const firestoreData = {
+        ...basicProfile,
+        createdAt: serverTimestamp()
+      };
+      
+      // Salva o perfil básico
+      await setDoc(doc(firestore, 'users', authUser.uid), firestoreData);
+      console.log(`Perfil básico criado para o usuário: ${authUser.uid}`);
+    } else {
+      console.log(`Perfil do usuário encontrado no Firestore: ${authUser.uid}`);
+    }
+    
+    return authUser;
   } catch (error) {
-    console.error('Error logging in:', error);
+    console.error('Erro ao fazer login:', error);
     throw error;
   }
 };
@@ -355,7 +421,8 @@ export const getAllUsers = async (): Promise<User[]> => {
     return users;
   } catch (error) {
     console.error('Error getting all users:', error);
-    throw error;
+    // Ao invés de lançar exceção, retornamos um array vazio
+    return [];
   }
 };
 
@@ -386,21 +453,25 @@ export const updateUserRole = async (userId: string, role: 'user' | 'admin'): Pr
 };
 
 // Tornar usuário administrador
-export const makeAdmin = async (userId: string): Promise<void> => {
+export const makeAdmin = async (userId: string): Promise<boolean> => {
   try {
     await updateUserRole(userId, 'admin');
+    console.log(`Usuário ${userId} promovido a administrador com sucesso`);
+    return true;
   } catch (error) {
-    console.error('Error making user admin:', error);
-    throw error;
+    console.error('Erro ao tornar usuário administrador:', error);
+    return false;
   }
 };
 
 // Remover privilégios de administrador
-export const removeAdmin = async (userId: string): Promise<void> => {
+export const removeAdmin = async (userId: string): Promise<boolean> => {
   try {
     await updateUserRole(userId, 'user');
+    console.log(`Privilégios de administrador removidos do usuário ${userId}`);
+    return true;
   } catch (error) {
-    console.error('Error removing admin privileges:', error);
-    throw error;
+    console.error('Erro ao remover privilégios de administrador:', error);
+    return false;
   }
 }; 

@@ -3,6 +3,7 @@ import type { Schedule, ShiftTime, UserData, Task, TaskComment, TaskChecklistIte
 import * as authService from '../services/auth.service';
 import { doc, updateDoc, setDoc, getDoc } from 'firebase/firestore';
 import { firestore } from '../config/firebase';
+import * as scheduleService from '../services/schedule.service';
 
 interface AppState {
   theme: 'light' | 'dark';
@@ -307,39 +308,56 @@ export const useStore = create<AppState>((set, get) => ({
   
   // Add initialization function to load data from Firebase
   init: async () => {
-    try {
-      console.log('Loading data from Firebase...');
-      
-      // Load schedule from Firebase
-      const scheduleRef = doc(firestore, 'schedules', 'main');
-      const scheduleSnapshot = await getDoc(scheduleRef);
-      
-      if (scheduleSnapshot.exists()) {
-        console.log('Found schedule document:', scheduleSnapshot.data());
-        
-        if (scheduleSnapshot.data().data) {
-          set({ schedule: scheduleSnapshot.data().data });
-          console.log('Schedule loaded from Firebase', scheduleSnapshot.data().data);
-        } else {
-          console.log('Schedule document exists but has no data field');
-        }
-      } else {
-        console.log('No schedule document found in Firebase');
+    console.log('Inicializando aplicação...');
+    
+    // Inicializar com valores padrão
+    set({ 
+      schedule: {},
+      users: defaultUsers
+    });
+    
+    // Função segura para salvar agenda vazia
+    function safeScheduleSave() {
+      try {
+        console.log('Tentando salvar agenda vazia...');
+        void scheduleService.saveScheduleToFirebase({});
+      } catch (e) {
+        console.error('Erro ao salvar agenda vazia:', e);
       }
+    }
+    
+    // Carregar a agenda de forma segura
+    try {
+      console.log('Tentando carregar agenda do Firebase...');
       
-      // Load users from Firebase
-      console.log('Loading users from Firebase...');
-      const users = await authService.getAllUsers();
+      const schedule = await scheduleService.loadScheduleFromFirebase() as ReturnType<typeof scheduleService.loadScheduleFromFirebase>;
       
-      if (users && users.length > 0) {
-        console.log(`Found ${users.length} users in Firebase`);
+      if (schedule && schedule !== null) {
+        console.log('Agenda carregada com sucesso');
+        set({ schedule });
+      } else {
+        console.log('Agenda nula retornada, mantendo vazia');
+        safeScheduleSave();
+      }
+    } catch (e) {
+      console.error('Erro ao carregar agenda:', e);
+      safeScheduleSave();
+    }
+    
+    // Carregar usuários de forma segura
+    try {
+      console.log('Tentando carregar usuários do Firebase...');
+      
+      const users = await authService.getAllUsers() as ReturnType<typeof authService.getAllUsers>;
+      
+      if (users && Array.isArray(users) && users.length > 0) {
+        console.log(`${users.length} usuários carregados`);
         
-        // Convert Firebase User to UserData
-        const userData: UserData[] = users.map(user => ({
+        const userData = users.map(user => ({
           id: user.id,
           email: user.email,
           name: user.name,
-          password: '', // We don't store passwords
+          password: '',
           country: user.country,
           age: user.age.toString(),
           relationshipStatus: user.relationshipStatus,
@@ -353,12 +371,11 @@ export const useStore = create<AppState>((set, get) => ({
         }));
         
         set({ users: userData });
-        console.log('Users loaded from Firebase:', userData.length);
       } else {
-        console.log('No users found in Firebase or getAllUsers returned empty array');
+        console.log('Nenhum usuário encontrado, mantendo padrões');
       }
-    } catch (error) {
-      console.error('Error loading initial data from Firebase:', error);
+    } catch (e) {
+      console.error('Erro ao carregar usuários:', e);
     }
   },
   
@@ -552,6 +569,7 @@ export const useStore = create<AppState>((set, get) => ({
   
   assignShift: (date, shift, volunteerId) => {
     set(state => {
+      // Atualização local imediata para a UI
       const currentShift = Array.isArray(state.schedule[date]?.[shift]) 
         ? state.schedule[date][shift] 
         : [];
@@ -568,17 +586,29 @@ export const useStore = create<AppState>((set, get) => ({
         }
       };
       
-      // Salvamento síncrono para atualização local
+      // Atualização local para efeito imediato na UI
       const result = { schedule: newSchedule };
       
-      // Salvamento assíncrono no Firebase
+      // Salva no Firebase usando o serviço dedicado
       (async () => {
         try {
-          const scheduleRef = doc(firestore, 'schedules', 'main');
-          await setDoc(scheduleRef, { data: newSchedule }, { merge: true });
-          console.log('Schedule updated successfully in Firebase');
+          console.log(`Solicitando atribuição de turno via serviço: ${date}, ${shift}, ${volunteerId}`);
+          const updatedSchedule = await scheduleService.assignShiftToFirebase(
+            date,
+            shift,
+            volunteerId,
+            state.schedule
+          );
+          
+          if (!updatedSchedule) {
+            console.error('Falha ao atribuir turno no Firebase - atualizando estado com valores originais');
+            // Se falhar, tenta reverter ao estado original
+            set(state => ({ schedule: state.schedule }));
+          } else {
+            console.log('Turno atribuído com sucesso no Firebase');
+          }
         } catch (error) {
-          console.error('Error saving schedule to Firebase:', error);
+          console.error('Erro crítico ao atribuir turno no Firebase:', error);
         }
       })();
       
@@ -588,6 +618,7 @@ export const useStore = create<AppState>((set, get) => ({
   
   removeShift: (date, shift, volunteerId) => {
     set(state => {
+      // Cria uma cópia local do schedule para atualização imediata da UI
       const newSchedule = { ...state.schedule };
       if (newSchedule[date]) {
         const currentShift = Array.isArray(newSchedule[date][shift]) 
@@ -609,25 +640,29 @@ export const useStore = create<AppState>((set, get) => ({
         }
       }
       
-      // Salvamento síncrono para atualização local
+      // Atualiza o estado local imediatamente
       const result = { schedule: newSchedule };
       
-      // Salvamento assíncrono no Firebase
+      // Usa o serviço dedicado para persistir no Firebase de forma assíncrona
       (async () => {
         try {
-          const scheduleRef = doc(firestore, 'schedules', 'main');
-          await setDoc(scheduleRef, { data: newSchedule }, { merge: true });
-          console.log('Schedule updated successfully in Firebase');
-        } catch (error) {
-          console.error('Error saving schedule to Firebase:', error);
-          // Tenta novamente em caso de falha
-          try {
-            const scheduleRef = doc(firestore, 'schedules', 'main');
-            await setDoc(scheduleRef, { data: newSchedule }, { merge: true });
-            console.log('Schedule update retry successful');
-          } catch (retryError) {
-            console.error('Retry failed - Error saving schedule to Firebase:', retryError);
+          console.log('Iniciando processo de remoção no Firebase:', { date, shift, volunteerId });
+          const updatedSchedule = await scheduleService.removeShiftFromFirebase(
+            date,
+            shift,
+            volunteerId,
+            state.schedule
+          );
+          
+          if (!updatedSchedule) {
+            console.error('Falha ao remover turno no Firebase - atualizando estado com valores originais');
+            // Se falhar, revertemos ao estado original no próximo ciclo
+            set(state => ({ schedule: state.schedule }));
+          } else {
+            console.log('Turno removido com sucesso no Firebase');
           }
+        } catch (error) {
+          console.error('Erro crítico ao remover turno do Firebase:', error);
         }
       })();
       
@@ -662,39 +697,59 @@ export const useStore = create<AppState>((set, get) => ({
     
     // Save to Firebase
     try {
-      // Convert UserData to User type for Firebase
-      const userData = {
-        id: newUserId,
-        email: staffData.email,
-        name: staffData.name,
-        country: staffData.country || '',
-        age: staffData.age ? parseInt(staffData.age) : 0,
-        relationshipStatus: staffData.relationshipStatus as 'single' | 'dating' | 'married',
-        phone: staffData.phone || '',
-        arrivalDate: staffData.arrivalDate || '',
-        departureDate: staffData.departureDate || '',
-        gender: staffData.gender as 'male' | 'female' | 'other',
-        role: 'user',
-        points: 0
-      };
+      console.log('Registrando novo colaborador no Firebase:', staffData.email);
       
-      // Register staff without affecting current auth state
-      void authService.registerStaffOnly({
+      // Preparando os dados para registro
+      const registrationData = {
         email: staffData.email,
         password: staffData.password,
         name: staffData.name,
-        country: staffData.country,
-        age: staffData.age,
-        relationshipStatus: staffData.relationshipStatus as 'single' | 'dating' | 'married',
-        gender: staffData.gender as 'male' | 'female' | 'other',
-        phone: staffData.phone,
-        arrivalDate: staffData.arrivalDate,
-        departureDate: staffData.departureDate
-      }).catch(error => {
-        console.error('Error registering staff in Firebase:', error);
-      });
+        country: staffData.country || '',
+        age: staffData.age || '0',
+        relationshipStatus: (staffData.relationshipStatus as 'single' | 'dating' | 'married') || 'single',
+        gender: (staffData.gender as 'male' | 'female' | 'other') || 'other',
+        phone: staffData.phone || '',
+        arrivalDate: staffData.arrivalDate || '',
+        departureDate: staffData.departureDate || ''
+      };
+      
+      // Register staff without affecting current auth state
+      // Usando async/await com try/catch para tratamento de erros
+      (async () => {
+        try {
+          const registeredUser = await authService.registerStaffOnly(registrationData);
+          
+          if (registeredUser) {
+            console.log('Colaborador registrado com sucesso:', registeredUser.id);
+            
+            // Atualiza o estado com o ID correto do Firebase
+            set(state => ({
+              users: state.users.map(u => 
+                u.email === staffData.email 
+                  ? { ...u, id: registeredUser.id }
+                  : u
+              )
+            }));
+          } else {
+            console.error('Falha ao registrar colaborador - removendo do estado local');
+            
+            // Remove do estado local se o registro falhou
+            set(state => ({
+              users: state.users.filter(u => u.email !== staffData.email)
+            }));
+          }
+        } catch (error) {
+          console.error('Erro ao registrar colaborador:', error);
+          
+          // Remove do estado local em caso de erro
+          set(state => ({
+            users: state.users.filter(u => u.email !== staffData.email)
+          }));
+        }
+      })();
     } catch (error) {
-      console.error('Error saving staff to Firebase:', error);
+      console.error('Erro grave ao salvar colaborador no Firebase:', error);
+      return false;
     }
     
     return true;
@@ -733,7 +788,7 @@ export const useStore = create<AppState>((set, get) => ({
     };
     
     // Use void operator to explicitly ignore the Promise return value
-    void authService.updateUserProfile(id, firebaseData)
+    authService.updateUserProfile(id, firebaseData)
       .catch(error => {
         console.error('Error updating user in Firebase:', error);
       });
