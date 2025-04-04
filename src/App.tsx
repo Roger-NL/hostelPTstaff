@@ -3,6 +3,7 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { Sun, Moon } from 'lucide-react';
 import { useStore } from './store/useStore';
 import { useTranslation } from './hooks/useTranslation';
+import { Toaster } from 'react-hot-toast';
 import Dashboard from './pages/Dashboard';
 import Login from './pages/Login';
 import Register from './pages/Register';
@@ -42,6 +43,30 @@ function App() {
     <BrowserRouter>
       <div className={`min-h-screen ${theme === 'dark' ? 'bg-gradient-to-b from-gray-900 to-gray-800' : 'bg-gradient-to-b from-gray-100 to-gray-200'} overflow-hidden`}>
         <AdminInitializer masterEmail="raugerac@gmail.com" />
+        <Toaster
+          position="top-center"
+          toastOptions={{
+            className: 'text-sm font-light',
+            style: {
+              background: theme === 'dark' ? '#1f2937' : 'white',
+              color: theme === 'dark' ? 'white' : '#1f2937',
+              borderRadius: '0.5rem',
+              border: '1px solid',
+              borderColor: theme === 'dark' ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)',
+            },
+            success: {
+              icon: '✅',
+              duration: 3000,
+            },
+            error: {
+              icon: '❌',
+              duration: 4000,
+            },
+            loading: {
+              icon: '⏳',
+            },
+          }}
+        />
         <div className="fixed top-4 right-4 z-50 flex gap-2">
           <button
             onClick={toggleTheme}
@@ -109,4 +134,4 @@ function App() {
   );
 }
 
-export default App;
+export default App;// Trigger Vercel deploy  
