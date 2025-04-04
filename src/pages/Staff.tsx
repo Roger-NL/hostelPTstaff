@@ -240,17 +240,17 @@ export default function Staff() {
   const isAdmin = currentUser?.role === 'admin';
 
   return (
-    <div className="h-[calc(100vh-6rem)] flex flex-col">
-      <div className="flex flex-wrap items-center justify-between gap-2 mb-4">
+    <div className="h-[calc(100vh-6rem)] flex flex-col overflow-auto pb-6">
+      <div className="flex flex-wrap items-center justify-between gap-2 mb-4 sticky top-0 bg-gray-900/80 backdrop-blur-sm py-2 z-10">
         <h2 className="text-lg xs:text-xl font-extralight text-white">{t('staff.title')}</h2>
         
         <div className="flex items-center gap-1.5 xs:gap-2">
           <button 
             onClick={loadUsers} 
-            className="h-8 xs:h-9 px-2.5 xs:px-3 bg-blue-500 text-white rounded-lg xs:rounded-xl shadow-md hover:bg-blue-600 transition-colors flex items-center gap-1.5 text-xs xs:text-sm font-light"
+            className="h-9 px-2.5 xs:px-3 bg-blue-500 text-white rounded-lg xs:rounded-xl shadow-md hover:bg-blue-600 transition-colors flex items-center gap-1.5 text-xs xs:text-sm font-light"
             disabled={isLoading}
           >
-            <RefreshCw size={14} className={`transition-transform duration-300 ${isLoading ? 'animate-spin' : ''}`} />
+            <RefreshCw size={16} className={`transition-transform duration-300 ${isLoading ? 'animate-spin' : ''}`} />
             <span className="hidden xs:inline">{t('refresh')}</span>
           </button>
           
@@ -261,10 +261,10 @@ export default function Staff() {
                 setEditingId(null);
                 setFormData(initialFormData);
               }}
-              className="h-8 xs:h-9 px-2.5 xs:px-3 bg-green-500 text-white rounded-lg xs:rounded-xl shadow-md hover:bg-green-600 transition-colors flex items-center gap-1.5 text-xs xs:text-sm font-light"
+              className="h-9 px-2.5 xs:px-3 bg-green-500 text-white rounded-lg xs:rounded-xl shadow-md hover:bg-green-600 transition-colors flex items-center gap-1.5 text-xs xs:text-sm font-light"
               disabled={isLoading}
             >
-              <Plus size={14} />
+              <Plus size={16} />
               <span className="hidden xs:inline">{t('addUser')}</span>
               <span className="xs:hidden">Add</span>
             </button>
@@ -272,54 +272,60 @@ export default function Staff() {
         </div>
       </div>
       
+      {isLoading && (
+        <div className="flex justify-center my-4">
+          <div className="bg-gray-800/80 px-4 py-2 rounded-full text-white/80 text-sm font-light flex items-center gap-2">
+            <RefreshCw size={14} className="animate-spin" />
+            <span>Carregando...</span>
+          </div>
+        </div>
+      )}
+      
       <p className="text-xs text-center text-white/80 mb-3">
         Total de usuários: {users.length}
       </p>
       
       {/* Staff List */}
-      <div className="bg-gray-800/50 backdrop-blur-sm rounded-lg p-6">
+      <div className="bg-gray-800/50 backdrop-blur-sm rounded-lg p-3 xs:p-4 sm:p-6 flex-1 overflow-auto">
         {/* Admins Section */}
-        <div className="mb-8">
-          <h3 className="text-lg font-medium text-white mb-4 flex items-center gap-2">
-            <Shield className="text-purple-400" size={20} />
+        <div className="mb-6">
+          <h3 className="text-base xs:text-lg font-medium text-white mb-3 flex items-center gap-2 sticky top-0">
+            <Shield className="text-purple-400" size={18} />
             {t('staff.roles.admin')}
           </h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 xs:gap-4">
             {admins.map(admin => (
               <div
                 key={admin.id}
-                className="bg-gray-700/50 rounded-lg p-4 border border-purple-500/20"
+                className="bg-gray-700/50 rounded-lg p-3 xs:p-4 border border-purple-500/20 hover:border-purple-500/30 transition-colors"
               >
-                <div className="flex justify-between items-start mb-4">
-                  <h3 className="text-base xs:text-lg font-medium text-white">{admin.name}</h3>
+                <div className="flex justify-between items-start mb-3">
+                  <h3 className="text-base font-medium text-white truncate pr-2">{admin.name}</h3>
                   {isAdmin && (
-                    <div className="flex gap-1 xs:gap-1.5">
+                    <div className="flex gap-1 xs:gap-1.5 shrink-0">
                       {admin.id !== currentUser?.id && admins.length > 1 && (
                         <button
                           onClick={() => handleRoleChange(admin.id, 'remove')}
-                          className="h-6 w-6 xs:h-7 xs:w-7 flex items-center justify-center bg-gray-600/50 hover:bg-purple-500/20 text-purple-400 hover:text-purple-300 rounded-full transition-colors"
+                          className="h-7 w-7 flex items-center justify-center bg-gray-600/50 hover:bg-purple-500/20 text-purple-400 hover:text-purple-300 rounded-full transition-colors"
                           title={t('staff.alerts.onlyAdminEdit')}
                         >
-                          <ShieldOff size={14} className="xs:hidden" />
-                          <ShieldOff size={16} className="hidden xs:block" />
+                          <ShieldOff size={16} />
                         </button>
                       )}
                       <button
                         onClick={() => handleEdit(admin)}
-                        className="h-6 w-6 xs:h-7 xs:w-7 flex items-center justify-center bg-gray-600/50 hover:bg-blue-500/20 text-blue-400 hover:text-blue-300 rounded-full transition-colors"
+                        className="h-7 w-7 flex items-center justify-center bg-gray-600/50 hover:bg-blue-500/20 text-blue-400 hover:text-blue-300 rounded-full transition-colors"
                         title={t('edit')}
                       >
-                        <Edit size={14} className="xs:hidden" />
-                        <Edit size={16} className="hidden xs:block" />
+                        <Edit size={16} />
                       </button>
                       {admin.id !== currentUser?.id && (
                         <button
                           onClick={() => handleDelete(admin.id)}
-                          className="h-6 w-6 xs:h-7 xs:w-7 flex items-center justify-center bg-gray-600/50 hover:bg-red-500/20 text-red-400 hover:text-red-300 rounded-full transition-colors"
+                          className="h-7 w-7 flex items-center justify-center bg-gray-600/50 hover:bg-red-500/20 text-red-400 hover:text-red-300 rounded-full transition-colors"
                           title={t('staff.delete')}
                         >
-                          <Trash2 size={14} className="xs:hidden" />
-                          <Trash2 size={16} className="hidden xs:block" />
+                          <Trash2 size={16} />
                         </button>
                       )}
                     </div>
@@ -333,43 +339,40 @@ export default function Staff() {
 
         {/* Staff Section */}
         <div>
-          <h3 className="text-lg font-medium text-white mb-4 flex items-center gap-2">
-            <Users className="text-blue-400" size={20} />
+          <h3 className="text-base xs:text-lg font-medium text-white mb-3 flex items-center gap-2 sticky top-0">
+            <Users className="text-blue-400" size={18} />
             {t('staff.roles.volunteer')}
           </h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 xs:gap-4">
             {volunteers.map(staff => (
               <div
                 key={staff.id}
-                className="bg-gray-700/50 rounded-lg p-4 border border-white/10"
+                className="bg-gray-700/50 rounded-lg p-3 xs:p-4 border border-white/10 hover:border-white/20 transition-colors"
               >
-                <div className="flex justify-between items-start mb-4">
-                  <h3 className="text-base xs:text-lg font-medium text-white">{staff.name}</h3>
+                <div className="flex justify-between items-start mb-3">
+                  <h3 className="text-base font-medium text-white truncate pr-2">{staff.name}</h3>
                   {isAdmin && (
-                    <div className="flex gap-1 xs:gap-1.5">
+                    <div className="flex gap-1 xs:gap-1.5 shrink-0">
                       <button
                         onClick={() => handleRoleChange(staff.id, 'make')}
-                        className="h-6 w-6 xs:h-7 xs:w-7 flex items-center justify-center bg-gray-600/50 hover:bg-purple-500/20 text-purple-400 hover:text-purple-300 rounded-full transition-colors"
+                        className="h-7 w-7 flex items-center justify-center bg-gray-600/50 hover:bg-purple-500/20 text-purple-400 hover:text-purple-300 rounded-full transition-colors"
                         title={t('staff.makeAdmin')}
                       >
-                        <Shield size={14} className="xs:hidden" />
-                        <Shield size={16} className="hidden xs:block" />
+                        <Shield size={16} />
                       </button>
                       <button
                         onClick={() => handleEdit(staff)}
-                        className="h-6 w-6 xs:h-7 xs:w-7 flex items-center justify-center bg-gray-600/50 hover:bg-blue-500/20 text-blue-400 hover:text-blue-300 rounded-full transition-colors"
+                        className="h-7 w-7 flex items-center justify-center bg-gray-600/50 hover:bg-blue-500/20 text-blue-400 hover:text-blue-300 rounded-full transition-colors"
                         title={t('edit')}
                       >
-                        <Edit size={14} className="xs:hidden" />
-                        <Edit size={16} className="hidden xs:block" />
+                        <Edit size={16} />
                       </button>
                       <button
                         onClick={() => handleDelete(staff.id)}
-                        className="h-6 w-6 xs:h-7 xs:w-7 flex items-center justify-center bg-gray-600/50 hover:bg-red-500/20 text-red-400 hover:text-red-300 rounded-full transition-colors"
+                        className="h-7 w-7 flex items-center justify-center bg-gray-600/50 hover:bg-red-500/20 text-red-400 hover:text-red-300 rounded-full transition-colors"
                         title={t('staff.delete')}
                       >
-                        <Trash2 size={14} className="xs:hidden" />
-                        <Trash2 size={16} className="hidden xs:block" />
+                        <Trash2 size={16} />
                       </button>
                     </div>
                   )}
@@ -383,24 +386,24 @@ export default function Staff() {
 
       {/* Delete Confirmation Modal */}
       {showConfirmDelete && (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50">
-          <div className="bg-gray-800 rounded-lg p-6 w-full max-w-md">
-            <h2 className="text-xl font-semibold text-white mb-4">
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-gray-800 rounded-lg p-4 xs:p-6 w-full max-w-md">
+            <h2 className="text-lg xs:text-xl font-semibold text-white mb-4">
               {t('staff.delete')}
             </h2>
-            <p className="text-white/80 mb-6">
+            <p className="text-white/80 mb-6 text-sm xs:text-base">
               {t('staff.alerts.confirmDelete')}
             </p>
             <div className="flex justify-end gap-3">
               <button
                 onClick={() => setShowConfirmDelete(null)}
-                className="px-4 py-2 text-white/60 hover:text-white transition-colors"
+                className="px-3 xs:px-4 py-2 text-white/60 hover:text-white transition-colors text-sm xs:text-base"
               >
                 {t('cancel')}
               </button>
               <button
                 onClick={confirmDelete}
-                className="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition"
+                className="px-3 xs:px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition text-sm xs:text-base"
               >
                 {t('confirm')}
               </button>
@@ -411,12 +414,12 @@ export default function Staff() {
 
       {/* Role Change Confirmation Modal */}
       {showConfirmRole && (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50">
-          <div className="bg-gray-800 rounded-lg p-6 w-full max-w-md">
-            <h2 className="text-xl font-semibold text-white mb-4">
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-gray-800 rounded-lg p-4 xs:p-6 w-full max-w-md">
+            <h2 className="text-lg xs:text-xl font-semibold text-white mb-4">
               {showConfirmRole.action === 'make' ? t('staff.makeAdmin') : t('staff.removeAdmin')}
             </h2>
-            <p className="text-white/80 mb-6">
+            <p className="text-white/80 mb-6 text-sm xs:text-base">
               {showConfirmRole.action === 'make'
                 ? t('staff.alerts.confirmMakeAdmin')
                 : t('staff.alerts.confirmRemoveAdmin')}
@@ -424,13 +427,13 @@ export default function Staff() {
             <div className="flex justify-end gap-3">
               <button
                 onClick={() => setShowConfirmRole(null)}
-                className="px-4 py-2 text-white/60 hover:text-white transition-colors"
+                className="px-3 xs:px-4 py-2 text-white/60 hover:text-white transition-colors text-sm xs:text-base"
               >
                 {t('cancel')}
               </button>
               <button
                 onClick={confirmRoleChange}
-                className={`px-4 py-2 text-white rounded-lg transition ${
+                className={`px-3 xs:px-4 py-2 text-white rounded-lg transition text-sm xs:text-base ${
                   showConfirmRole.action === 'make'
                     ? 'bg-purple-500 hover:bg-purple-600'
                     : 'bg-red-500 hover:bg-red-600'
@@ -445,20 +448,20 @@ export default function Staff() {
 
       {/* Add/Edit Staff Form */}
       {showForm && (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50">
-          <div className="bg-gray-800 rounded-lg p-6 w-full max-w-2xl">
-            <h2 className="text-xl font-semibold text-white mb-6">
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4 overflow-y-auto">
+          <div className="bg-gray-800 rounded-lg p-4 xs:p-6 w-full max-w-2xl my-4">
+            <h2 className="text-lg xs:text-xl font-semibold text-white mb-4 xs:mb-6">
               {editingId ? t('staff.editUser') : t('staff.addUser')}
             </h2>
 
             {error && (
-              <div className="mb-4 p-3 bg-red-500/20 border border-red-500/50 rounded-lg text-red-400">
+              <div className="mb-4 p-3 bg-red-500/20 border border-red-500/50 rounded-lg text-red-400 text-sm">
                 {error}
               </div>
             )}
 
-            <form onSubmit={handleSubmit} className="space-y-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <form onSubmit={handleSubmit} className="space-y-4 xs:space-y-6">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 xs:gap-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-300 mb-1">
                     {t('name')}
@@ -467,7 +470,7 @@ export default function Staff() {
                     type="text"
                     value={formData.name}
                     onChange={e => setFormData({ ...formData, name: e.target.value })}
-                    className="w-full bg-gray-700/50 border border-white/10 rounded-lg px-4 py-2 text-white"
+                    className="w-full bg-gray-700/50 border border-white/10 rounded-lg px-3 py-2 text-white text-sm"
                     required
                   />
                 </div>
@@ -480,7 +483,7 @@ export default function Staff() {
                     type="email"
                     value={formData.email}
                     onChange={e => setFormData({ ...formData, email: e.target.value })}
-                    className="w-full bg-gray-700/50 border border-white/10 rounded-lg px-4 py-2 text-white"
+                    className="w-full bg-gray-700/50 border border-white/10 rounded-lg px-3 py-2 text-white text-sm"
                     required
                   />
                 </div>
@@ -493,8 +496,9 @@ export default function Staff() {
                     type="password"
                     value={formData.password}
                     onChange={e => setFormData({ ...formData, password: e.target.value })}
-                    className="w-full bg-gray-700/50 border border-white/10 rounded-lg px-4 py-2 text-white"
+                    className="w-full bg-gray-700/50 border border-white/10 rounded-lg px-3 py-2 text-white text-sm"
                     required={!editingId}
+                    placeholder={editingId ? "••••••••" : ""}
                   />
                 </div>
 
@@ -506,7 +510,7 @@ export default function Staff() {
                     type="tel"
                     value={formData.phone}
                     onChange={e => setFormData({ ...formData, phone: e.target.value })}
-                    className="w-full bg-gray-700/50 border border-white/10 rounded-lg px-4 py-2 text-white"
+                    className="w-full bg-gray-700/50 border border-white/10 rounded-lg px-3 py-2 text-white text-sm"
                     required
                   />
                 </div>
@@ -519,7 +523,7 @@ export default function Staff() {
                     type="text"
                     value={formData.country}
                     onChange={e => setFormData({ ...formData, country: e.target.value })}
-                    className="w-full bg-gray-700/50 border border-white/10 rounded-lg px-4 py-2 text-white"
+                    className="w-full bg-gray-700/50 border border-white/10 rounded-lg px-3 py-2 text-white text-sm"
                     required
                   />
                 </div>
@@ -532,19 +536,19 @@ export default function Staff() {
                     type="number"
                     value={formData.age}
                     onChange={e => setFormData({ ...formData, age: e.target.value })}
-                    className="w-full bg-gray-700/50 border border-white/10 rounded-lg px-4 py-2 text-white"
+                    className="w-full bg-gray-700/50 border border-white/10 rounded-lg px-3 py-2 text-white text-sm"
                     min="18"
                     max="100"
                     required
                   />
                 </div>
 
-                <div>
+                <div className="sm:col-span-2">
                   <label className="block text-sm font-medium text-gray-300 mb-1">
                     {t('gender')}
                   </label>
-                  <div className="flex space-x-4">
-                    <label className="flex items-center cursor-pointer">
+                  <div className="flex flex-wrap space-x-4 text-sm">
+                    <label className="flex items-center cursor-pointer mb-2">
                       <input
                         type="radio"
                         name="gender"
@@ -559,7 +563,7 @@ export default function Staff() {
                       <span className="text-white">{t('male')}</span>
                     </label>
                     
-                    <label className="flex items-center cursor-pointer">
+                    <label className="flex items-center cursor-pointer mb-2">
                       <input
                         type="radio"
                         name="gender"
@@ -574,7 +578,7 @@ export default function Staff() {
                       <span className="text-white">{t('female')}</span>
                     </label>
                     
-                    <label className="flex items-center cursor-pointer">
+                    <label className="flex items-center cursor-pointer mb-2">
                       <input
                         type="radio"
                         name="gender"
@@ -616,7 +620,7 @@ export default function Staff() {
                 </div>
               </div>
 
-              <div className="flex justify-end gap-3">
+              <div className="flex justify-end gap-3 pt-2">
                 <button
                   type="button"
                   onClick={() => {
@@ -624,14 +628,16 @@ export default function Staff() {
                     setFormData(initialFormData);
                     setEditingId(null);
                   }}
-                  className="px-4 py-2 text-white/60 hover:text-white transition-colors"
+                  className="px-3 xs:px-4 py-2 text-white/60 hover:text-white transition-colors text-sm"
                 >
                   {t('cancel')}
                 </button>
                 <button
                   type="submit"
-                  className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition"
+                  disabled={isLoading}
+                  className="px-3 xs:px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition text-sm flex items-center gap-1.5"
                 >
+                  {isLoading && <RefreshCw size={14} className="animate-spin" />}
                   {editingId ? t('save') : t('staff.add')}
                 </button>
               </div>
@@ -656,22 +662,22 @@ function StaffInfo({ staff }: { staff: UserData }) {
   };
 
   return (
-    <div className="space-y-2 text-sm">
-      <div className="flex items-center gap-2 text-gray-300">
-        <Mail size={14} />
-        <span>{staff.email}</span>
+    <div className="space-y-1.5 text-xs xs:text-sm">
+      <div className="flex items-center gap-1.5 text-gray-300">
+        <Mail size={14} className="shrink-0" />
+        <span className="truncate">{staff.email}</span>
       </div>
-      <div className="flex items-center gap-2 text-gray-300">
-        <Phone size={14} />
-        <span>{staff.phone}</span>
+      <div className="flex items-center gap-1.5 text-gray-300">
+        <Phone size={14} className="shrink-0" />
+        <span className="truncate">{staff.phone}</span>
       </div>
-      <div className="flex items-center gap-2 text-gray-300">
-        <MapPin size={14} />
-        <span>{staff.country}</span>
+      <div className="flex items-center gap-1.5 text-gray-300">
+        <MapPin size={14} className="shrink-0" />
+        <span className="truncate">{staff.country}</span>
       </div>
-      <div className="flex items-center gap-2 text-gray-300">
-        <Calendar size={14} />
-        <span>{formatDate(staff.arrivalDate)} - {formatDate(staff.departureDate)}</span>
+      <div className="flex items-center gap-1.5 text-gray-300">
+        <Calendar size={14} className="shrink-0" />
+        <span className="truncate">{formatDate(staff.arrivalDate)} - {formatDate(staff.departureDate)}</span>
       </div>
     </div>
   );
