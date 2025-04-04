@@ -6,6 +6,7 @@ import { ChevronLeft, ChevronRight, Plus, X, Calendar as CalendarIcon, ChevronDo
 import type { ShiftTime } from '../types';
 import SimpleDatePicker from '../components/SimpleDatePicker';
 import { useTranslation } from '../hooks/useTranslation';
+import toast from 'react-hot-toast';
 
 const SHIFTS: ShiftTime[] = [
   '08:00-10:00',
@@ -387,14 +388,47 @@ export default function Schedule() {
   const handleConfirmAssignment = () => {
     if (modalState.date && modalState.shift && modalState.pendingVolunteerId) {
       const dateStr = format(modalState.date, 'yyyy-MM-dd');
+      const volunteerName = getVolunteerName(modalState.pendingVolunteerId);
+      
+      // Mostrar toast de carregamento
+      toast.loading(`Atribuindo ${volunteerName.split(' ')[0]} ao turno ${modalState.shift}...`, { 
+        id: `assign-${modalState.pendingVolunteerId}-${modalState.shift}`
+      });
+      
+      // Chamar a função de atribuir
       assignShift(dateStr, modalState.shift, modalState.pendingVolunteerId);
+      
+      // Atualizar o toast para sucesso após um período curto
+      setTimeout(() => {
+        toast.success(`${volunteerName.split(' ')[0]} atribuído(a) ao turno ${modalState.shift}`, { 
+          id: `assign-${modalState.pendingVolunteerId}-${modalState.shift}`,
+          duration: 2000
+        });
+      }, 1000);
+      
       setModalState({ isOpen: false, volunteerName: '' });
     }
   };
 
   const handleRemoveShift = (date: Date, shift: ShiftTime, volunteerId: string) => {
     const dateStr = format(date, 'yyyy-MM-dd');
+    const volunteerName = getVolunteerName(volunteerId);
+    
+    // Mostrar toast de carregamento
+    toast.loading(`Removendo ${volunteerName.split(' ')[0]} do turno ${shift}...`, { 
+      id: `remove-${volunteerId}-${shift}` 
+    });
+    
+    // Chamar a função de remover
     removeShift(dateStr, shift, volunteerId);
+    
+    // Atualizar o toast para sucesso após um período curto
+    setTimeout(() => {
+      toast.success(`${volunteerName.split(' ')[0]} removido(a) do turno ${shift}`, { 
+        id: `remove-${volunteerId}-${shift}`,
+        duration: 2000
+      });
+    }, 1000);
   };
 
   const handleCloseModal = () => {

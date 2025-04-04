@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect, ChangeEvent } from 'react';
 import { useStore } from '../store/useStore';
 import { format } from 'date-fns';
 import { Smile, Send, X, Image, Paperclip, Trash2 } from 'lucide-react';
+import { useTranslation } from '../hooks/useTranslation';
 
 const EMOJI_LIST = ['👍', '❤️', '😊', '🎉', '👏', '🙌'];
 
@@ -22,6 +23,7 @@ export default function Messages() {
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const { t } = useTranslation();
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -95,16 +97,16 @@ export default function Messages() {
       {showDeleteConfirm && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
           <div className="bg-gray-800 rounded-lg p-6 max-w-md w-full mx-4">
-            <h3 className="text-white text-lg font-light mb-4">Confirmar exclusão</h3>
+            <h3 className="text-white text-lg font-light mb-4">{t('confirm')}</h3>
             <p className="text-white/70 mb-6">
-              Tem certeza que deseja excluir todas as mensagens? Esta ação não pode ser desfeita.
+              {t('messages.confirmDeleteAll')}
             </p>
             <div className="flex justify-end gap-3">
               <button
                 onClick={() => setShowDeleteConfirm(false)}
                 className="px-4 py-2 text-white/70 hover:text-white transition-colors"
               >
-                Cancelar
+                {t('cancel')}
               </button>
               <button
                 onClick={() => {
@@ -113,7 +115,7 @@ export default function Messages() {
                 }}
                 className="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors"
               >
-                Excluir todas
+                {t('delete')}
               </button>
             </div>
           </div>

@@ -139,7 +139,8 @@ export const translations = {
       attachments: 'Attachments',
       reactions: 'Reactions',
       read: 'Read',
-      unread: 'Unread'
+      unread: 'Unread',
+      confirmDeleteAll: 'Are you sure you want to delete all messages? This action cannot be undone.'
     },
     
     // Dashboard
@@ -151,13 +152,22 @@ export const translations = {
       welcomeEvening: 'Good evening, {name}!',
       currentShift: 'You are currently on shift: {shift}',
       currentShiftSimple: 'Current Shift',
-      nextShift: 'Your next shift will be on {date} at {shift}',
+      nextShift: 'Next shift: {date} at {shift}',
       previousShift: 'Previous Shift',
+      lastActiveShift: 'Last Active Shift',
       nextShiftSimple: 'Next Shift',
       daysOff: 'Your days off this week:',
       noShiftsScheduled: 'You have no shifts scheduled',
       noVolunteersAssigned: 'No volunteers assigned',
       you: 'You',
+      todayTeam: "Today's Team",
+      todaysTasks: "Today's Tasks",
+      noTasks: "No tasks found",
+      yourNextShift: "Your Next Shift",
+      yourSchedule: "Your Schedule",
+      dutyConfirmed: "Duty confirmed",
+      noUpcomingShifts: "No upcoming shifts scheduled",
+      noDaysOff: "No days off this week",
       stats: {
         tasks: 'Tasks',
         points: 'Points',
@@ -168,7 +178,9 @@ export const translations = {
         title: 'Current Conditions',
         temperature: 'Temperature',
         wind: 'Wind',
+        windSpeed: 'Wind Speed',
         waves: 'Waves',
+        waveHeight: 'Wave Height',
         humidity: 'Humidity'
       },
       recentActivity: 'Recent Activity',
@@ -402,7 +414,8 @@ export const translations = {
       attachments: 'Anexos',
       reactions: 'Reações',
       read: 'Lida',
-      unread: 'Não lida'
+      unread: 'Não lida',
+      confirmDeleteAll: 'Tem certeza que deseja excluir todas as mensagens? Esta ação não pode ser desfeita.'
     },
     
     // Dashboard
@@ -414,13 +427,22 @@ export const translations = {
       welcomeEvening: 'Boa noite, {name}!',
       currentShift: 'Você está no seu turno atual: {shift}',
       currentShiftSimple: 'Turno Atual',
-      nextShift: 'Seu próximo turno será em {date} às {shift}',
+      nextShift: 'Próximo turno: {date} às {shift}',
       previousShift: 'Turno Anterior',
+      lastActiveShift: 'Último Turno Ativo',
       nextShiftSimple: 'Próximo Turno',
       daysOff: 'Seus dias de folga nesta semana:',
       noShiftsScheduled: 'Você não tem turnos agendados',
       noVolunteersAssigned: 'Nenhum voluntário designado',
       you: 'Você',
+      todayTeam: "Equipe de Hoje",
+      todaysTasks: "Tarefas de Hoje",
+      noTasks: "Nenhuma tarefa encontrada",
+      yourNextShift: "Seu Próximo Turno",
+      yourSchedule: "Sua Agenda",
+      dutyConfirmed: "Turno confirmado",
+      noUpcomingShifts: "Nenhum turno agendado",
+      noDaysOff: "Nenhum dia de folga nesta semana",
       stats: {
         tasks: 'Tarefas',
         points: 'Pontos',
@@ -431,7 +453,9 @@ export const translations = {
         title: 'Condições Atuais',
         temperature: 'Temperatura',
         wind: 'Vento',
+        windSpeed: 'Velocidade do Vento',
         waves: 'Ondas',
+        waveHeight: 'Altura das Ondas',
         humidity: 'Umidade'
       },
       recentActivity: 'Atividade Recente',
