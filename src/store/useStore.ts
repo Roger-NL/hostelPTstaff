@@ -4,6 +4,7 @@ import * as authService from '../services/auth.service';
 import { doc, updateDoc, setDoc, getDoc } from 'firebase/firestore';
 import { firestore } from '../config/firebase';
 import * as scheduleService from '../services/schedule.service';
+import * as messageService from '../services/message.service';
 
 interface AppState {
   theme: 'light' | 'dark';
@@ -330,11 +331,11 @@ export const useStore = create<AppState>((set, get) => ({
     try {
       console.log('Tentando carregar agenda do Firebase...');
       
-      const schedule = await scheduleService.loadScheduleFromFirebase() as ReturnType<typeof scheduleService.loadScheduleFromFirebase>;
+      const scheduleResult = await scheduleService.loadScheduleFromFirebase();
       
-      if (schedule && schedule !== null) {
+      if (scheduleResult && scheduleResult !== null) {
         console.log('Agenda carregada com sucesso');
-        set({ schedule });
+        set({ schedule: scheduleResult });
       } else {
         console.log('Agenda nula retornada, mantendo vazia');
         safeScheduleSave();
@@ -348,12 +349,12 @@ export const useStore = create<AppState>((set, get) => ({
     try {
       console.log('Tentando carregar usuários do Firebase...');
       
-      const users = await authService.getAllUsers() as ReturnType<typeof authService.getAllUsers>;
+      const userResults = await authService.getAllUsers();
       
-      if (users && Array.isArray(users) && users.length > 0) {
-        console.log(`${users.length} usuários carregados`);
+      if (userResults && Array.isArray(userResults) && userResults.length > 0) {
+        console.log(`${userResults.length} usuários carregados`);
         
-        const userData = users.map(user => ({
+        const userData = userResults.map(user => ({
           id: user.id,
           email: user.email,
           name: user.name,
@@ -376,6 +377,22 @@ export const useStore = create<AppState>((set, get) => ({
       }
     } catch (e) {
       console.error('Erro ao carregar usuários:', e);
+    }
+
+    // Carregar mensagens de forma segura
+    try {
+      console.log('Tentando carregar mensagens do Firebase...');
+      
+      const messages = await messageService.loadMessagesFromFirebase();
+      
+      if (messages && Array.isArray(messages) && messages.length > 0) {
+        console.log(`${messages.length} mensagens carregadas`);
+        set({ messages });
+      } else {
+        console.log('Nenhuma mensagem encontrada');
+      }
+    } catch (e) {
+      console.error('Erro ao carregar mensagens:', e);
     }
   },
   
@@ -1065,7 +1082,7 @@ export const useStore = create<AppState>((set, get) => ({
     const { user } = get();
     if (!user) return;
 
-    const newMessage: Message = {
+    const newMessage = {
       id: crypto.randomUUID(),
       userId: user.id,
       content,
@@ -1075,33 +1092,67 @@ export const useStore = create<AppState>((set, get) => ({
       read: [user.id] // creator has read the message
     };
 
+    // Atualiza o estado local
     set(state => ({
       messages: [...state.messages, newMessage]
     }));
+
+    // Persiste no Firebase
+    try {
+      void messageService.addMessageToFirebase(newMessage)
+        .catch(error => {
+          console.error('Erro ao adicionar mensagem no Firebase:', error);
+        });
+    } catch (error) {
+      console.error('Erro ao chamar addMessageToFirebase:', error);
+    }
   },
   
   deleteMessage: (messageId: string) => {
     const { user } = get();
     if (!user || user.role !== 'admin') return;
 
+    // Atualiza o estado local
     set(state => ({
       messages: state.messages.filter(msg => msg.id !== messageId)
     }));
+
+    // Exclui do Firebase
+    try {
+      void messageService.deleteMessageFromFirebase(messageId)
+        .catch(error => {
+          console.error('Erro ao excluir mensagem do Firebase:', error);
+        });
+    } catch (error) {
+      console.error('Erro ao chamar deleteMessageFromFirebase:', error);
+    }
   },
   
   clearAllMessages: () => {
     const { user } = get();
     if (!user || user.role !== 'admin') return;
 
+    // Atualiza o estado local
     set(state => ({
       messages: []
     }));
+
+    // Exclui todas do Firebase
+    try {
+      void messageService.clearAllMessagesFromFirebase()
+        .catch(error => {
+          console.error('Erro ao limpar todas as mensagens do Firebase:', error);
+        });
+    } catch (error) {
+      console.error('Erro ao chamar clearAllMessagesFromFirebase:', error);
+    }
   },
   
   addReaction: (messageId: string, emoji: string) => {
     const { user } = get();
     if (!user) return;
 
+    // Atualiza o estado local
     set(state => ({
       messages: state.messages.map(msg => {
         if (msg.id === messageId) {
@@ -1120,12 +1171,23 @@ export const useStore = create<AppState>((set, get) => ({
         return msg;
       })
     }));
+
+    // Persiste no Firebase
+    try {
+      void messageService.addReactionToMessage(messageId, emoji, user.id)
+        .catch(error => {
+          console.error('Erro ao adicionar reação no Firebase:', error);
+        });
+    } catch (error) {
+      console.error('Erro ao chamar addReactionToMessage:', error);
+    }
   },
   
   removeReaction: (messageId: string, emoji: string) => {
     const { user } = get();
     if (!user) return;
 
+    // Atualiza o estado local
     set(state => ({
       messages: state.messages.map(msg => {
         if (msg.id === messageId && msg.reactions?.[emoji]) {
@@ -1139,12 +1201,23 @@ export const useStore = create<AppState>((set, get) => ({
         return msg;
       })
     }));
+
+    // Persiste no Firebase
+    try {
+      void messageService.removeReactionFromMessage(messageId, emoji, user.id)
+        .catch(error => {
+          console.error('Erro ao remover reação do Firebase:', error);
+        });
+    } catch (error) {
+      console.error('Erro ao chamar removeReactionFromMessage:', error);
+    }
   },
   
   markMessageAsRead: (messageId: string) => {
     const { user } = get();
     if (!user) return;
 
+    // Atualiza o estado local
     set(state => ({
       messages: state.messages.map(msg =>
         msg.id === messageId && !msg.read.includes(user.id)
@@ -1155,12 +1228,23 @@ export const useStore = create<AppState>((set, get) => ({
           : msg
       )
     }));
+
+    // Persiste no Firebase
+    try {
+      void messageService.markMessageAsRead(messageId, user.id)
+        .catch(error => {
+          console.error('Erro ao marcar mensagem como lida no Firebase:', error);
+        });
+    } catch (error) {
+      console.error('Erro ao chamar markMessageAsRead:', error);
+    }
   },
   
   markAllMessagesAsRead: () => {
     const { user } = get();
     if (!user) return;
 
+    // Atualiza o estado local
     set(state => ({
       messages: state.messages.map(msg =>
         !msg.read.includes(user.id)
@@ -1171,6 +1255,16 @@ export const useStore = create<AppState>((set, get) => ({
           : msg
       )
     }));
+
+    // Persiste no Firebase
+    try {
+      void messageService.markAllMessagesAsRead(user.id)
+        .catch(error => {
+          console.error('Erro ao marcar todas mensagens como lidas no Firebase:', error);
+        });
+    } catch (error) {
+      console.error('Erro ao chamar markAllMessagesAsRead:', error);
+    }
   },
   
   // Settings state
