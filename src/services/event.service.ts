@@ -19,18 +19,50 @@ export async function loadEventsFromFirebase(): Promise<Event[]> {
     }
     
     const events: Event[] = [];
+    const deletedIds = new Set<string>(); // Para rastrear IDs que foram marcados como excluídos
     
-    // Processa cada documento
+    // Primeiro passe: identifica eventos excluídos
+    countSnapshot.forEach(doc => {
+      const docData = doc.data();
+      // Marcar como excluído se tiver a flag deleted ou se o título começar com [DELETED]
+      if (docData.deleted === true || 
+          (docData.title && docData.title.startsWith('[DELETED]')) ||
+          docData.status === 'deleted') {
+        deletedIds.add(doc.id);
+        // Para IDs adicionais/numéricos, também marcar como excluído
+        if (docData.id) {
+          deletedIds.add(docData.id);
+        }
+        // Armazenar títulos de eventos excluídos para evitar recriar eventos com o mesmo título
+        if (docData.title) {
+          // Armazenar tanto o título normal quanto o título com prefixo [DELETED]
+          const cleanTitle = docData.title.replace('[DELETED] ', '');
+          deletedIds.add(`title:${cleanTitle}`);
+        }
+        console.log(`Evento ${doc.id} identificado como excluído e será ignorado`);
+      }
+    });
+    
+    // Segundo passe: processar eventos não excluídos
     countSnapshot.forEach(doc => {
       try {
-        const docData = doc.data();
-        console.log(`Processando evento ${doc.id}: ${docData.title || 'sem título'}`);
+        // Pular documentos excluídos identificados no primeiro passe
+        if (deletedIds.has(doc.id)) {
+          return;
+        }
         
-        // Verifica se o documento tem a flag "deleted"
-        if (docData.deleted === true) {
+        const docData = doc.data();
+        
+        // Verificações adicionais para determinar se é excluído
+        if (docData.deleted === true || 
+            (docData.title && docData.title.startsWith('[DELETED]')) ||
+            (docData.id && deletedIds.has(docData.id)) ||
+            docData.status === 'deleted') {
           console.log(`Evento ${doc.id} está marcado como excluído, ignorando`);
           return;
         }
+        
+        console.log(`Processando evento ${doc.id}: ${docData.title || 'sem título'}`);
         
         // Verifica e formata os dados do evento
         const eventData: Event = {
@@ -50,6 +82,18 @@ export async function loadEventsFromFirebase(): Promise<Event[]> {
           createdAt: docData.createdAt || new Date().toISOString(),
           tags: Array.isArray(docData.tags) ? docData.tags : []
         };
+        
+        // Verificação final: não adicionar eventos com títulos padrão que foram excluídos anteriormente
+        // ou com IDs que foram excluídos
+        if (eventData.id === '1' || eventData.id === '2' ||
+            eventData.title === 'Beach Volleyball Tournament' || 
+            eventData.title === 'Welcome Dinner') {
+          // Verifica se já existe uma versão excluída deste evento
+          if (deletedIds.has(eventData.id) || deletedIds.has(`title:${eventData.title}`)) {
+            console.log(`Evento padrão ${eventData.id} (${eventData.title}) já foi excluído anteriormente, ignorando`);
+            return;
+          }
+        }
         
         events.push(eventData);
       } catch (err) {
@@ -269,5 +313,110 @@ export async function cancelEventInFirebase(eventId: string): Promise<void> {
   } catch (error) {
     console.error("Erro ao cancelar evento:", error);
     throw error;
+  }
+}
+
+// Função para limpar eventos excluídos do Firebase
+export async function cleanupDeletedEvents(): Promise<boolean> {
+  try {
+    console.log("Iniciando limpeza de eventos excluídos...");
+    
+    const eventsCol = collection(firestore, 'events');
+    const snapshot = await getDocs(eventsCol);
+    
+    if (snapshot.empty) {
+      console.log("Nenhum evento encontrado para limpar");
+      return true;
+    }
+    
+    const deletedEvents: string[] = [];
+    
+    // Identificar eventos para excluir
+    snapshot.forEach(doc => {
+      const data = doc.data();
+      if (data.deleted === true || 
+          (data.title && data.title.startsWith('[DELETED]')) ||
+          data.status === 'deleted') {
+        deletedEvents.push(doc.id);
+      }
+    });
+    
+    console.log(`Encontrados ${deletedEvents.length} eventos excluídos para limpar`);
+    
+    if (deletedEvents.length === 0) {
+      return true;
+    }
+    
+    // Excluir eventos marcados
+    const deletePromises = deletedEvents.map(async (id) => {
+      const docRef = doc(firestore, 'events', id);
+      try {
+        await deleteDoc(docRef);
+        console.log(`Evento ${id} limpo permanentemente`);
+        return true;
+      } catch (error) {
+        console.error(`Erro ao limpar evento ${id}:`, error);
+        return false;
+      }
+    });
+    
+    const results = await Promise.all(deletePromises);
+    const success = results.every(result => result === true);
+    
+    console.log(`Limpeza de eventos concluída. Sucesso: ${success}`);
+    return success;
+  } catch (error) {
+    console.error("Erro durante limpeza de eventos:", error);
+    return false;
+  }
+}
+
+// Função para excluir completamente todos os eventos do Firebase
+export async function deleteAllEvents(): Promise<boolean> {
+  try {
+    console.log("Iniciando exclusão de todos os eventos...");
+    
+    const eventsCol = collection(firestore, 'events');
+    const snapshot = await getDocs(eventsCol);
+    
+    if (snapshot.empty) {
+      console.log("Nenhum evento encontrado para excluir");
+      return true;
+    }
+    
+    const events: string[] = [];
+    
+    // Coletar todos os IDs de eventos
+    snapshot.forEach(doc => {
+      events.push(doc.id);
+    });
+    
+    console.log(`Encontrados ${events.length} eventos para excluir`);
+    
+    if (events.length === 0) {
+      return true;
+    }
+    
+    // Excluir todos os eventos
+    const deletePromises = events.map(async (id) => {
+      const docRef = doc(firestore, 'events', id);
+      try {
+        await deleteDoc(docRef);
+        console.log(`Evento ${id} excluído permanentemente`);
+        return true;
+      } catch (error) {
+        console.error(`Erro ao excluir evento ${id}:`, error);
+        return false;
+      }
+    });
+    
+    const results = await Promise.all(deletePromises);
+    const success = results.every(result => result === true);
+    
+    console.log(`Exclusão de todos os eventos concluída. Sucesso: ${success}`);
+    return success;
+  } catch (error) {
+    console.error("Erro durante exclusão de eventos:", error);
+    return false;
   }
 } 
