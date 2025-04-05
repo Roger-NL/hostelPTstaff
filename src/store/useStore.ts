@@ -6,6 +6,7 @@ import { firestore } from '../config/firebase';
 import * as scheduleService from '../services/schedule.service';
 import * as messageService from '../services/message.service';
 import * as eventService from '../services/event.service';
+import { collection, getDocs } from 'firebase/firestore';
 
 interface AppState {
   theme: 'light' | 'dark';
@@ -399,40 +400,49 @@ export const useStore = create<AppState>((set, get) => ({
         } else {
           console.log('4. Nenhum evento encontrado, salvando eventos padrão no Firebase');
           
-          // Se não houver eventos no Firebase, salvar os eventos padrão
-          const eventsToSave = JSON.parse(JSON.stringify(defaultEvents));
+          // Verificar se já tem documentos na coleção
+          const eventsCollection = collection(firestore, 'events');
+          const eventsSnapshot = await getDocs(eventsCollection);
           
-          // Primeiro atualiza o estado local
-          set({ events: eventsToSave });
-          
-          // Depois salva cada evento no Firebase de forma confiável
-          console.log('5. Salvando eventos padrão no Firebase...');
-          let successCount = 0;
-          
-          for (const event of eventsToSave) {
-            try {
-              const saved = await eventService.saveEventToFirebase(event);
-              if (saved) {
-                successCount++;
-                console.log(`Evento padrão ${event.id} salvo com sucesso (${successCount}/${eventsToSave.length})`);
-              } else {
-                console.error(`Falha ao salvar evento padrão ${event.id}`);
+          if (eventsSnapshot.empty) {
+            // Se não houver eventos no Firebase, salvar os eventos padrão
+            const eventsToSave = JSON.parse(JSON.stringify(defaultEvents));
+            
+            // Primeiro atualiza o estado local
+            set({ events: eventsToSave });
+            
+            // Depois salva cada evento no Firebase de forma confiável
+            console.log('5. Salvando eventos padrão no Firebase...');
+            let successCount = 0;
+            
+            for (const event of eventsToSave) {
+              try {
+                const saved = await eventService.saveEventToFirebase(event);
+                if (saved) {
+                  successCount++;
+                  console.log(`Evento padrão ${event.id} salvo com sucesso (${successCount}/${eventsToSave.length})`);
+                } else {
+                  console.error(`Falha ao salvar evento padrão ${event.id}`);
+                }
+              } catch (error) {
+                console.error(`Erro ao salvar evento padrão ${event.id}:`, error);
               }
-            } catch (error) {
-              console.error(`Erro ao salvar evento padrão ${event.id}:`, error);
             }
-          }
-          
-          console.log(`6. ${successCount}/${eventsToSave.length} eventos padrão salvos no Firebase`);
-          
-          // Recarrega os eventos para garantir sincronização
-          if (successCount > 0) {
-            console.log('7. Recarregando eventos para garantir sincronização');
-            const refreshedEvents = await eventService.loadEventsFromFirebase();
-            if (refreshedEvents && refreshedEvents.length > 0) {
-              set({ events: refreshedEvents });
-              console.log(`8. Estado atualizado com ${refreshedEvents.length} eventos recarregados`);
+            
+            console.log(`6. ${successCount}/${eventsToSave.length} eventos padrão salvos no Firebase`);
+            
+            // Recarrega os eventos para garantir sincronização
+            if (successCount > 0) {
+              console.log('7. Recarregando eventos para garantir sincronização');
+              const refreshedEvents = await eventService.loadEventsFromFirebase();
+              if (refreshedEvents && refreshedEvents.length > 0) {
+                set({ events: refreshedEvents });
+                console.log(`8. Estado atualizado com ${refreshedEvents.length} eventos recarregados`);
+              }
             }
+          } else {
+            console.log('A coleção de eventos existe, mas não retornou dados. Mantendo estado vazio.');
+            set({ events: [] });
           }
         }
       } else {
@@ -1162,6 +1172,19 @@ export const useStore = create<AppState>((set, get) => ({
       (async () => {
         try {
           console.log(`Solicitando exclusão do evento ${eventId} no Firebase`);
+          
+          // Primeiro marca o evento como excluído
+          const eventToDelete = currentEvents.find(e => e.id === eventId);
+          if (eventToDelete) {
+            // Marcar o evento como excluído antes de excluí-lo completamente
+            await eventService.updateEventInFirebase(eventId, { 
+              status: 'cancelled', 
+              deleted: true 
+            });
+            console.log(`Evento ${eventId} marcado como excluído`);
+          }
+          
+          // Então tenta excluí-lo completamente
           const success = await eventService.deleteEventFromFirebase(eventId);
           
           if (success) {

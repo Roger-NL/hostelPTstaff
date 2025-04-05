@@ -21,10 +21,16 @@ export async function loadEventsFromFirebase(): Promise<Event[]> {
     const events: Event[] = [];
     
     // Processa cada documento
-    countSnapshot.forEach((doc) => {
+    countSnapshot.forEach(doc => {
       try {
         const docData = doc.data();
         console.log(`Processando evento ${doc.id}: ${docData.title || 'sem título'}`);
+        
+        // Verifica se o documento tem a flag "deleted"
+        if (docData.deleted === true) {
+          console.log(`Evento ${doc.id} está marcado como excluído, ignorando`);
+          return;
+        }
         
         // Verifica e formata os dados do evento
         const eventData: Event = {
@@ -131,15 +137,31 @@ export async function deleteEventFromFirebase(eventId: string): Promise<boolean>
     // Exclui o evento
     await deleteDoc(eventRef);
     
-    // Verifica se o evento foi realmente excluído
-    const checkDoc = await getDoc(eventRef);
-    if (checkDoc.exists()) {
-      console.error(`Falha na exclusão: evento ${eventId} ainda existe`);
-      return false;
+    // Verifica se o evento foi realmente excluído com várias tentativas
+    let checkAttempts = 0;
+    const maxAttempts = 3;
+    
+    while (checkAttempts < maxAttempts) {
+      checkAttempts++;
+      const checkDoc = await getDoc(eventRef);
+      
+      if (!checkDoc.exists()) {
+        console.log(`Evento ${eventId} excluído com sucesso (verificado na tentativa ${checkAttempts})`);
+        return true;
+      }
+      
+      console.warn(`Evento ${eventId} ainda existe após tentativa ${checkAttempts} de exclusão. Tentando novamente...`);
+      
+      // Pequena pausa antes de nova tentativa
+      await new Promise(resolve => setTimeout(resolve, 500));
+      
+      // Tenta excluir novamente
+      await deleteDoc(eventRef);
     }
     
-    console.log(`Evento ${eventId} excluído com sucesso`);
-    return true;
+    // Se chegou aqui, todas as tentativas falharam
+    console.error(`Falha na exclusão: evento ${eventId} ainda existe após ${maxAttempts} tentativas`);
+    return false;
   } catch (error) {
     console.error("Erro ao excluir evento:", error);
     return false;

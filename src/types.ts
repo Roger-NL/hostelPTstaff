@@ -124,6 +124,7 @@ export interface Event {
   organizer: string;
   createdAt: string;
   tags?: string[];
+  deleted?: boolean;
 }
 
 export type ShiftTime = '08:00-10:00' | '10:00-13:00' | '13:00-16:00' | '16:00-19:00' | '19:00-22:00';
