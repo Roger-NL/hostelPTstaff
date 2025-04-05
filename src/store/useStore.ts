@@ -53,6 +53,7 @@ interface AppState {
   addEvent: (event: Omit<Event, 'id' | 'createdAt' | 'status'>) => void;
   updateEvent: (eventId: string, updates: Partial<Event>) => void;
   deleteEvent: (eventId: string) => Promise<boolean>;
+  deleteAllEvents: () => Promise<boolean>;
   joinEvent: (eventId: string, userId: string) => void;
   leaveEvent: (eventId: string, userId: string) => void;
   cancelEvent: (eventId: string) => void;
@@ -319,6 +320,11 @@ export const useStore = create<AppState>((set, get) => ({
     
     // Verificar se a aplicação já foi inicializada antes
     const appInitialized = localStorage.getItem('app_initialized');
+    // Verificar se as tarefas padrão já foram excluídas
+    const tasksDeleted = localStorage.getItem('default_tasks_deleted') === 'true';
+    // Verificar se os eventos padrão já foram excluídos
+    const eventsDeleted = localStorage.getItem('default_events_deleted') === 'true';
+    
     const isFirstRun = !appInitialized;
     
     if (isFirstRun) {
@@ -428,8 +434,8 @@ export const useStore = create<AppState>((set, get) => ({
           const eventsCollection = collection(firestore, 'events');
           const eventsSnapshot = await getDocs(eventsCollection);
           
-          // Criar eventos padrão apenas na primeira execução
-          if (eventsSnapshot.empty && isFirstRun) {
+          // Criar eventos padrão apenas na primeira execução e se não foram excluídos
+          if (eventsSnapshot.empty && isFirstRun && !eventsDeleted) {
             console.log('Primeira execução e nenhum evento existe, salvando eventos padrão no Firebase');
             
             // Se não houver eventos no Firebase, salvar os eventos padrão
@@ -468,19 +474,19 @@ export const useStore = create<AppState>((set, get) => ({
               }
             }
           } else {
-            console.log('A coleção de eventos existe ou não é primeira execução. Mantendo estado vazio.');
+            console.log('A coleção de eventos existe ou não é primeira execução ou os eventos padrão foram excluídos. Mantendo estado vazio.');
             set({ events: [] });
           }
         }
       } else {
         console.error('3. ERRO: Resposta inválida do loadEventsFromFirebase:', events);
-        // Mantenha eventos padrão para segurança apenas na primeira execução
-        set({ events: isFirstRun ? defaultEvents : [] });
+        // Mantenha eventos padrão para segurança apenas na primeira execução se não foram excluídos
+        set({ events: (isFirstRun && !eventsDeleted) ? defaultEvents : [] });
       }
     } catch (e) {
       console.error('ERRO crítico ao carregar eventos:', e);
       // Em caso de erro, garantir que o estado tem eventos padrão apenas na primeira execução
-      set({ events: isFirstRun ? defaultEvents : [] });
+      set({ events: (isFirstRun && !eventsDeleted) ? defaultEvents : [] });
     }
 
     // Carregar tarefas de forma segura
@@ -506,8 +512,8 @@ export const useStore = create<AppState>((set, get) => ({
           const tasksCollection = collection(firestore, 'tasks');
           const tasksSnapshot = await getDocs(tasksCollection);
           
-          // Criar tarefas padrão apenas na primeira execução
-          if (tasksSnapshot.empty && isFirstRun) {
+          // Criar tarefas padrão apenas na primeira execução e se não foram excluídas
+          if (tasksSnapshot.empty && isFirstRun && !tasksDeleted) {
             console.log('Primeira execução e nenhuma tarefa existe, salvando tarefas padrão no Firebase');
             
             // Se não houver tarefas no Firebase, salvar as tarefas padrão
@@ -546,19 +552,19 @@ export const useStore = create<AppState>((set, get) => ({
               }
             }
           } else {
-            console.log('A coleção de tarefas existe ou não é primeira execução. Mantendo estado vazio.');
+            console.log('A coleção de tarefas existe ou não é primeira execução ou as tarefas padrão foram excluídas. Mantendo estado vazio.');
             set({ tasks: [] });
           }
         }
       } else {
         console.error('3. ERRO: Resposta inválida do loadTasksFromFirebase:', tasks);
-        // Mantenha tarefas padrão para segurança apenas na primeira execução
-        set({ tasks: isFirstRun ? defaultTasks : [] });
+        // Mantenha tarefas padrão para segurança apenas na primeira execução se não foram excluídas
+        set({ tasks: (isFirstRun && !tasksDeleted) ? defaultTasks : [] });
       }
     } catch (e) {
       console.error('ERRO crítico ao carregar tarefas:', e);
       // Em caso de erro, garantir que o estado tem tarefas padrão apenas na primeira execução
-      set({ tasks: isFirstRun ? defaultTasks : [] });
+      set({ tasks: (isFirstRun && !tasksDeleted) ? defaultTasks : [] });
     }
 
     // Carregar mensagens de forma segura
@@ -1160,6 +1166,11 @@ export const useStore = create<AppState>((set, get) => ({
       // Depois exclui todas as tarefas do Firebase
       const success = await taskService.deleteAllTasks();
       
+      // Marcar que as tarefas padrão foram excluídas para evitar recriar no próximo carregamento
+      if (success) {
+        localStorage.setItem('default_tasks_deleted', 'true');
+      }
+      
       console.log(`Exclusão de todas as tarefas ${success ? 'concluída com sucesso' : 'falhou'}`);
       return success;
     } catch (error) {
@@ -1173,6 +1184,47 @@ export const useStore = create<AppState>((set, get) => ({
         }
       } catch (loadError) {
         console.error('Erro ao recarregar tarefas após falha na exclusão:', loadError);
+      }
+      
+      return false;
+    }
+  },
+  
+  // Adicionar função para excluir todos os eventos
+  deleteAllEvents: async () => {
+    const { user } = get();
+    if (!user || user.role !== 'admin') {
+      console.error('Apenas administradores podem excluir todos os eventos');
+      return false;
+    }
+    
+    try {
+      console.log('Iniciando exclusão de todos os eventos...');
+      
+      // Primeiro atualiza o estado local para feedback imediato
+      set({ events: [] });
+      
+      // Depois exclui todos os eventos do Firebase
+      const success = await eventService.deleteAllEvents();
+      
+      // Marcar que os eventos padrão foram excluídos para evitar recriar no próximo carregamento
+      if (success) {
+        localStorage.setItem('default_events_deleted', 'true');
+      }
+      
+      console.log(`Exclusão de todos os eventos ${success ? 'concluída com sucesso' : 'falhou'}`);
+      return success;
+    } catch (error) {
+      console.error('Erro ao excluir todos os eventos:', error);
+      
+      // Recarrega os eventos do Firebase para sincronizar o estado
+      try {
+        const events = await eventService.loadEventsFromFirebase();
+        if (Array.isArray(events)) {
+          set({ events });
+        }
+      } catch (loadError) {
+        console.error('Erro ao recarregar eventos após falha na exclusão:', loadError);
       }
       
       return false;
@@ -1391,110 +1443,37 @@ export const useStore = create<AppState>((set, get) => ({
     }
   },
   
-  deleteEvent: (eventId) => {
-    console.log(`Iniciando exclusão completa do evento ${eventId}`);
-    
-    // Guarda uma cópia do estado atual para possível restauração
-    const currentEvents = [...get().events];
-    
-    // Primeiro atualiza o estado local para feedback imediato ao usuário
-    set(state => ({
-      events: state.events.filter(event => event.id !== eventId)
-    }));
-    
-    // Tenta excluir do Firebase de forma mais agressiva
-    return new Promise((resolve, reject) => {
-      (async () => {
-        try {
-          console.log(`Solicitando exclusão permanente do evento ${eventId} no Firebase`);
-          
-          // Primeiro marca o evento como excluído
-          const eventToDelete = currentEvents.find(e => e.id === eventId);
-          if (eventToDelete) {
-            // Marcar o evento como excluído e cancelado antes de excluí-lo completamente
-            await eventService.updateEventInFirebase(eventId, { 
-              status: 'cancelled', 
-              deleted: true,
-              title: `[DELETED] ${eventToDelete.title}` // Marcar como excluído no título também
-            });
-            console.log(`Evento ${eventId} marcado como excluído`);
-          }
-          
-          // Então tenta excluí-lo completamente - várias tentativas
-          let success = false;
-          let attempts = 0;
-          const maxAttempts = 3;
-          
-          while (!success && attempts < maxAttempts) {
-            attempts++;
-            console.log(`Tentativa ${attempts} de exclusão do evento ${eventId}`);
-            
-            try {
-              success = await eventService.deleteEventFromFirebase(eventId);
-              if (success) {
-                console.log(`Evento ${eventId} excluído com sucesso do Firebase na tentativa ${attempts}`);
-                
-                // Remover também de todas as coleções relacionadas para garantir
-                // Isso ajuda a garantir que dados órfãos não causem problemas
-                try {
-                  // Verificar se existe uma referência de evento em algum lugar e remover
-                  const eventsRef = collection(firestore, 'events');
-                  const q = query(eventsRef, where('id', '==', eventId));
-                  const querySnapshot = await getDocs(q);
-                  
-                  if (!querySnapshot.empty) {
-                    console.log(`Encontrados ${querySnapshot.size} documentos relacionados ao evento ${eventId}, removendo...`);
-                    
-                    // Excluir todos os documentos encontrados
-                    const deletePromises = querySnapshot.docs.map(doc => deleteDoc(doc.ref));
-                    await Promise.all(deletePromises);
-                    console.log(`Documentos relacionados ao evento ${eventId} removidos`);
-                  }
-                } catch (relatedError) {
-                  console.error(`Erro ao remover documentos relacionados: ${relatedError}`);
-                  // Continuar mesmo com erro, já que o documento principal foi excluído
-                }
-                
-                break;
-              }
-            } catch (attemptError) {
-              console.error(`Erro na tentativa ${attempts} de exclusão: ${attemptError}`);
-              // Pequena pausa entre tentativas
-              await new Promise(res => setTimeout(res, 500));
-            }
-          }
-          
-          if (success) {
-            console.log(`Evento ${eventId} excluído permanentemente do Firebase`);
-            
-            // Força uma remoção da lista local para garantir
-            // Remove o evento do estado novamente, caso algo tenha mudado
-            set(state => ({
-              events: state.events.filter(event => event.id !== eventId)
-            }));
-            
-            resolve(true);
-          } else {
-            console.error(`Falha em todas as ${maxAttempts} tentativas de excluir evento ${eventId}`);
-            
-            // Mesmo com falha, mantém o evento removido localmente
-            // Isso é uma abordagem mais agressiva, mas resolve o problema
-            // para o usuário, mesmo que tecnicamente o evento possa ainda
-            // existir no Firebase
-            
-            // Não restaura mais o estado como antes
-            console.log(`Mantendo evento ${eventId} removido localmente mesmo com falha no Firebase`);
-            resolve(true); // Retorna true para o usuário de qualquer forma
-          }
-        } catch (error) {
-          console.error(`Erro crítico ao excluir evento ${eventId}:`, error);
-          
-          // Mesmo com erro, vamos manter o evento removido localmente
-          console.log(`Mantendo evento ${eventId} removido localmente mesmo com erro`);
-          resolve(true); // Retorna true para o usuário de qualquer forma
-        }
-      })();
-    });
+  deleteEvent: async (eventId) => {
+    try {
+      console.log(`Iniciando exclusão do evento ${eventId}...`);
+      
+      // Primeiro atualiza o estado local para feedback imediato
+      set(state => ({
+        events: state.events.filter(event => event.id !== eventId)
+      }));
+      
+      // Depois exclui o evento do Firebase
+      const success = await eventService.deleteEventFromFirebase(eventId);
+      
+      console.log(`Exclusão do evento ${eventId} ${success ? 'concluída com sucesso' : 'falhou'}`);
+      
+      // Verifica se foi excluído um dos eventos padrão para marcar isso no localStorage
+      const { events } = get();
+      const remainingDefaultEvents = events.filter(event => 
+        event.title === 'Beach Volleyball Tournament' || 
+        event.title === 'Welcome Dinner'
+      );
+      
+      // Se não restarem eventos padrão, marcar como excluídos
+      if (remainingDefaultEvents.length === 0) {
+        localStorage.setItem('default_events_deleted', 'true');
+      }
+      
+      return success;
+    } catch (error) {
+      console.error('Erro ao excluir evento:', error);
+      return false;
+    }
   },
   
   joinEvent: (eventId, userId) => {
