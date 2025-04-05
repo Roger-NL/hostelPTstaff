@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { useStore } from '../store/useStore';
 import { translations } from '../i18n/translations';
 import {
@@ -21,6 +21,7 @@ import {
 } from 'lucide-react';
 import { format } from 'date-fns';
 import type { Task, TaskComment, TaskChecklistItem } from '../types';
+import usePerformanceOptimizer from '../hooks/usePerformanceOptimizer';
 
 interface TaskFormData {
   title: string;
@@ -66,6 +67,13 @@ export default function Tasks() {
     deleteAllTasks,
     cleanupDeletedTasks
   } = useStore();
+  
+  // Aplica otimizações de performance
+  const { 
+    shouldVirtualize, 
+    isLowEndDevice, 
+    shouldSimplifyUI 
+  } = usePerformanceOptimizer();
   
   const t = translations['en'];
   const [showForm, setShowForm] = useState(false);

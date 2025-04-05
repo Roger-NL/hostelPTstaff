@@ -24,6 +24,7 @@
 
 :root {
   --font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+  touch-action: manipulation; /* Previne delays de toque em dispositivos móveis */
 }
 
 * {
@@ -34,6 +35,7 @@ body {
   font-weight: 100;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  overscroll-behavior: none; /* Previne efeitos de scroll bounce que causam jank */
 }
 
 h1, h2, h3, h4, h5, h6 {
@@ -78,8 +80,16 @@ input, select, textarea, button {
 }
 
 @layer components {
+  /* Versão otimizada do glass-morphism para mobile */
   .glass-morphism {
-    @apply backdrop-blur-xl bg-white/[0.07] dark:bg-black/[0.15] border border-white/[0.15] dark:border-white/[0.1];
+    @apply bg-white/[0.07] dark:bg-black/[0.15] border border-white/[0.15] dark:border-white/[0.1];
+  }
+  
+  /* Versão completa do glass-morphism apenas para desktop */
+  @media (min-width: 768px) {
+    .glass-morphism {
+      @apply backdrop-blur-xl;
+    }
   }
 
   .input-field {
@@ -94,12 +104,15 @@ input, select, textarea, button {
     @apply filter invert opacity-50 hover:opacity-75 transition-opacity cursor-pointer;
   }
   
+  /* Simplificação das animações em dispositivos móveis */
   .hover-lift {
     @apply transition-transform duration-200;
   }
   
-  .hover-lift:hover {
-    @apply transform -translate-y-1;
+  @media (min-width: 768px) {
+    .hover-lift:hover {
+      @apply transform -translate-y-1;
+    }
   }
   
   .stagger-fade {
@@ -107,6 +120,7 @@ input, select, textarea, button {
   }
 }
 
+/* Otimizado para mobile - desativa ou reduz a intensidade do efeito grain em dispositivos móveis */
 .grain {
   position: fixed;
   top: -150%;
@@ -116,14 +130,98 @@ input, select, textarea, button {
   width: 200%;
   height: 300vh;
   background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 512 512' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
-  opacity: 0.15;
+  opacity: 0.07; /* Reduzido para melhor performance */
   pointer-events: none;
+  will-change: transform; /* Otimização para composição em GPU */
+  transform: translateZ(0); /* Força o uso de aceleração de hardware */
+}
+
+/* Desativa efeito grain completamente em telas muito pequenas */
+@media (max-width: 480px) {
+  .grain {
+    display: none;
+  }
 }
 
 .dark .grain {
-  opacity: 0.2;
+  opacity: 0.1; /* Reduzido para melhor performance */
 }
 
 .font-arial {
   font-family: Arial, sans-serif;
+}
+
+/* Otimizações para performance mobile */
+@media (max-width: 768px) {
+  /* Força uma animação mais suave em celulares */
+  * {
+    -webkit-transform: translate3d(0, 0, 0);
+    transform: translate3d(0, 0, 0);
+    backface-visibility: hidden;
+    perspective: 1000;
+  }
+  
+  /* Desabilita animações complexas em dispositivos móveis */
+  .animate-spin {
+    animation-duration: 1.5s; /* Animação mais lenta consome menos recursos */
+  }
+  
+  /* Reduz a complexidade de sombras */
+  .shadow-md, .shadow-lg, .shadow-xl {
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+  }
+}
+
+/* Otimizações para dispositivos de baixo desempenho - aplicadas via usePerformanceOptimizer */
+.low-end-device {
+  /* Otimizações gerais para dispositivos de baixo desempenho */
+  --shadow-strength: 0.25; /* Reduz intensidade de sombras */
+}
+
+/* Reduz ou desabilita animações para melhorar performance */
+.reduce-animation {
+  --transition-slow: 0s !important; /* Desabilita transições lentas */
+  --transition-medium: 0s !important; /* Desabilita transições médias */
+  --transition-fast: 0.1s !important; /* Mantém transições rápidas mas mais curtas */
+  
+  /* Remove todas as animações não-essenciais */
+  * {
+    animation-duration: 0s !important;
+    animation-delay: 0s !important;
+    transition-duration: 0s !important;
+    transition-delay: 0s !important;
+  }
+  
+  /* Permite apenas animações específicas essenciais para UX */
+  .animate-spin {
+    animation-duration: 1.5s !important;
+  }
+  
+  /* Remove efeitos de blur que são pesados para renderizar */
+  .backdrop-blur-sm, 
+  .backdrop-blur, 
+  .backdrop-blur-md, 
+  .backdrop-blur-lg, 
+  .backdrop-blur-xl {
+    backdrop-filter: none !important;
+  }
+}
+
+/* Simplifica a UI para melhorar performance */
+.simplified-ui {
+  /* Reduz opacidade e blur */
+  --opacity-level: 1 !important; /* Remove transparências parciais */
+  
+  /* Remove bordas arredondadas complexas */
+  --rounded-complex: 0.25rem !important;
+  
+  /* Simplifica backgrounds gradientes */
+  .bg-gradient-to-b, 
+  .bg-gradient-to-r, 
+  .bg-gradient-to-l, 
+  .bg-gradient-to-t {
+    background: #1f2937 !important; /* Substitui gradientes por cor sólida */
+  }
+  
+  /* Outras simplificações para componentes específicos podem ser adicionadas aqui */
 }

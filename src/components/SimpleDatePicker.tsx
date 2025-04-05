@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, memo, useMemo, useCallback } from 'react';
 import { DayPicker } from 'react-day-picker';
 import { format, addMonths } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
@@ -14,7 +14,10 @@ interface SimpleDatePickerProps {
   required?: boolean;
 }
 
-const SimpleDatePicker: React.FC<SimpleDatePickerProps> = ({
+// Verificar se estamos em um dispositivo móvel uma única vez na inicialização
+const isMobileDevice = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+
+const SimpleDatePicker: React.FC<SimpleDatePickerProps> = memo(({
   value,
   onChange,
   label,
@@ -24,16 +27,27 @@ const SimpleDatePicker: React.FC<SimpleDatePickerProps> = ({
   const [isOpen, setIsOpen] = useState(false);
   const [selected, setSelected] = useState<Date | undefined>(value || undefined);
   const [month, setMonth] = useState<Date>(selected || new Date());
-  const [isMobile, setIsMobile] = useState(window.innerWidth < 640);
+  const [isMobile, setIsMobile] = useState(isMobileDevice || window.innerWidth < 640);
 
   const pickerRef = useRef<HTMLDivElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
 
-  // Detectar dispositivo móvel
+  // Detectar dispositivo móvel - versão otimizada com debounce
   useEffect(() => {
-    const checkMobile = () => setIsMobile(window.innerWidth < 640);
+    let timeoutId: number;
+    
+    const checkMobile = () => {
+      clearTimeout(timeoutId);
+      timeoutId = window.setTimeout(() => {
+        setIsMobile(window.innerWidth < 640);
+      }, 150); // debounce para evitar múltiplas renderizações
+    };
+    
     window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
+    return () => {
+      window.removeEventListener('resize', checkMobile);
+      clearTimeout(timeoutId);
+    };
   }, []);
 
   useEffect(() => {
@@ -46,67 +60,75 @@ const SimpleDatePicker: React.FC<SimpleDatePickerProps> = ({
     }
   }, [value]);
 
-  // Adiciona evento para fechar o calendário quando clicar fora dele
+  // Versão otimizada do handler de clique externo
   useEffect(() => {
+    if (!isOpen) return;
+    
     const handleClickOutside = (event: MouseEvent) => {
       if (pickerRef.current && !pickerRef.current.contains(event.target as Node)) {
         setIsOpen(false);
       }
     };
 
-    // Só adiciona o listener quando o picker estiver aberto
-    if (isOpen) {
-      document.addEventListener('mousedown', handleClickOutside);
-      return () => {
-        document.removeEventListener('mousedown', handleClickOutside);
-      };
-    }
-    return undefined;
+    // Usar capture: true para garantir que o evento seja capturado primeiro
+    document.addEventListener('mousedown', handleClickOutside, { capture: true });
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside, { capture: true });
+    };
   }, [isOpen]);
 
-  // Calcula a posição do calendário para garantir que fique visível
+  // Calcula a posição do calendário com useMemo para otimizar o cálculo
   useEffect(() => {
-    if (isOpen && pickerRef.current && containerRef.current) {
-      const rect = containerRef.current.getBoundingClientRect();
+    if (!isOpen || !pickerRef.current || !containerRef.current) return;
+    
+    const positionPicker = () => {
+      const rect = containerRef.current!.getBoundingClientRect();
       const viewportHeight = window.innerHeight;
       const pickerHeight = isMobile ? 300 : 350; // Altura aproximada do picker
       
       // Verificar se o picker ultrapassa a parte inferior da tela
       if (rect.bottom + pickerHeight > viewportHeight) {
         // Posicionar acima do input se não couber abaixo
-        pickerRef.current.style.top = 'auto';
-        pickerRef.current.style.bottom = '100%';
-        pickerRef.current.style.maxHeight = `${rect.top - 20}px`;
+        pickerRef.current!.style.top = 'auto';
+        pickerRef.current!.style.bottom = '100%';
+        pickerRef.current!.style.maxHeight = `${rect.top - 20}px`;
       } else {
         // Posicionar abaixo do input
-        pickerRef.current.style.top = '100%';
-        pickerRef.current.style.bottom = 'auto';
-        pickerRef.current.style.maxHeight = `${viewportHeight - rect.bottom - 20}px`;
+        pickerRef.current!.style.top = '100%';
+        pickerRef.current!.style.bottom = 'auto';
+        pickerRef.current!.style.maxHeight = `${viewportHeight - rect.bottom - 20}px`;
       }
-    }
+    };
+    
+    // Executar posicionamento após um pequeno delay para garantir renderização completa
+    const timeoutId = setTimeout(positionPicker, 10);
+    return () => clearTimeout(timeoutId);
   }, [isOpen, isMobile]);
 
-  const handleDayClick = (date: Date | undefined) => {
+  // Memoizar handlers para evitar recriação a cada render
+  const handleDayClick = useCallback((date: Date | undefined) => {
     setSelected(date);
     if (date) {
       onChange(date);
     }
     setIsOpen(false);
-  };
+  }, [onChange]);
 
-  const handlePrevMonth = () => {
+  const handlePrevMonth = useCallback(() => {
     setMonth(prev => addMonths(prev, -1));
-  };
+  }, []);
 
-  const handleNextMonth = () => {
+  const handleNextMonth = useCallback(() => {
     setMonth(prev => addMonths(prev, 1));
-  };
+  }, []);
 
-  const displayValue = selected 
-    ? format(selected, 'dd/MM/yyyy') 
-    : '';
+  // Calcular displayValue apenas quando selected mudar
+  const displayValue = useMemo(() => 
+    selected ? format(selected, 'dd/MM/yyyy') : '',
+  [selected]);
 
-  const renderMobileHeader = () => (
+  // Memoizar o header para dispositivos móveis
+  const renderMobileHeader = useCallback(() => (
     <div className="flex justify-between items-center p-2 sticky top-0 bg-gray-800/95 z-10 border-b border-white/10">
       <div className="flex-1 text-left">
         <button 
@@ -130,7 +152,31 @@ const SimpleDatePicker: React.FC<SimpleDatePickerProps> = ({
         </button>
       </div>
     </div>
-  );
+  ), [month, handlePrevMonth, handleNextMonth]);
+
+  // Renderizar uma versão mais simples em dispositivos móveis muito pequenos
+  if (isMobileDevice && window.innerWidth < 360) {
+    return (
+      <div className="relative">
+        {label && (
+          <label className="block text-sm font-medium text-gray-300 mb-1">
+            {label} {required && <span className="text-red-500">*</span>}
+          </label>
+        )}
+        <input
+          type="date"
+          value={selected ? format(selected, 'yyyy-MM-dd') : ''}
+          onChange={(e) => {
+            const date = e.target.value ? new Date(e.target.value) : null;
+            setSelected(date || undefined);
+            onChange(date);
+          }}
+          className={`w-full bg-gray-700/50 border border-white/10 rounded-lg px-4 py-2 text-white ${className}`}
+          required={required}
+        />
+      </div>
+    );
+  }
 
   return (
     <div className="relative" ref={containerRef}>
@@ -198,14 +244,12 @@ const SimpleDatePicker: React.FC<SimpleDatePickerProps> = ({
                 today: new Date(),
               }}
               modifiersClassNames={{
-                today: 'calendar-day-today',
-                selected: 'calendar-day-selected'
+                today: 'today',
+                selected: 'selected',
               }}
               styles={{
                 caption: { color: 'white', display: isMobile ? 'none' : 'flex' },
                 caption_label: isMobile ? { display: 'none' } : { color: 'white' },
-                caption_dropdowns: isMobile ? { display: 'none' } : {},
-                nav: isMobile ? { display: 'none' } : {},
                 day: { 
                   color: 'white',
                   backgroundColor: '#374151',
@@ -221,6 +265,8 @@ const SimpleDatePicker: React.FC<SimpleDatePickerProps> = ({
       )}
     </div>
   );
-};
+});
+
+SimpleDatePicker.displayName = 'SimpleDatePicker';
 
 export default SimpleDatePicker; 

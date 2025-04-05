@@ -1,20 +1,27 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, Suspense, lazy } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { Sun, Moon } from 'lucide-react';
 import { useStore } from './store/useStore';
 import { useTranslation } from './hooks/useTranslation';
 import { Toaster } from 'react-hot-toast';
-import Dashboard from './pages/Dashboard';
-import Login from './pages/Login';
-import Register from './pages/Register';
 import PrivateRoute from './components/PrivateRoute';
-import StaffManagement from './pages/StaffManagement';
-import { auth } from './config/firebase';
 import AdminInitializer from './components/AdminInitializer';
-import Schedule from './pages/Schedule';
-import Tasks from './pages/Tasks';
-import Events from './pages/Events';
-import Staff from './pages/Staff';
+
+// Lazy loading de componentes pesados
+const Login = lazy(() => import('./pages/Login'));
+const Register = lazy(() => import('./pages/Register'));
+const Dashboard = lazy(() => import('./pages/Dashboard'));
+const Schedule = lazy(() => import('./pages/Schedule'));
+const Tasks = lazy(() => import('./pages/Tasks'));
+const Events = lazy(() => import('./pages/Events'));
+const Staff = lazy(() => import('./pages/Staff'));
+
+// Componente de carregamento
+const LoadingFallback = () => (
+  <div className="flex items-center justify-center h-screen">
+    <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-yellow-500"></div>
+  </div>
+);
 
 function App() {
   const { theme, language, setTheme, setLanguage, init } = useStore();
@@ -83,52 +90,54 @@ function App() {
             {language === 'pt' ? 'EN' : 'PT'}
           </button>
         </div>
-        <Routes>
-          <Route path="/login" element={<Login />} />
-          <Route path="/register" element={<Register />} />
-          <Route 
-            path="/dashboard" 
-            element={
-              <PrivateRoute>
-                <Dashboard />
-              </PrivateRoute>
-            } 
-          />
-          <Route 
-            path="/schedule" 
-            element={
-              <PrivateRoute>
-                <Schedule />
-              </PrivateRoute>
-            } 
-          />
-          <Route 
-            path="/tasks" 
-            element={
-              <PrivateRoute>
-                <Tasks />
-              </PrivateRoute>
-            } 
-          />
-          <Route 
-            path="/events" 
-            element={
-              <PrivateRoute>
-                <Events />
-              </PrivateRoute>
-            } 
-          />
-          <Route 
-            path="/staff" 
-            element={
-              <PrivateRoute>
-                <Staff />
-              </PrivateRoute>
-            } 
-          />
-          <Route path="/" element={<Navigate to="/login" replace />} />
-          <Route path="*" element={<Navigate to="/login" replace />} />
-        </Routes>
+        <Suspense fallback={<LoadingFallback />}>
+          <Routes>
+            <Route path="/login" element={<Login />} />
+            <Route path="/register" element={<Register />} />
+            <Route 
+              path="/dashboard" 
+              element={
+                <PrivateRoute>
+                  <Dashboard />
+                </PrivateRoute>
+              } 
+            />
+            <Route 
+              path="/schedule" 
+              element={
+                <PrivateRoute>
+                  <Schedule />
+                </PrivateRoute>
+              } 
+            />
+            <Route 
+              path="/tasks" 
+              element={
+                <PrivateRoute>
+                  <Tasks />
+                </PrivateRoute>
+              } 
+            />
+            <Route 
+              path="/events" 
+              element={
+                <PrivateRoute>
+                  <Events />
+                </PrivateRoute>
+              } 
+            />
+            <Route 
+              path="/staff" 
+              element={
+                <PrivateRoute>
+                  <Staff />
+                </PrivateRoute>
+              } 
+            />
+            <Route path="/" element={<Navigate to="/login" replace />} />
+            <Route path="*" element={<Navigate to="/login" replace />} />
+          </Routes>
+        </Suspense>
       </div>
     </BrowserRouter>
   );
