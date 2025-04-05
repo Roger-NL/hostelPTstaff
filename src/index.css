@@ -4,6 +4,19 @@
 @tailwind components;
 @tailwind utilities;
 
+html, body {
+  height: 100%;
+  overflow: hidden; /* Impede rolagem no documento global */
+  position: fixed;
+  width: 100%;
+  overscroll-behavior: none;
+}
+
+#root {
+  height: 100%;
+  overflow: hidden;
+}
+
 /* Esconder a scrollbar enquanto mantém a funcionalidade */
 .scrollbar-none::-webkit-scrollbar {
   display: none;
@@ -12,6 +25,14 @@
 .scrollbar-none {
   -ms-overflow-style: none;
   scrollbar-width: none;
+}
+
+/* Classe para elementos com rolagem interna */
+.content-scrollable {
+  overflow-y: auto;
+  overflow-x: hidden;
+  scrollbar-width: thin;
+  -webkit-overflow-scrolling: touch; /* Scroll suave em iOS */
 }
 
 /* Adiciona classe para texto muito pequeno */
@@ -120,6 +141,30 @@ input, select, textarea, button {
   }
 }
 
+/* Layout para páginas com altura fixa e rolagem apenas no conteúdo */
+.page-container {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  position: relative;
+  overflow: hidden;
+}
+
+.page-header {
+  flex-shrink: 0;
+}
+
+.page-content {
+  flex: 1;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
+}
+
+.page-footer {
+  flex-shrink: 0;
+}
+
 /* Otimizado para mobile - desativa ou reduz a intensidade do efeito grain em dispositivos móveis */
 .grain {
   position: fixed;
@@ -224,4 +269,69 @@ input, select, textarea, button {
   }
   
   /* Outras simplificações para componentes específicos podem ser adicionadas aqui */
+}
+
+/* Layout fixo global */
+.fixed-layout {
+  height: 100%;
+  overflow: hidden;
+  position: fixed;
+  width: 100%;
+  touch-action: manipulation;
+  overscroll-behavior: none;
+  user-select: none;
+}
+
+.fixed-layout #root {
+  height: 100%;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Garantir que as páginas internas respeitem o layout fixo */
+.fixed-layout .page-container,
+.page-container {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  max-height: 100%;
+  overflow: hidden;
+  position: relative;
+}
+
+/* Componentes de uma página de layout fixo */
+.fixed-layout .page-header,
+.page-header {
+  flex-shrink: 0;
+  position: relative;
+  z-index: 10;
+}
+
+.fixed-layout .page-content, 
+.page-content {
+  flex: 1;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
+  position: relative;
+}
+
+.fixed-layout .page-footer,
+.page-footer {
+  flex-shrink: 0;
+  position: relative;
+  z-index: 10;
+}
+
+/* Ajustes para containers internos com rolagem */
+.fixed-layout .content-scrollable,
+.content-scrollable {
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: thin;
+  overscroll-behavior: contain;
+  position: relative;
+  height: 100%;
+  max-height: 100%;
 }

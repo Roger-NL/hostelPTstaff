@@ -110,7 +110,7 @@ export default function MainDashboard() {
   ];
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-sky-200 to-violet-200 dark:from-gray-900 dark:to-gray-800 flex relative font-sans text-gray-800 dark:text-white">
+    <div className="page-container bg-gradient-to-br from-sky-200 to-violet-200 dark:from-gray-900 dark:to-gray-800 flex relative font-sans text-gray-800 dark:text-white">
       {/* Background with light effect */}
       <div className="fixed inset-0 z-0">
         <div className="absolute inset-0 bg-gradient-to-br from-sky-200 to-violet-200 dark:from-gray-900 dark:to-gray-800" />
@@ -157,7 +157,7 @@ export default function MainDashboard() {
           </button>
         </div>
         
-        <div className="flex-1 p-3 xs:p-4 space-y-1.5 xs:space-y-2 overflow-y-auto">
+        <div className="flex-1 content-scrollable p-3 xs:p-4 space-y-1.5 xs:space-y-2">
           {menuItems.map(item => (
             <button
               key={item.view}
@@ -199,58 +199,26 @@ export default function MainDashboard() {
               onClick={handleLogout}
               className="w-full p-2 xs:p-2.5 rounded-lg bg-gray-100 dark:bg-gray-700/50 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors text-xs xs:text-sm font-light flex items-center justify-center gap-2"
             >
-              <LogOut size={14} />
-              <span>Sign Out</span>
+              <LogOut size={14} /> {t('logout')}
             </button>
           </div>
         </div>
       </div>
 
-      {/* Main Content - always full width */}
-      <div className="flex-1 p-4 pt-14 xs:p-5 xs:pt-14 sm:p-6 sm:pt-16 md:p-8 md:pt-8 overflow-auto relative z-10">
-        <div className="max-w-7xl mx-auto space-y-4 xs:space-y-5 sm:space-y-6">
-          {/* Header */}
-          <div className="flex flex-col">
-            <div className="flex justify-between items-center mb-3 xs:mb-4">
-              <div className="flex items-center gap-2 xs:gap-3">
-                <h1 className="text-xl xs:text-2xl font-extralight text-gray-800 dark:text-white tracking-wide">
-                  {view === 'schedule' ? t('schedule.title') : 
-                  view === 'staff' ? t('staff.title') :
-                  view === 'tasks' ? t('taskManagement') :
-                  view === 'events' ? t('events.title') :
-                  view === 'settings' ? t('settings.title') :
-                  view === 'messages' ? t('messages.title') :
-                  view === 'laundry' ? t('laundry.title') :
-                  t('dashboard.title')}
-                </h1>
-              </div>
-              
-              <div className="flex items-center gap-2 xs:gap-3">
-                <div className="h-8 xs:h-10 px-3 xs:px-4 py-1.5 xs:py-2 bg-white/90 dark:bg-gray-800/90 backdrop-blur-md rounded-lg xs:rounded-xl shadow-lg text-xs xs:text-sm font-light flex items-center gap-1.5 xs:gap-2 text-gray-600 dark:text-gray-300 border border-gray-100 dark:border-gray-700/30 overflow-hidden">
-                  <User size={14} className="text-blue-500 xs:hidden" />
-                  <User size={16} className="text-blue-500 hidden xs:block" />
-                  <span className="truncate max-w-[120px] xs:max-w-none">{getGreeting()}</span>
-                  <span className="text-amber-500 flex items-center ml-1 gap-1 font-normal whitespace-nowrap">
-                    <Award size={12} className="xs:hidden" />
-                    <Award size={14} className="hidden xs:block" />
-                    {user?.points || 0}
-                  </span>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Content */}
-          <div className="bg-white/60 dark:bg-gray-800/30 backdrop-blur-md rounded-xl xs:rounded-2xl p-4 xs:p-5 sm:p-6 shadow-xl border border-white/20 dark:border-gray-700/20 min-h-[calc(100vh-160px)]">
-            {view === 'dashboard' && <DashboardContent />}
-            {view === 'schedule' && <Schedule />}
-            {view === 'tasks' && <Tasks />}
-            {view === 'staff' && <Staff />}
-            {view === 'events' && <Events />}
-            {view === 'settings' && <SettingsPage />}
-            {view === 'messages' && <Messages />}
-            {view === 'laundry' && <LaundrySchedule />}
-          </div>
+      {/* Main Content */}
+      <div 
+        className={`flex-1 transition-all duration-500 content-scrollable
+          ${!isSidebarCollapsed ? 'lg:pl-[280px]' : ''}`}
+      >
+        <div className="content-area relative z-10 h-full">
+          {view === 'dashboard' && <DashboardContent />}
+          {view === 'schedule' && <Schedule />}
+          {view === 'tasks' && <Tasks />}
+          {view === 'staff' && <Staff />}
+          {view === 'events' && <Events />}
+          {view === 'settings' && <SettingsPage />}
+          {view === 'messages' && <Messages />}
+          {view === 'laundry' && <LaundrySchedule />}
         </div>
       </div>
     </div>

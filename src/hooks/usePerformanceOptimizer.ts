@@ -6,6 +6,7 @@ interface PerformanceOptions {
   enableVirtualization?: boolean;
   deferRendering?: boolean;
   deferTime?: number;
+  fixedLayout?: boolean;
 }
 
 /**
@@ -25,7 +26,8 @@ export const usePerformanceOptimizer = (options: PerformanceOptions = {}) => {
     simplifyUI = true,
     enableVirtualization = true,
     deferRendering = true,
-    deferTime = 100
+    deferTime = 100,
+    fixedLayout = true
   } = options;
   
   useEffect(() => {
@@ -64,6 +66,12 @@ export const usePerformanceOptimizer = (options: PerformanceOptions = {}) => {
           document.documentElement.classList.add('simplified-ui');
         }
       }
+      
+      // Aplica layout fixo independente do tipo de dispositivo
+      if (fixedLayout) {
+        document.documentElement.classList.add('fixed-layout');
+        document.body.classList.add('fixed-layout');
+      }
     };
     
     // Detectar capabilities e aplicar otimizações
@@ -86,7 +94,7 @@ export const usePerformanceOptimizer = (options: PerformanceOptions = {}) => {
         clearTimeout(timeoutRef.current);
       }
     };
-  }, [disableAnimations, simplifyUI, deferRendering, deferTime, isLowEndDevice]);
+  }, [disableAnimations, simplifyUI, deferRendering, deferTime, isLowEndDevice, fixedLayout]);
   
   return {
     isReady: isMounted,
@@ -94,7 +102,8 @@ export const usePerformanceOptimizer = (options: PerformanceOptions = {}) => {
     isSmallScreen,
     shouldVirtualize: enableVirtualization && isLowEndDevice,
     shouldSimplifyUI: simplifyUI && isLowEndDevice,
-    shouldDisableAnimations: disableAnimations && isLowEndDevice
+    shouldDisableAnimations: disableAnimations && isLowEndDevice,
+    useFixedLayout: fixedLayout
   };
 };
 

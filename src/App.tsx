@@ -48,7 +48,7 @@ function App() {
 
   return (
     <BrowserRouter>
-      <div className={`min-h-screen ${theme === 'dark' ? 'bg-gradient-to-b from-gray-900 to-gray-800' : 'bg-gradient-to-b from-gray-100 to-gray-200'} overflow-hidden`}>
+      <div className={`min-h-screen page-container ${theme === 'dark' ? 'bg-gradient-to-b from-gray-900 to-gray-800' : 'bg-gradient-to-b from-gray-100 to-gray-200'}`}>
         <AdminInitializer masterEmail="raugerac@gmail.com" />
         <Toaster
           position="top-center"
@@ -90,54 +90,57 @@ function App() {
             {language === 'pt' ? 'EN' : 'PT'}
           </button>
         </div>
-        <Suspense fallback={<LoadingFallback />}>
-          <Routes>
-            <Route path="/login" element={<Login />} />
-            <Route path="/register" element={<Register />} />
-            <Route 
-              path="/dashboard" 
-              element={
-                <PrivateRoute>
-                  <Dashboard />
-                </PrivateRoute>
-              } 
-            />
-            <Route 
-              path="/schedule" 
-              element={
-                <PrivateRoute>
-                  <Schedule />
-                </PrivateRoute>
-              } 
-            />
-            <Route 
-              path="/tasks" 
-              element={
-                <PrivateRoute>
-                  <Tasks />
-                </PrivateRoute>
-              } 
-            />
-            <Route 
-              path="/events" 
-              element={
-                <PrivateRoute>
-                  <Events />
-                </PrivateRoute>
-              } 
-            />
-            <Route 
-              path="/staff" 
-              element={
-                <PrivateRoute>
-                  <Staff />
-                </PrivateRoute>
-              } 
-            />
-            <Route path="/" element={<Navigate to="/login" replace />} />
-            <Route path="*" element={<Navigate to="/login" replace />} />
-          </Routes>
-        </Suspense>
+        
+        <div className="page-content">
+          <Suspense fallback={<LoadingFallback />}>
+            <Routes>
+              <Route path="/login" element={<Login />} />
+              <Route path="/register" element={<Register />} />
+              <Route 
+                path="/dashboard" 
+                element={
+                  <PrivateRoute>
+                    <Dashboard />
+                  </PrivateRoute>
+                } 
+              />
+              <Route 
+                path="/schedule" 
+                element={
+                  <PrivateRoute>
+                    <Schedule />
+                  </PrivateRoute>
+                } 
+              />
+              <Route 
+                path="/tasks" 
+                element={
+                  <PrivateRoute>
+                    <Tasks />
+                  </PrivateRoute>
+                } 
+              />
+              <Route 
+                path="/events" 
+                element={
+                  <PrivateRoute>
+                    <Events />
+                  </PrivateRoute>
+                } 
+              />
+              <Route 
+                path="/staff" 
+                element={
+                  <PrivateRoute>
+                    <Staff />
+                  </PrivateRoute>
+                } 
+              />
+              <Route path="/" element={<Navigate to="/login" replace />} />
+              <Route path="*" element={<Navigate to="/login" replace />} />
+            </Routes>
+          </Suspense>
+        </div>
       </div>
     </BrowserRouter>
   );

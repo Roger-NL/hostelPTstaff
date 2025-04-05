@@ -367,7 +367,7 @@ export default function Tasks() {
           </span>
         </div>
         
-        <div className="flex-1 overflow-y-auto p-3 space-y-3">
+        <div className="flex-1 overflow-y-auto content-scrollable p-3 space-y-3">
           {tasksInColumn.length > 0 ? (
             tasksInColumn.map((task, index) => (
               <TaskCard key={task.id} task={task} index={index} />
@@ -440,8 +440,8 @@ export default function Tasks() {
   };
 
   return (
-    <div className="h-[calc(100vh-6rem)] flex flex-col overflow-auto pb-6">
-      <div className="flex flex-wrap items-center justify-between gap-2 mb-4 sticky top-0 bg-gray-900/80 backdrop-blur-sm py-2 z-10">
+    <div className="page-container flex flex-col">
+      <div className="page-header flex flex-wrap items-center justify-between gap-2 mb-4 py-2 z-10 bg-gray-900/80 backdrop-blur-sm">
         <h2 className="text-lg xs:text-xl font-extralight text-white">Task Management</h2>
         <div className="flex items-center gap-2">
           {isAdmin && (
@@ -480,8 +480,8 @@ export default function Tasks() {
       </div>
 
       {/* Task Columns Container */}
-      <div className="bg-gray-800/50 backdrop-blur-sm rounded-lg p-3 xs:p-4 sm:p-6 flex-1 overflow-auto">
-        <div className="flex flex-col lg:flex-row gap-4 min-h-[calc(100%-2rem)]">
+      <div className="page-content bg-gray-800/50 backdrop-blur-sm rounded-lg p-3 xs:p-4 sm:p-6">
+        <div className="flex flex-col lg:flex-row gap-4 h-full">
           <TaskColumn status="todo" title="To Do" />
           <TaskColumn status="inProgress" title="In Progress" />
           <TaskColumn status="done" title="Done" />
