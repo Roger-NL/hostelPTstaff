@@ -37,6 +37,7 @@ import Events from './Events';
 import SettingsPage from './Settings';
 import Messages from './Messages';
 import DashboardContent from './DashboardContent';
+import LaundrySchedule from './LaundrySchedule';
 
 export default function MainDashboard() {
   const { user, users, tasks, messages, logout } = useStore();
@@ -104,6 +105,7 @@ export default function MainDashboard() {
     { icon: Users, label: t('staff.title'), view: 'staff' },
     { icon: PartyPopper, label: t('events.title'), view: 'events' },
     { icon: MessageCircle, label: t('messages.title'), view: 'messages', badge: unreadCount },
+    { icon: HomeIcon, label: t('laundry.title'), view: 'laundry' },
     { icon: SettingsIcon, label: t('settings.title'), view: 'settings' }
   ];
 
@@ -218,6 +220,7 @@ export default function MainDashboard() {
                   view === 'events' ? t('events.title') :
                   view === 'settings' ? t('settings.title') :
                   view === 'messages' ? t('messages.title') :
+                  view === 'laundry' ? t('laundry.title') :
                   t('dashboard.title')}
                 </h1>
               </div>
@@ -246,6 +249,7 @@ export default function MainDashboard() {
             {view === 'events' && <Events />}
             {view === 'settings' && <SettingsPage />}
             {view === 'messages' && <Messages />}
+            {view === 'laundry' && <LaundrySchedule />}
           </div>
         </div>
       </div>

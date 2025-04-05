@@ -241,6 +241,31 @@ export const translations = {
       volunteer: 'Volunteer'
     },
     
+    // Laundry Schedule
+    laundry: {
+      title: 'Laundry Schedule',
+      add: 'Add',
+      staff: 'Staff',
+      guest: 'Guest',
+      addReservation: 'Add Reservation',
+      guestName: 'Name',
+      guestNamePlaceholder: 'Enter name...',
+      isStaff: 'Is Staff/Hostel',
+      slot: 'Time Slot',
+      reservationSummary: 'You are reserving a laundry slot for:',
+      nameRequired: 'Name is required',
+      addingReservation: 'Adding {name} to {slot} slot...',
+      reservationAdded: '{name} added to {slot} slot',
+      removingReservation: 'Removing {name} from {slot} slot...',
+      reservationRemoved: '{name} removed from {slot} slot',
+      slots: {
+        header: 'Time Slots',
+        morning: 'Morning',
+        afternoon: 'Afternoon',
+        evening: 'Evening'
+      }
+    },
+    
     // Staff
     staff: {
       title: 'Staff Management',
@@ -535,11 +560,36 @@ export const translations = {
       volunteer: 'Voluntário'
     },
     
+    // Laundry Schedule
+    laundry: {
+      title: 'Escala de Lavanderia',
+      add: 'Adicionar',
+      staff: 'Staff',
+      guest: 'Hóspede',
+      addReservation: 'Adicionar Reserva',
+      guestName: 'Nome',
+      guestNamePlaceholder: 'Digite o nome...',
+      isStaff: 'É Staff/Hostel',
+      slot: 'Horário',
+      reservationSummary: 'Você está reservando um horário para:',
+      nameRequired: 'Nome é obrigatório',
+      addingReservation: 'Adicionando {name} ao horário {slot}...',
+      reservationAdded: '{name} adicionado ao horário {slot}',
+      removingReservation: 'Removendo {name} do horário {slot}...',
+      reservationRemoved: '{name} removido do horário {slot}',
+      slots: {
+        header: 'Horários',
+        morning: 'Manhã',
+        afternoon: 'Tarde',
+        evening: 'Noite'
+      }
+    },
+    
     // Staff
     staff: {
-      title: 'Gerenciamento de Equipe',
+      title: 'Gerenciamento de Staff',
       addUser: 'Adicionar Usuário',
-      editUser: 'Editar Membro da Equipe',
+      editUser: 'Editar Membro da Staff',
       name: 'Nome',
       email: 'Email',
       password: 'Senha',
