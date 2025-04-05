@@ -148,13 +148,26 @@ const Login: React.FC = () => {
         // Remove a senha temporária se estiver incorreta
         sessionStorage.removeItem('temp_last_pwd');
         
-        // Mostra o erro apenas se não for senha incorreta (para não confundir o usuário)
-        if (err.code !== 'auth/wrong-password') {
-          setError(t('error.quickLoginFailed'));
-        }
+        // Em vez de mostrar erro, apenas muda para o formulário de login regular
+        setShowQuickLogin(false);
+        
+        // Foca no campo de senha
+        setTimeout(() => {
+          const passwordField = document.getElementById('password-field');
+          if (passwordField) passwordField.focus();
+        }, 100);
       } finally {
         setLoading(false);
       }
+    } else {
+      // Se não tivermos a senha, apenas mostra o formulário de login
+      setShowQuickLogin(false);
+      
+      // Foca no campo de senha
+      setTimeout(() => {
+        const passwordField = document.getElementById('password-field');
+        if (passwordField) passwordField.focus();
+      }, 100);
     }
   };
 
@@ -262,27 +275,35 @@ const Login: React.FC = () => {
             
             {/* Login rápido com último usuário */}
             {showQuickLogin && savedLogins.length > 0 && !loading && (
-              <div className="p-4 bg-blue-600/20 border border-blue-500/40 rounded-lg mb-4">
-                <div className="flex items-center gap-3 mb-3">
-                  <UserCircle className="w-8 h-8 text-white/80" />
-                  <div className="flex-1">
-                    <div className="text-white font-medium">{savedLogins[0].name || savedLogins[0].email}</div>
-                    <div className="text-white/60 text-sm">{savedLogins[0].email}</div>
+              <div className="p-4 bg-blue-600/30 border border-blue-500/40 rounded-xl mb-4 backdrop-blur-sm shadow-lg">
+                <div className="flex items-center gap-3 mb-2">
+                  <div className="bg-blue-500/30 p-2 rounded-full">
+                    <UserCircle className="w-8 h-8 text-white" />
                   </div>
+                  <div className="flex-1">
+                    <div className="text-white font-medium text-lg">{savedLogins[0].name || savedLogins[0].email}</div>
+                    <div className="text-white/70 text-sm">{savedLogins[0].email}</div>
+                  </div>
+                </div>
+                <div className="text-center mb-3 text-white/60 text-xs italic">
+                  <span className="inline-flex items-center gap-1">
+                    <LogIn className="w-3 h-3" />
+                    {t('quickLoginHint')}
+                  </span>
                 </div>
                 <button
                   type="button"
                   onClick={handleQuickLogin}
-                  className="w-full py-2 px-4 bg-blue-600/60 hover:bg-blue-600/80 rounded-lg text-white font-medium transition flex items-center justify-center gap-2"
+                  className="w-full py-3 px-4 bg-blue-600 hover:bg-blue-700 rounded-lg text-white font-semibold transition-all duration-300 flex items-center justify-center gap-2 shadow-md hover:shadow-lg transform hover:-translate-y-0.5"
                 >
-                  <LogIn className="w-4 h-4" />
+                  <LogIn className="w-5 h-5" />
                   {t('quickLogin')}
                 </button>
-                <div className="mt-2 text-center">
+                <div className="mt-3 text-center">
                   <button
                     type="button"
                     onClick={() => setShowQuickLogin(false)}
-                    className="text-sm text-white/60 hover:text-white/80"
+                    className="text-sm text-white/70 hover:text-white hover:underline transition-colors"
                   >
                     {t('useAnotherAccount')}
                   </button>

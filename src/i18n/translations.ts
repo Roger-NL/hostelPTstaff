@@ -13,6 +13,9 @@ export const translations = {
     forgotPassword: 'Forgot Password?',
     resetPassword: 'Reset Password',
     backToLogin: 'Back to Login',
+    quickLogin: 'Login with this account',
+    useAnotherAccount: 'Use another account',
+    quickLoginHint: 'Quick access with your saved credentials',
     
     // User Information
     name: 'Name',
@@ -61,7 +64,8 @@ export const translations = {
       unauthorized: 'You are not authorized to perform this action',
       passwordsDoNotMatch: 'Passwords do not match',
       passwordTooShort: 'Password must be at least 6 characters',
-      invalidEmail: 'Please enter a valid email address'
+      invalidEmail: 'Please enter a valid email address',
+      quickLoginFailed: 'Quick login failed. Please enter your password'
     },
     
     // Tasks
@@ -332,6 +336,9 @@ export const translations = {
     forgotPassword: 'Esqueceu a senha?',
     resetPassword: 'Redefinir Senha',
     backToLogin: 'Voltar para Login',
+    quickLogin: 'Entrar com esta conta',
+    useAnotherAccount: 'Usar outra conta',
+    quickLoginHint: 'Acesso rápido com suas credenciais salvas',
     
     // User Information
     name: 'Nome',
@@ -380,7 +387,8 @@ export const translations = {
       unauthorized: 'Você não está autorizado a realizar esta ação',
       passwordsDoNotMatch: 'As senhas não coincidem',
       passwordTooShort: 'A senha deve ter pelo menos 6 caracteres',
-      invalidEmail: 'Por favor, insira um endereço de email válido'
+      invalidEmail: 'Por favor, insira um endereço de email válido',
+      quickLoginFailed: 'Login rápido falhou. Por favor, digite sua senha'
     },
     
     // Tasks
