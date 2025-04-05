@@ -6,6 +6,7 @@ import { firestore } from '../config/firebase';
 import * as scheduleService from '../services/schedule.service';
 import * as messageService from '../services/message.service';
 import * as eventService from '../services/event.service';
+import * as taskService from '../services/task.service';
 import { collection, getDocs } from 'firebase/firestore';
 import { query, where, deleteDoc } from 'firebase/firestore';
 
@@ -37,6 +38,8 @@ interface AppState {
   addTask: (task: Omit<Task, 'id' | 'createdAt' | 'status' | 'comments' | 'checklist' | 'createdBy'>) => void;
   updateTask: (taskId: string, updates: Partial<Task>) => void;
   deleteTask: (taskId: string) => void;
+  deleteAllTasks: () => Promise<boolean>;
+  cleanupDeletedTasks: () => Promise<boolean>;
   moveTask: (taskId: string, newStatus: Task['status']) => void;
   assignTask: (taskId: string, userIds: string[]) => void;
   addTaskComment: (taskId: string, content: string) => void;
@@ -327,8 +330,10 @@ export const useStore = create<AppState>((set, get) => ({
       try {
         console.log('Executando limpeza de eventos excluídos...');
         await eventService.cleanupDeletedEvents();
+        console.log('Executando limpeza de tarefas excluídas...');
+        await taskService.cleanupDeletedTasks();
       } catch (cleanupError) {
-        console.error('Erro ao limpar eventos excluídos:', cleanupError);
+        console.error('Erro ao limpar itens excluídos:', cleanupError);
       }
     }
     
@@ -476,6 +481,84 @@ export const useStore = create<AppState>((set, get) => ({
       console.error('ERRO crítico ao carregar eventos:', e);
       // Em caso de erro, garantir que o estado tem eventos padrão apenas na primeira execução
       set({ events: isFirstRun ? defaultEvents : [] });
+    }
+
+    // Carregar tarefas de forma segura
+    try {
+      console.log('Tentando carregar tarefas do Firebase...');
+      
+      // Tenta carregar tarefas existentes
+      console.log('1. Iniciando carregamento de tarefas');
+      const tasks = await taskService.loadTasksFromFirebase();
+      console.log('2. Resposta recebida do loadTasksFromFirebase');
+      
+      if (tasks && Array.isArray(tasks)) {
+        console.log(`3. Array de tarefas válido com ${tasks.length} tarefas`);
+        
+        if (tasks.length > 0) {
+          console.log('4. Atualizando estado com tarefas carregadas');
+          set({ tasks });
+          console.log('5. Estado atualizado com sucesso');
+        } else {
+          console.log('4. Nenhuma tarefa encontrada');
+          
+          // Verificar se já tem documentos na coleção
+          const tasksCollection = collection(firestore, 'tasks');
+          const tasksSnapshot = await getDocs(tasksCollection);
+          
+          // Criar tarefas padrão apenas na primeira execução
+          if (tasksSnapshot.empty && isFirstRun) {
+            console.log('Primeira execução e nenhuma tarefa existe, salvando tarefas padrão no Firebase');
+            
+            // Se não houver tarefas no Firebase, salvar as tarefas padrão
+            const tasksToSave = JSON.parse(JSON.stringify(defaultTasks));
+            
+            // Primeiro atualiza o estado local
+            set({ tasks: tasksToSave });
+            
+            // Depois salva cada tarefa no Firebase de forma confiável
+            console.log('5. Salvando tarefas padrão no Firebase...');
+            let successCount = 0;
+            
+            for (const task of tasksToSave) {
+              try {
+                const saved = await taskService.saveTaskToFirebase(task);
+                if (saved) {
+                  successCount++;
+                  console.log(`Tarefa padrão ${task.id} salva com sucesso (${successCount}/${tasksToSave.length})`);
+                } else {
+                  console.error(`Falha ao salvar tarefa padrão ${task.id}`);
+                }
+              } catch (error) {
+                console.error(`Erro ao salvar tarefa padrão ${task.id}:`, error);
+              }
+            }
+            
+            console.log(`6. ${successCount}/${tasksToSave.length} tarefas padrão salvas no Firebase`);
+            
+            // Recarrega as tarefas para garantir sincronização
+            if (successCount > 0) {
+              console.log('7. Recarregando tarefas para garantir sincronização');
+              const refreshedTasks = await taskService.loadTasksFromFirebase();
+              if (refreshedTasks && refreshedTasks.length > 0) {
+                set({ tasks: refreshedTasks });
+                console.log(`8. Estado atualizado com ${refreshedTasks.length} tarefas recarregadas`);
+              }
+            }
+          } else {
+            console.log('A coleção de tarefas existe ou não é primeira execução. Mantendo estado vazio.');
+            set({ tasks: [] });
+          }
+        }
+      } else {
+        console.error('3. ERRO: Resposta inválida do loadTasksFromFirebase:', tasks);
+        // Mantenha tarefas padrão para segurança apenas na primeira execução
+        set({ tasks: isFirstRun ? defaultTasks : [] });
+      }
+    } catch (e) {
+      console.error('ERRO crítico ao carregar tarefas:', e);
+      // Em caso de erro, garantir que o estado tem tarefas padrão apenas na primeira execução
+      set({ tasks: isFirstRun ? defaultTasks : [] });
     }
 
     // Carregar mensagens de forma segura
@@ -979,13 +1062,26 @@ export const useStore = create<AppState>((set, get) => ({
       type: taskData.isPrivate ? 'personal' : 'hostel'
     };
 
+    // Primeiro atualiza o estado local para feedback imediato
     set(state => ({
       tasks: [...state.tasks, newTask]
     }));
+    
+    // Depois salva no Firebase de forma assíncrona
+    try {
+      void taskService.saveTaskToFirebase(newTask)
+        .catch(error => {
+          console.error('Erro ao salvar tarefa no Firebase:', error);
+        });
+    } catch (error) {
+      console.error('Erro ao chamar saveTaskToFirebase:', error);
+    }
   },
   
   updateTask: (taskId, updates) => {
     console.log('Updating task:', { taskId, updates });
+    
+    // Primeiro atualiza o estado local para feedback imediato
     set(state => {
       const updatedTasks = state.tasks.map(task =>
         task.id === taskId
@@ -996,15 +1092,121 @@ export const useStore = create<AppState>((set, get) => ({
             }
           : task
       );
+      
       console.log('Updated tasks:', updatedTasks);
       return { tasks: updatedTasks };
     });
+    
+    // Depois atualiza no Firebase de forma assíncrona
+    try {
+      void taskService.updateTaskInFirebase(taskId, updates)
+        .catch(error => {
+          console.error('Erro ao atualizar tarefa no Firebase:', error);
+        });
+    } catch (error) {
+      console.error('Erro ao chamar updateTaskInFirebase:', error);
+    }
   },
   
   deleteTask: (taskId) => {
+    const { tasks } = get();
+    const taskToDelete = tasks.find(task => task.id === taskId);
+    
+    if (!taskToDelete) {
+      console.log(`Tarefa ${taskId} não encontrada para exclusão`);
+      return;
+    }
+    
+    // Primeiro atualiza o estado local para feedback imediato
     set(state => ({
       tasks: state.tasks.filter(task => task.id !== taskId)
     }));
+    
+    // Depois exclui do Firebase de forma assíncrona
+    try {
+      // Marca a tarefa como excluída antes de excluí-la definitivamente
+      const markedTask = {
+        ...taskToDelete,
+        deleted: true,
+        title: `[DELETED] ${taskToDelete.title}`
+      };
+      
+      // Atualiza a tarefa como excluída e depois a exclui definitivamente
+      void taskService.updateTaskInFirebase(taskId, markedTask)
+        .then(() => {
+          return taskService.deleteTaskFromFirebase(taskId);
+        })
+        .catch(error => {
+          console.error('Erro ao excluir tarefa do Firebase:', error);
+        });
+    } catch (error) {
+      console.error('Erro ao chamar deleteTaskFromFirebase:', error);
+    }
+  },
+  
+  deleteAllTasks: async () => {
+    const { user } = get();
+    if (!user || user.role !== 'admin') {
+      console.error('Apenas administradores podem excluir todas as tarefas');
+      return false;
+    }
+    
+    try {
+      console.log('Iniciando exclusão de todas as tarefas...');
+      
+      // Primeiro atualiza o estado local para feedback imediato
+      set({ tasks: [] });
+      
+      // Depois exclui todas as tarefas do Firebase
+      const success = await taskService.deleteAllTasks();
+      
+      console.log(`Exclusão de todas as tarefas ${success ? 'concluída com sucesso' : 'falhou'}`);
+      return success;
+    } catch (error) {
+      console.error('Erro ao excluir todas as tarefas:', error);
+      
+      // Recarrega as tarefas do Firebase para sincronizar o estado
+      try {
+        const tasks = await taskService.loadTasksFromFirebase();
+        if (Array.isArray(tasks)) {
+          set({ tasks });
+        }
+      } catch (loadError) {
+        console.error('Erro ao recarregar tarefas após falha na exclusão:', loadError);
+      }
+      
+      return false;
+    }
+  },
+  
+  cleanupDeletedTasks: async () => {
+    const { user } = get();
+    if (!user || user.role !== 'admin') {
+      console.error('Apenas administradores podem limpar tarefas excluídas');
+      return false;
+    }
+    
+    try {
+      console.log('Iniciando limpeza de tarefas excluídas...');
+      
+      // Executa a limpeza no Firebase
+      const success = await taskService.cleanupDeletedTasks();
+      
+      // Recarrega as tarefas para atualizar o estado
+      if (success) {
+        const tasks = await taskService.loadTasksFromFirebase();
+        if (Array.isArray(tasks)) {
+          set({ tasks });
+          console.log('Estado atualizado após limpeza de tarefas excluídas');
+        }
+      }
+      
+      console.log(`Limpeza de tarefas excluídas ${success ? 'concluída com sucesso' : 'falhou'}`);
+      return success;
+    } catch (error) {
+      console.error('Erro ao limpar tarefas excluídas:', error);
+      return false;
+    }
   },
   
   moveTask: (taskId, newStatus) => {
@@ -1015,6 +1217,7 @@ export const useStore = create<AppState>((set, get) => ({
       updateUserPoints(task.points);
     }
     
+    // Primeiro atualiza o estado local para feedback imediato
     set(state => ({
       tasks: state.tasks.map(task =>
         task.id === taskId
@@ -1022,6 +1225,16 @@ export const useStore = create<AppState>((set, get) => ({
           : task
       )
     }));
+    
+    // Depois atualiza no Firebase de forma assíncrona
+    try {
+      void taskService.updateTaskInFirebase(taskId, { status: newStatus })
+        .catch(error => {
+          console.error('Erro ao atualizar status da tarefa no Firebase:', error);
+        });
+    } catch (error) {
+      console.error('Erro ao chamar updateTaskInFirebase:', error);
+    }
   },
   
   assignTask: (taskId, userIds) => {

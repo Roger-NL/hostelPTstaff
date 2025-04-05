@@ -62,7 +62,9 @@ export default function Tasks() {
     toggleTaskChecklistItem,
     deleteTaskChecklistItem,
     addTaskTag,
-    removeTaskTag
+    removeTaskTag,
+    deleteAllTasks,
+    cleanupDeletedTasks
   } = useStore();
   
   const t = translations['en'];
@@ -75,6 +77,9 @@ export default function Tasks() {
   const [newChecklistItem, setNewChecklistItem] = useState('');
   const [newTag, setNewTag] = useState('');
   const [showStatusDropdown, setShowStatusDropdown] = useState<string | null>(null);
+  const [isLoadingAction, setIsLoadingAction] = useState(false);
+  const [showConfirmAllDelete, setShowConfirmAllDelete] = useState(false);
+  const [showConfirmCleanup, setShowConfirmCleanup] = useState(false);
 
   const isAdmin = user?.role === 'admin';
   const volunteers = users.filter(u => u.role === 'user');
@@ -382,20 +387,88 @@ export default function Tasks() {
     );
   };
 
+  // Função para excluir todas as tarefas
+  const handleDeleteAllTasks = async () => {
+    try {
+      setIsLoadingAction(true);
+      const success = await deleteAllTasks();
+      setIsLoadingAction(false);
+      setShowConfirmAllDelete(false);
+      
+      if (success) {
+        // Notificação de sucesso aqui se tiver um sistema de notificações
+        console.log('Todas as tarefas foram excluídas com sucesso');
+      } else {
+        // Notificação de erro aqui se tiver um sistema de notificações
+        console.error('Erro ao excluir todas as tarefas');
+      }
+    } catch (error) {
+      console.error('Erro ao excluir todas as tarefas:', error);
+      setIsLoadingAction(false);
+      setShowConfirmAllDelete(false);
+    }
+  };
+
+  // Função para limpar tarefas excluídas
+  const handleCleanupDeletedTasks = async () => {
+    try {
+      setIsLoadingAction(true);
+      const success = await cleanupDeletedTasks();
+      setIsLoadingAction(false);
+      setShowConfirmCleanup(false);
+      
+      if (success) {
+        // Notificação de sucesso aqui se tiver um sistema de notificações
+        console.log('Limpeza de tarefas excluídas concluída com sucesso');
+      } else {
+        // Notificação de erro aqui se tiver um sistema de notificações
+        console.error('Erro ao limpar tarefas excluídas');
+      }
+    } catch (error) {
+      console.error('Erro ao limpar tarefas excluídas:', error);
+      setIsLoadingAction(false);
+      setShowConfirmCleanup(false);
+    }
+  };
+
   return (
     <div className="h-[calc(100vh-6rem)] flex flex-col overflow-auto pb-6">
       <div className="flex flex-wrap items-center justify-between gap-2 mb-4 sticky top-0 bg-gray-900/80 backdrop-blur-sm py-2 z-10">
         <h2 className="text-lg xs:text-xl font-extralight text-white">Task Management</h2>
-        {isAdmin && (
-          <button
-            onClick={() => setShowForm(true)}
-            className="h-9 px-2.5 xs:px-3 bg-green-500 text-white rounded-lg xs:rounded-xl shadow-md hover:bg-green-600 transition-colors flex items-center gap-1.5 text-xs xs:text-sm font-light"
-          >
-            <Plus size={16} />
-            <span className="hidden xs:inline">Add Task</span>
-            <span className="xs:hidden">Add</span>
-          </button>
-        )}
+        <div className="flex items-center gap-2">
+          {isAdmin && (
+            <>
+              <div className="flex-shrink-0 flex items-center gap-2">
+                <button
+                  onClick={() => setShowConfirmCleanup(true)}
+                  className="h-9 px-2.5 xs:px-3 bg-amber-500 text-white rounded-lg xs:rounded-xl shadow-md hover:bg-amber-600 transition-colors flex items-center gap-1.5 text-xs xs:text-sm font-light"
+                  disabled={isLoadingAction}
+                >
+                  <Trash2 size={16} />
+                  <span className="hidden sm:inline">Limpar Tarefas Excluídas</span>
+                  <span className="sm:hidden">Limpar</span>
+                </button>
+                <button
+                  onClick={() => setShowConfirmAllDelete(true)}
+                  className="h-9 px-2.5 xs:px-3 bg-red-500 text-white rounded-lg xs:rounded-xl shadow-md hover:bg-red-600 transition-colors flex items-center gap-1.5 text-xs xs:text-sm font-light"
+                  disabled={isLoadingAction}
+                >
+                  <AlertTriangle size={16} />
+                  <span className="hidden sm:inline">Excluir Todas</span>
+                  <span className="sm:hidden">Excluir</span>
+                </button>
+              </div>
+              <button
+                onClick={() => setShowForm(true)}
+                className="h-9 px-2.5 xs:px-3 bg-green-500 text-white rounded-lg xs:rounded-xl shadow-md hover:bg-green-600 transition-colors flex items-center gap-1.5 text-xs xs:text-sm font-light"
+              >
+                <Plus size={16} />
+                <span className="hidden xs:inline">Add Task</span>
+                <span className="xs:hidden">Add</span>
+              </button>
+            </>
+          )}
+        </div>
       </div>
 
       {/* Task Columns Container */}
@@ -712,6 +785,84 @@ export default function Tasks() {
                 className="px-3 xs:px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors text-sm"
               >
                 Delete
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Confirmação para excluir todas as tarefas */}
+      {showConfirmAllDelete && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-3 xs:p-4">
+          <div className="bg-gray-800 rounded-lg p-4 xs:p-6 w-full max-w-md">
+            <h2 className="text-lg xs:text-xl font-semibold text-white mb-3">
+              Excluir Todas as Tarefas
+            </h2>
+            <p className="text-sm text-white/80 mb-4 xs:mb-6">
+              Tem certeza de que deseja excluir <strong>todas</strong> as tarefas? Esta ação não pode ser desfeita.
+            </p>
+            <div className="flex justify-end gap-3">
+              <button
+                onClick={() => setShowConfirmAllDelete(false)}
+                className="px-3 xs:px-4 py-2 text-white/60 hover:text-white transition-colors text-sm"
+                disabled={isLoadingAction}
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={handleDeleteAllTasks}
+                className="px-3 xs:px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors text-sm flex items-center gap-2"
+                disabled={isLoadingAction}
+              >
+                {isLoadingAction ? (
+                  <>
+                    <span className="animate-pulse">Processando...</span>
+                  </>
+                ) : (
+                  <>
+                    <AlertTriangle size={14} />
+                    <span>Excluir Todas</span>
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+      
+      {/* Confirmação para limpar tarefas excluídas */}
+      {showConfirmCleanup && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-3 xs:p-4">
+          <div className="bg-gray-800 rounded-lg p-4 xs:p-6 w-full max-w-md">
+            <h2 className="text-lg xs:text-xl font-semibold text-white mb-3">
+              Limpar Tarefas Excluídas
+            </h2>
+            <p className="text-sm text-white/80 mb-4 xs:mb-6">
+              Esta ação removerá permanentemente todas as tarefas marcadas como excluídas do banco de dados. Deseja continuar?
+            </p>
+            <div className="flex justify-end gap-3">
+              <button
+                onClick={() => setShowConfirmCleanup(false)}
+                className="px-3 xs:px-4 py-2 text-white/60 hover:text-white transition-colors text-sm"
+                disabled={isLoadingAction}
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={handleCleanupDeletedTasks}
+                className="px-3 xs:px-4 py-2 bg-amber-500 text-white rounded-lg hover:bg-amber-600 transition-colors text-sm flex items-center gap-2"
+                disabled={isLoadingAction}
+              >
+                {isLoadingAction ? (
+                  <>
+                    <span className="animate-pulse">Processando...</span>
+                  </>
+                ) : (
+                  <>
+                    <Trash2 size={14} />
+                    <span>Limpar</span>
+                  </>
+                )}
               </button>
             </div>
           </div>
