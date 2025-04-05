@@ -5,6 +5,7 @@ import { doc, updateDoc, setDoc, getDoc } from 'firebase/firestore';
 import { firestore } from '../config/firebase';
 import * as scheduleService from '../services/schedule.service';
 import * as messageService from '../services/message.service';
+import * as eventService from '../services/event.service';
 
 interface AppState {
   theme: 'light' | 'dark';
@@ -46,7 +47,7 @@ interface AppState {
   // Event management
   addEvent: (event: Omit<Event, 'id' | 'createdAt' | 'status'>) => void;
   updateEvent: (eventId: string, updates: Partial<Event>) => void;
-  deleteEvent: (eventId: string) => void;
+  deleteEvent: (eventId: string) => Promise<boolean>;
   joinEvent: (eventId: string, userId: string) => void;
   leaveEvent: (eventId: string, userId: string) => void;
   cancelEvent: (eventId: string) => void;
@@ -379,20 +380,101 @@ export const useStore = create<AppState>((set, get) => ({
       console.error('Erro ao carregar usuários:', e);
     }
 
+    // Carregar eventos de forma segura
+    try {
+      console.log('Tentando carregar eventos do Firebase...');
+      
+      // Tenta carregar eventos existentes
+      console.log('1. Iniciando carregamento de eventos');
+      const events = await eventService.loadEventsFromFirebase();
+      console.log('2. Resposta recebida do loadEventsFromFirebase');
+      
+      if (events && Array.isArray(events)) {
+        console.log(`3. Array de eventos válido com ${events.length} eventos`);
+        
+        if (events.length > 0) {
+          console.log('4. Atualizando estado com eventos carregados');
+          set({ events });
+          console.log('5. Estado atualizado com sucesso');
+        } else {
+          console.log('4. Nenhum evento encontrado, salvando eventos padrão no Firebase');
+          
+          // Se não houver eventos no Firebase, salvar os eventos padrão
+          const eventsToSave = JSON.parse(JSON.stringify(defaultEvents));
+          
+          // Primeiro atualiza o estado local
+          set({ events: eventsToSave });
+          
+          // Depois salva cada evento no Firebase de forma confiável
+          console.log('5. Salvando eventos padrão no Firebase...');
+          let successCount = 0;
+          
+          for (const event of eventsToSave) {
+            try {
+              const saved = await eventService.saveEventToFirebase(event);
+              if (saved) {
+                successCount++;
+                console.log(`Evento padrão ${event.id} salvo com sucesso (${successCount}/${eventsToSave.length})`);
+              } else {
+                console.error(`Falha ao salvar evento padrão ${event.id}`);
+              }
+            } catch (error) {
+              console.error(`Erro ao salvar evento padrão ${event.id}:`, error);
+            }
+          }
+          
+          console.log(`6. ${successCount}/${eventsToSave.length} eventos padrão salvos no Firebase`);
+          
+          // Recarrega os eventos para garantir sincronização
+          if (successCount > 0) {
+            console.log('7. Recarregando eventos para garantir sincronização');
+            const refreshedEvents = await eventService.loadEventsFromFirebase();
+            if (refreshedEvents && refreshedEvents.length > 0) {
+              set({ events: refreshedEvents });
+              console.log(`8. Estado atualizado com ${refreshedEvents.length} eventos recarregados`);
+            }
+          }
+        }
+      } else {
+        console.error('3. ERRO: Resposta inválida do loadEventsFromFirebase:', events);
+        // Mantenha eventos padrão para segurança
+        set({ events: defaultEvents });
+      }
+    } catch (e) {
+      console.error('ERRO crítico ao carregar eventos:', e);
+      // Em caso de erro, garantir que o estado tem pelo menos os eventos padrão
+      set({ events: defaultEvents });
+    }
+
     // Carregar mensagens de forma segura
     try {
       console.log('Tentando carregar mensagens do Firebase...');
       
+      // Verificação de mensagens
+      console.log('1. Iniciando carregamento de mensagens');
       const messages = await messageService.loadMessagesFromFirebase();
+      console.log('2. Resposta recebida do loadMessagesFromFirebase');
       
-      if (messages && Array.isArray(messages) && messages.length > 0) {
-        console.log(`${messages.length} mensagens carregadas`);
-        set({ messages });
+      if (messages && Array.isArray(messages)) {
+        console.log(`3. Array de mensagens válido com ${messages.length} mensagens`);
+        
+        if (messages.length > 0) {
+          console.log('4. Atualizando estado com mensagens carregadas');
+          set({ messages });
+          console.log('5. Estado atualizado com sucesso');
+        } else {
+          console.log('4. Nenhuma mensagem encontrada (array vazio)');
+          set({ messages: [] });
+        }
       } else {
-        console.log('Nenhuma mensagem encontrada');
+        console.error('3. ERRO: Resposta inválida do loadMessagesFromFirebase:', messages);
+        // Mantenha mensagens vazias para segurança
+        set({ messages: [] });
       }
     } catch (e) {
-      console.error('Erro ao carregar mensagens:', e);
+      console.error('ERRO crítico ao carregar mensagens:', e);
+      // Em caso de erro, garantir que o estado tem pelo menos um array vazio
+      set({ messages: [] });
     }
   },
   
@@ -1027,12 +1109,24 @@ export const useStore = create<AppState>((set, get) => ({
       organizer: user.id
     };
 
+    // Atualizar o estado local
     set(state => ({
       events: [...state.events, newEvent]
     }));
+
+    // Persistir no Firebase
+    try {
+      void eventService.saveEventToFirebase(newEvent)
+        .catch(error => {
+          console.error('Erro ao salvar evento no Firebase:', error);
+        });
+    } catch (error) {
+      console.error('Erro ao chamar saveEventToFirebase:', error);
+    }
   },
   
   updateEvent: (eventId, updates) => {
+    // Atualizar o estado local
     set(state => ({
       events: state.events.map(event =>
         event.id === eventId
@@ -1040,15 +1134,61 @@ export const useStore = create<AppState>((set, get) => ({
           : event
       )
     }));
+
+    // Persistir no Firebase
+    try {
+      void eventService.updateEventInFirebase(eventId, updates)
+        .catch(error => {
+          console.error('Erro ao atualizar evento no Firebase:', error);
+        });
+    } catch (error) {
+      console.error('Erro ao chamar updateEventInFirebase:', error);
+    }
   },
   
   deleteEvent: (eventId) => {
+    console.log(`Iniciando exclusão do evento ${eventId}`);
+    
+    // Guarda uma cópia do estado atual para possível restauração
+    const currentEvents = [...get().events];
+    
+    // Primeiro atualiza o estado local para feedback imediato ao usuário
     set(state => ({
       events: state.events.filter(event => event.id !== eventId)
     }));
+    
+    // Tenta excluir do Firebase
+    return new Promise((resolve, reject) => {
+      (async () => {
+        try {
+          console.log(`Solicitando exclusão do evento ${eventId} no Firebase`);
+          const success = await eventService.deleteEventFromFirebase(eventId);
+          
+          if (success) {
+            console.log(`Evento ${eventId} excluído com sucesso do Firebase`);
+            resolve(true);
+          } else {
+            console.error(`Falha ao excluir evento ${eventId} do Firebase`);
+            
+            // Restaura o estado anterior caso a operação falhe
+            set({ events: currentEvents });
+            
+            reject(new Error(`Falha ao excluir evento ${eventId}`));
+          }
+        } catch (error) {
+          console.error(`Erro crítico ao excluir evento ${eventId}:`, error);
+          
+          // Restaura o estado anterior caso a operação falhe
+          set({ events: currentEvents });
+          
+          reject(error);
+        }
+      })();
+    });
   },
   
   joinEvent: (eventId, userId) => {
+    // Atualizar o estado local
     set(state => ({
       events: state.events.map(event =>
         event.id === eventId && !event.attendees.includes(userId)
@@ -1056,9 +1196,20 @@ export const useStore = create<AppState>((set, get) => ({
           : event
       )
     }));
+
+    // Persistir no Firebase
+    try {
+      void eventService.addAttendeeToEvent(eventId, userId)
+        .catch(error => {
+          console.error('Erro ao adicionar participante no Firebase:', error);
+        });
+    } catch (error) {
+      console.error('Erro ao chamar addAttendeeToEvent:', error);
+    }
   },
   
   leaveEvent: (eventId, userId) => {
+    // Atualizar o estado local
     set(state => ({
       events: state.events.map(event =>
         event.id === eventId
@@ -1066,9 +1217,20 @@ export const useStore = create<AppState>((set, get) => ({
           : event
       )
     }));
+
+    // Persistir no Firebase
+    try {
+      void eventService.removeAttendeeFromEvent(eventId, userId)
+        .catch(error => {
+          console.error('Erro ao remover participante do Firebase:', error);
+        });
+    } catch (error) {
+      console.error('Erro ao chamar removeAttendeeFromEvent:', error);
+    }
   },
   
   cancelEvent: (eventId) => {
+    // Atualizar o estado local
     set(state => ({
       events: state.events.map(event =>
         event.id === eventId
@@ -1076,36 +1238,70 @@ export const useStore = create<AppState>((set, get) => ({
           : event
       )
     }));
+
+    // Persistir no Firebase
+    try {
+      void eventService.cancelEventInFirebase(eventId)
+        .catch(error => {
+          console.error('Erro ao cancelar evento no Firebase:', error);
+        });
+    } catch (error) {
+      console.error('Erro ao chamar cancelEventInFirebase:', error);
+    }
   },
   
   addMessage: (content: string, attachments?: string[]) => {
     const { user } = get();
     if (!user) return;
 
+    // Cria um ID único para a mensagem
+    const messageId = crypto.randomUUID();
+    const timestamp = new Date().toISOString();
+
+    // Cria o objeto da mensagem
     const newMessage = {
-      id: crypto.randomUUID(),
+      id: messageId,
       userId: user.id,
       content,
-      createdAt: new Date().toISOString(),
+      createdAt: timestamp,
       attachments,
       reactions: {},
       read: [user.id] // creator has read the message
     };
 
-    // Atualiza o estado local
+    console.log('Criando nova mensagem:', newMessage);
+
+    // Primeiro atualiza o estado local para feedback imediato
     set(state => ({
       messages: [...state.messages, newMessage]
     }));
 
-    // Persiste no Firebase
-    try {
-      void messageService.addMessageToFirebase(newMessage)
-        .catch(error => {
-          console.error('Erro ao adicionar mensagem no Firebase:', error);
-        });
-    } catch (error) {
-      console.error('Erro ao chamar addMessageToFirebase:', error);
-    }
+    // Então persiste no Firebase, garantindo que qualquer erro seja tratado
+    (async () => {
+      try {
+        console.log('Salvando mensagem no Firebase...');
+        const result = await messageService.addMessageToFirebase(newMessage);
+        
+        if (!result) {
+          console.error('Firebase retornou falha ao salvar mensagem');
+          // Se falhar no Firebase, considere remover do estado local
+          // ou tente novamente, dependendo da estratégia de consistência
+        } else {
+          console.log('Mensagem salva com sucesso no Firebase');
+          
+          // Opcionalmente, atualize o estado com os dados do Firebase para maior consistência
+          // Isso pode ser útil se o servidor aplicar alguma transformação
+          const updatedMessages = await messageService.loadMessagesFromFirebase();
+          if (updatedMessages.length > 0) {
+            set({ messages: updatedMessages });
+            console.log('Estado de mensagens atualizado após salvar.');
+          }
+        }
+      } catch (error) {
+        console.error('Erro ao salvar mensagem no Firebase:', error);
+        // Considere mostrar uma notificação para o usuário
+      }
+    })();
   },
   
   deleteMessage: (messageId: string) => {

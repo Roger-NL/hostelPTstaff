@@ -32,19 +32,50 @@ export const loadMessagesFromFirebase = async (): Promise<Message[]> => {
     console.log('Carregando mensagens do Firebase...');
     
     const messagesCollection = collection(firestore, 'messages');
+    
+    // Primeiro verifica se a coleção existe e tem documentos
+    const countSnapshot = await getDocs(messagesCollection);
+    console.log(`Coleção de mensagens tem ${countSnapshot.size} documentos`);
+    
+    if (countSnapshot.empty) {
+      console.log('Coleção de mensagens está vazia');
+      return [];
+    }
+    
+    // Busca ordenada por data de criação
     const messagesQuery = query(messagesCollection, orderBy('createdAt', 'asc'));
     const querySnapshot = await getDocs(messagesQuery);
     
+    console.log(`Query retornou ${querySnapshot.size} documentos`);
+    
     const messages: Message[] = [];
+    
     querySnapshot.forEach((doc) => {
-      const messageData = doc.data() as Message;
-      messages.push({
-        ...messageData,
-        id: doc.id
-      });
+      try {
+        const docData = doc.data();
+        console.log(`Processando mensagem ${doc.id}:`, docData);
+        
+        const messageData: Message = {
+          id: doc.id,
+          userId: docData.userId || '',
+          content: docData.content || '',
+          createdAt: docData.createdAt || new Date().toISOString(),
+          read: Array.isArray(docData.read) ? docData.read : [],
+          attachments: Array.isArray(docData.attachments) ? docData.attachments : undefined,
+          reactions: typeof docData.reactions === 'object' ? docData.reactions : {}
+        };
+        
+        messages.push(messageData);
+      } catch (err) {
+        console.error(`Erro ao processar documento ${doc.id}:`, err);
+      }
     });
     
     console.log(`${messages.length} mensagens carregadas com sucesso`);
+    
+    // Ordena por data de criação para garantir
+    messages.sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
+    
     return messages;
   } catch (error) {
     console.error('Erro ao carregar mensagens:', error);
@@ -59,16 +90,37 @@ export const addMessageToFirebase = async (message: Message): Promise<boolean> =
   try {
     console.log('Adicionando mensagem ao Firebase:', message.id);
     
+    // Verifica se os dados da mensagem são válidos
+    if (!message.id || !message.userId || !message.createdAt) {
+      console.error('Dados da mensagem inválidos:', message);
+      return false;
+    }
+    
     const messageRef = doc(firestore, 'messages', message.id);
     
-    // Inclui timestamp do servidor para ordenação
+    // Inclui timestamp do servidor para ordenação e garante que todos os campos obrigatórios existam
     const messageData = {
-      ...message,
-      serverCreatedAt: serverTimestamp()
+      id: message.id,
+      userId: message.userId,
+      content: message.content || '',
+      createdAt: message.createdAt,
+      serverCreatedAt: serverTimestamp(),
+      read: Array.isArray(message.read) ? message.read : [message.userId],
+      attachments: Array.isArray(message.attachments) ? message.attachments : [],
+      reactions: message.reactions || {}
     };
     
-    await setDoc(messageRef, messageData);
-    console.log('Mensagem adicionada com sucesso');
+    // Usa set com merge:false para garantir que tudo seja substituído completamente
+    await setDoc(messageRef, messageData, { merge: false });
+    
+    // Verifica se a mensagem foi salva corretamente
+    const savedMessage = await getDoc(messageRef);
+    if (!savedMessage.exists()) {
+      console.error('Mensagem não foi encontrada após salvar');
+      return false;
+    }
+    
+    console.log('Mensagem adicionada com sucesso, dados verificados');
     return true;
   } catch (error) {
     console.error('Erro ao adicionar mensagem:', error);

@@ -18,6 +18,7 @@ import {
 } from 'lucide-react';
 import type { Event } from '../types';
 import SimpleDateTimePicker from '../components/SimpleDateTimePicker';
+import { toast } from 'react-hot-toast';
 
 interface EventFormData {
   title: string;
@@ -102,9 +103,27 @@ export default function Events() {
     setShowForm(true);
   };
 
-  const handleDelete = (eventId: string) => {
-    deleteEvent(eventId);
-    setShowConfirmDelete(null);
+  const handleDelete = async (eventId: string) => {
+    try {
+      // Mostrar toast de carregamento
+      const toastId = toast.loading('Excluindo evento...');
+      
+      // Tenta excluir o evento (isso agora retorna uma Promise)
+      const success = await deleteEvent(eventId);
+      
+      // Se chegou aqui, a exclusão foi bem-sucedida
+      if (success) {
+        toast.success('Evento excluído com sucesso!', { id: toastId });
+        setShowConfirmDelete(null);
+      } else {
+        // Falha na exclusão, mas sem erro crítico
+        toast.error('Não foi possível excluir o evento. Tente novamente.', { id: toastId });
+      }
+    } catch (error) {
+      console.error('Erro ao excluir evento:', error);
+      // Erro crítico durante a exclusão
+      toast.error('Erro ao excluir evento. Verifique sua conexão e tente novamente.', { id: 'delete-error' });
+    }
   };
 
   const handleJoinLeave = (event: Event) => {
