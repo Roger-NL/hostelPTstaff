@@ -1,11 +1,12 @@
 import React, { useEffect, Suspense, lazy } from 'react';
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { Sun, Moon } from 'lucide-react';
 import { useStore } from './store/useStore';
 import { useTranslation } from './hooks/useTranslation';
 import { Toaster } from 'react-hot-toast';
 import PrivateRoute from './components/PrivateRoute';
 import AdminInitializer from './components/AdminInitializer';
+import { useAuth } from './hooks/useAuth';
 
 // Lazy loading de componentes pesados
 const Login = lazy(() => import('./pages/Login'));
@@ -23,9 +24,23 @@ const LoadingFallback = () => (
   </div>
 );
 
+const ScrollToTop = () => {
+  const { pathname } = useLocation();
+  
+  useEffect(() => {
+    const mainContent = document.querySelector('.content-scrollable');
+    if (mainContent) {
+      mainContent.scrollTop = 0;
+    }
+  }, [pathname]);
+  
+  return null;
+};
+
 function App() {
-  const { theme, language, setTheme, setLanguage, init } = useStore();
+  const { theme, language, setTheme, setLanguage, init, setUser } = useStore();
   const { t } = useTranslation();
+  const { currentUser, isAuthenticated } = useAuth();
 
   // Initialize data from Firebase
   useEffect(() => {
@@ -35,6 +50,14 @@ function App() {
       console.error('Failed to initialize data from Firebase:', error);
     });
   }, [init]);
+
+  // Sincroniza o usuário do hook de autenticação com o store global
+  useEffect(() => {
+    if (isAuthenticated && currentUser) {
+      console.log('Sincronizando usuário autenticado com o store global:', currentUser.name);
+      setUser(currentUser);
+    }
+  }, [isAuthenticated, currentUser, setUser]);
 
   // Alternar tema
   const toggleTheme = () => {
@@ -94,10 +117,11 @@ function App() {
         <div className="page-content">
           <Suspense fallback={<LoadingFallback />}>
             <Routes>
+              <Route path="/" element={<Navigate to="/login" replace />} />
               <Route path="/login" element={<Login />} />
               <Route path="/register" element={<Register />} />
               <Route 
-                path="/dashboard" 
+                path="/dashboard/*" 
                 element={
                   <PrivateRoute>
                     <Dashboard />
@@ -136,7 +160,6 @@ function App() {
                   </PrivateRoute>
                 } 
               />
-              <Route path="/" element={<Navigate to="/login" replace />} />
               <Route path="*" element={<Navigate to="/login" replace />} />
             </Routes>
           </Suspense>

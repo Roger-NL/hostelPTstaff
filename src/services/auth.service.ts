@@ -250,7 +250,7 @@ export const registerStaffOnly = async (userData: UserRegistrationData): Promise
 };
 
 // Login
-export const login = async (email: string, password: string): Promise<FirebaseUser> => {
+export const login = async (email: string, password: string): Promise<User> => {
   try {
     console.log(`Tentando fazer login com email: ${email}`);
     
@@ -291,11 +291,13 @@ export const login = async (email: string, password: string): Promise<FirebaseUs
       // Salva o perfil básico
       await setDoc(doc(firestore, 'users', authUser.uid), firestoreData);
       console.log(`Perfil básico criado para o usuário: ${authUser.uid}`);
+      
+      return basicProfile;
     } else {
       console.log(`Perfil do usuário encontrado no Firestore: ${authUser.uid}`);
+      // Retorna o perfil completo do usuário, não apenas o objeto de autenticação
+      return { id: authUser.uid, ...userDoc.data() } as User;
     }
-    
-    return authUser;
   } catch (error) {
     console.error('Erro ao fazer login:', error);
     throw error;

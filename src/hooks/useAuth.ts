@@ -106,8 +106,7 @@ export const useAuth = () => {
   // Otimização: memoiza a função de login para não recriar a cada render
   const login = useCallback(async (email: string, password: string) => {
     try {
-      const firebaseUser = await authService.login(email, password);
-      const userProfile = await authService.getUserProfile(firebaseUser.uid);
+      const userProfile = await authService.login(email, password);
       
       if (userProfile) {
         storeLogin(email, password);
@@ -116,6 +115,10 @@ export const useAuth = () => {
           isLoading: false,
           currentUser: userProfile
         });
+        
+        // Atualiza também o armazenamento global do usuário
+        useStore.getState().setUser(userProfile);
+        
         return userProfile;
       } else {
         throw new Error('Perfil de usuário não encontrado');
