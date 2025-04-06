@@ -97,22 +97,26 @@ function App() {
             },
           }}
         />
-        <div className="fixed top-4 right-4 z-50 flex gap-2">
-          <button
-            onClick={toggleTheme}
-            className={`p-2 rounded-full ${theme === 'dark' ? 'bg-gray-700 text-white hover:bg-gray-600' : 'bg-white text-gray-800 shadow-md hover:bg-gray-100'} transition-colors`}
-            aria-label={theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
-          >
-            {theme === 'dark' ? <Sun size={18} /> : <Moon size={18} />}
-          </button>
-          <button
-            onClick={toggleLanguage}
-            className={`p-2 rounded-full ${theme === 'dark' ? 'bg-gray-700 text-white hover:bg-gray-600' : 'bg-white text-gray-800 shadow-md hover:bg-gray-100'} transition-colors font-medium text-xs`}
-            aria-label={language === 'pt' ? 'Switch to English' : 'Alternar para Português'}
-          >
-            {language === 'pt' ? 'EN' : 'PT'}
-          </button>
-        </div>
+        
+        {/* Mostra botões de tema e idioma APENAS na página de login ou quando não estiver autenticado */}
+        {!isAuthenticated && (
+          <div className="fixed top-4 right-4 z-50 flex gap-2">
+            <button
+              onClick={toggleTheme}
+              className={`p-2 rounded-full ${theme === 'dark' ? 'bg-gray-700 text-white hover:bg-gray-600' : 'bg-white text-gray-800 shadow-md hover:bg-gray-100'} transition-colors`}
+              aria-label={theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
+            >
+              {theme === 'dark' ? <Sun size={18} /> : <Moon size={18} />}
+            </button>
+            <button
+              onClick={toggleLanguage}
+              className={`p-2 rounded-full ${theme === 'dark' ? 'bg-gray-700 text-white hover:bg-gray-600' : 'bg-white text-gray-800 shadow-md hover:bg-gray-100'} transition-colors font-medium text-xs`}
+              aria-label={language === 'pt' ? 'Switch to English' : 'Alternar para Português'}
+            >
+              {language === 'pt' ? 'EN' : 'PT'}
+            </button>
+          </div>
+        )}
         
         <div className="page-content">
           <Suspense fallback={<LoadingFallback />}>
