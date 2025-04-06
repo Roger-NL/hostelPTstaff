@@ -108,8 +108,8 @@ input, select, textarea, button {
   
   /* Versão completa do glass-morphism apenas para desktop */
   @media (min-width: 768px) {
-    .glass-morphism {
-      @apply backdrop-blur-xl;
+    .glass-morphism-desktop {
+      backdrop-filter: blur(16px);
     }
   }
 

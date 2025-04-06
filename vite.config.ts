@@ -5,14 +5,7 @@ import path from 'path';
 // https://vitejs.dev/config/
 export default defineConfig({
   plugins: [
-    react({
-      // Otimizando JSX para produção
-      babel: {
-        plugins: [
-          ['@babel/plugin-transform-react-jsx', { runtime: 'automatic' }]
-        ]
-      }
-    })
+    react() // Simplificando a configuração do Babel
   ],
   optimizeDeps: {
     exclude: ['lucide-react'],
@@ -28,7 +21,7 @@ export default defineConfig({
         drop_debugger: true
       }
     },
-    // Otimizando o carregamento separando os chunks
+    // Otimizando o carregamento separando os chunks essenciais
     rollupOptions: {
       output: {
         manualChunks: {
@@ -37,13 +30,6 @@ export default defineConfig({
           ui: ['lucide-react', 'recharts'],
           utils: ['date-fns', 'zustand'],
           firebase: ['firebase/app', 'firebase/auth', 'firebase/firestore'],
-          // Separa as páginas grandes em chunks distintos
-          pages: [
-            './src/pages/Dashboard.tsx',
-            './src/pages/Tasks.tsx',
-            './src/pages/Events.tsx',
-            './src/pages/Schedule.tsx'
-          ]
         },
       },
     },
