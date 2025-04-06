@@ -1,5 +1,6 @@
-import React, { useState, useEffect, useMemo, useCallback } from 'react';
+import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { useStore } from '../store/useStore';
+import { useTranslation } from '../hooks/useTranslation';
 import { translations } from '../i18n/translations';
 import {
   Clock,
@@ -20,12 +21,17 @@ import {
   User,
   AlertCircle,
   MessageSquare,
-  CheckSquare
+  CheckSquare,
+  XCircle,
+  ClipboardList,
+  Loader
 } from 'lucide-react';
 import { format } from 'date-fns';
 import type { Task, TaskComment, TaskChecklistItem } from '../types';
 import usePerformanceOptimizer from '../hooks/usePerformanceOptimizer';
 import PhotoCapture from '../components/PhotoCapture';
+import { toast } from 'react-hot-toast';
+import { Popover, PopoverTrigger, PopoverContent } from '../components/ui/popover';
 
 interface TaskFormData {
   title: string;
@@ -73,7 +79,8 @@ export default function Tasks() {
     deleteAllTasks,
     cleanupDeletedTasks,
     approveTaskPhoto,
-    rejectTaskPhoto
+    rejectTaskPhoto,
+    uploadTaskPhoto
   } = useStore();
   
   // Aplica otimizações de performance
@@ -83,7 +90,7 @@ export default function Tasks() {
     shouldSimplifyUI 
   } = usePerformanceOptimizer();
   
-  const t = translations['en'];
+  const { t } = useTranslation();
   const [showForm, setShowForm] = useState(false);
   const [formData, setFormData] = useState<TaskFormData>(initialFormData);
   const [editingTaskId, setEditingTaskId] = useState<string | null>(null);
@@ -110,8 +117,18 @@ export default function Tasks() {
   }, [tasks, selectedTask?.id]);
 
   const handleStatusChange = (taskId: string, newStatus: Task['status']) => {
+    const task = tasks.find(t => t.id === taskId);
+    
+    if (!task) return;
+    
+    if (newStatus === 'done' && task.requirePhoto) {
+      if (!task.photo || !task.photo.approved) {
+        toast.error(t('approvals.cannotComplete'));
+        return;
+      }
+    }
+    
     moveTask(taskId, newStatus);
-    setShowStatusDropdown(null);
   };
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -194,171 +211,373 @@ export default function Tasks() {
     }
   };
 
-  const TaskCard = ({ task, index }: { task: Task; index: number }) => (
-    <div
-      className="bg-gray-800/70 backdrop-blur-sm rounded-lg border border-white/10 hover:border-white/20 transition-all shadow-sm hover:shadow-md cursor-pointer"
-      onClick={() => setSelectedTask(task)}
-    >
-      <div className="p-3 border-b border-white/5">
-        <div className="flex items-start justify-between gap-2 mb-2">
-          <h4 className="font-medium text-white text-sm truncate flex-1">
-            {task.title}
-            {task.requirePhoto && (
-              <div className="ml-2 flex items-center" title="Foto necessária para conclusão">
-                <Camera size={14} className="text-amber-400" />
-              </div>
-            )}
-          </h4>
-          <div className="flex items-center gap-1.5 shrink-0">
-            <div className={`text-xs px-2 py-0.5 rounded-full ${getPriorityColor(task.priority)} font-normal`}>
-              {task.priority}
-            </div>
-          </div>
-        </div>
+  const TaskCard = ({ task, index }: { task: Task; index: number }) => {
+    const { t } = useTranslation();
+    const [showPhotoModal, setShowPhotoModal] = useState(false);
+    const [isCapturing, setIsCapturing] = useState(false);
+    const [photoUrl, setPhotoUrl] = useState('');
+    const videoRef = useRef<HTMLVideoElement>(null);
+    const canvasRef = useRef<HTMLCanvasElement>(null);
+    const [uploadingPhoto, setUploadingPhoto] = useState(false);
+
+    const startCapture = async () => {
+      setIsCapturing(true);
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({ 
+          video: { facingMode: 'environment' } 
+        });
+        if (videoRef.current) {
+          videoRef.current.srcObject = stream;
+        }
+      } catch (err) {
+        console.error('Erro ao acessar a câmera:', err);
+        setIsCapturing(false);
+      }
+    };
+
+    const capturePhoto = () => {
+      const video = videoRef.current;
+      const canvas = canvasRef.current;
+      if (video && canvas) {
+        const context = canvas.getContext('2d');
+        canvas.width = video.videoWidth;
+        canvas.height = video.videoHeight;
+        context.drawImage(video, 0, 0, canvas.width, canvas.height);
         
-        <div className="flex flex-wrap items-center justify-between gap-2 text-xs">
-          <div className="relative">
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                setShowStatusDropdown(showStatusDropdown === task.id ? null : task.id);
-              }}
-              className="flex items-center gap-1 text-xs px-2 py-1 rounded-md bg-gray-700/50 hover:bg-gray-700"
-            >
-              {getStatusIcon(task.status)}
-              <span className="text-white">{task.status}</span>
-              <ChevronDown size={12} className="text-white/70" />
-            </button>
-            {showStatusDropdown === task.id && (
-              <>
-                <div 
-                  className="fixed inset-0 z-40"
-                  onClick={() => setShowStatusDropdown(null)}
-                />
-                <div 
-                  className="absolute left-0 mt-1 w-40 bg-gray-800 rounded-lg shadow-xl z-50 border border-white/10 overflow-hidden"
-                  onClick={(e) => e.stopPropagation()}
-                >
-                  <button
-                    onClick={() => handleStatusChange(task.id, 'todo')}
-                    className="w-full px-3 py-2 text-left text-xs hover:bg-gray-700 text-white flex items-center gap-2"
-                  >
-                    <X size={14} className="text-gray-400" />
-                    <span>To Do</span>
-                  </button>
-                  <button
-                    onClick={() => handleStatusChange(task.id, 'inProgress')}
-                    className="w-full px-3 py-2 text-left text-xs hover:bg-gray-700 text-white flex items-center gap-2"
-                  >
-                    <AlertTriangle size={14} className="text-amber-400" />
-                    <span>In Progress</span>
-                  </button>
-                  <button
-                    onClick={() => handleStatusChange(task.id, 'done')}
-                    className="w-full px-3 py-2 text-left text-xs hover:bg-gray-700 text-white flex items-center gap-2"
-                  >
-                    <CheckCircle size={14} className="text-emerald-400" />
-                    <span>Done</span>
-                  </button>
-                </div>
-              </>
-            )}
-          </div>
-          
-          <div className="flex items-center text-amber-400 text-xs font-medium">
-            <Award size={12} className="mr-1" />
-            <span>{task.points}</span>
-          </div>
-          
-          {isAdmin && (
-            <div className="flex gap-1 ml-auto">
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  handleEdit(task);
-                }}
-                className="p-1 bg-gray-700/50 hover:bg-blue-500/20 text-blue-400 hover:text-blue-300 rounded transition-colors"
-              >
-                <Edit size={12} />
-              </button>
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setShowConfirmDelete(task.id);
-                }}
-                className="p-1 bg-gray-700/50 hover:bg-red-500/20 text-red-400 hover:text-red-300 rounded transition-colors"
-              >
-                <Trash2 size={12} />
-              </button>
-            </div>
-          )}
-        </div>
-      </div>
+        const photo = canvas.toDataURL('image/jpeg');
+        setPhotoUrl(photo);
+        
+        const stream = video.srcObject;
+        if (stream) {
+          const tracks = stream.getTracks();
+          tracks.forEach(track => track.stop());
+        }
+        setIsCapturing(false);
+      }
+    };
+
+    const submitPhoto = async () => {
+      if (!photoUrl) return;
       
-      <div className="p-3">
-        <p className="text-xs text-gray-300 mb-2.5 line-clamp-2">
-          {task.description}
-        </p>
-        
-        {Array.isArray(task.tags) && task.tags.length > 0 && (
-          <div className="flex flex-wrap gap-1 mb-2.5">
-            {task.tags.map(tag => (
-              <span
-                key={tag}
-                className="text-[10px] px-2 py-0.5 rounded-full bg-gray-700/50 text-gray-300"
+      setUploadingPhoto(true);
+      try {
+        await uploadTaskPhoto(task.id, photoUrl, user.id);
+        toast.success(t('approvals.photoUploaded'));
+        setShowPhotoModal(false);
+      } catch (err) {
+        console.error('Erro ao enviar foto:', err);
+        toast.error(t('error.general'));
+      } finally {
+        setUploadingPhoto(false);
+      }
+    };
+
+    const cancelCapture = () => {
+      if (isCapturing && videoRef.current) {
+        const stream = videoRef.current.srcObject;
+        if (stream) {
+          const tracks = stream.getTracks();
+          tracks.forEach(track => track.stop());
+        }
+      }
+      setIsCapturing(false);
+      setPhotoUrl('');
+      setShowPhotoModal(false);
+    };
+
+    return (
+      <div
+        className="bg-gray-800/70 backdrop-blur-sm rounded-lg border border-white/10 hover:border-white/20 transition-all shadow-sm hover:shadow-md cursor-pointer"
+        onClick={() => setSelectedTask(task)}
+      >
+        <div className="p-3 border-b border-white/5">
+          <div className="flex items-start justify-between gap-2 mb-2">
+            <h4 className="font-medium text-white text-sm truncate flex-1">
+              {task.title}
+              {task.requirePhoto && (
+                <span className="ml-2 inline-flex items-center" title={t('approvals.photoRequired')}>
+                  <Camera size={14} className="text-amber-400" />
+                </span>
+              )}
+            </h4>
+            <div className="flex items-center gap-1.5 shrink-0">
+              <div className={`text-xs px-2 py-0.5 rounded-full ${getPriorityColor(task.priority)} font-normal`}>
+                {task.priority}
+              </div>
+            </div>
+          </div>
+          
+          <div className="flex flex-wrap items-center justify-between gap-2 text-xs">
+            <div className="relative">
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setShowStatusDropdown(showStatusDropdown === task.id ? null : task.id);
+                }}
+                className="flex items-center gap-1 text-xs px-2 py-1 rounded-md bg-gray-700/50 hover:bg-gray-700"
               >
-                {tag}
-              </span>
-            ))}
-          </div>
-        )}
-        
-        <div className="flex flex-wrap items-center gap-2 text-[10px] text-gray-400">
-          <div className="flex items-center gap-1">
-            <Clock size={10} className="text-gray-300" />
-            <span className="text-gray-300 truncate">
-              {format(new Date(task.dueDate || new Date()), 'MMM d, yyyy')}
-            </span>
-          </div>
-          
-          {Array.isArray(task.assignedTo) && task.assignedTo.length > 0 && (
-            <div className="flex items-center gap-1">
-              <User size={10} className="text-gray-300" />
-              <span className="text-gray-300 truncate max-w-[100px]">
-                {task.assignedTo.map(id => 
-                  users.find(u => u.id === id)?.name.split(' ')[0]
-                ).join(', ')}
-              </span>
+                {getStatusIcon(task.status)}
+                <span className="text-white">{task.status === 'todo' ? t('todo') : task.status === 'inProgress' ? t('inProgress') : t('done')}</span>
+                <ChevronDown size={12} className="text-white/70" />
+              </button>
+              {showStatusDropdown === task.id && (
+                <>
+                  <div 
+                    className="fixed inset-0 z-40"
+                    onClick={() => setShowStatusDropdown(null)}
+                  />
+                  <div 
+                    className="absolute left-0 mt-1 w-40 bg-gray-800 rounded-lg shadow-xl z-50 border border-white/10 overflow-hidden"
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleStatusChange(task.id, 'todo');
+                        setShowStatusDropdown(null);
+                      }}
+                      className="w-full px-3 py-2 text-left text-xs hover:bg-gray-700 text-white flex items-center gap-2"
+                    >
+                      <ClipboardList size={14} className="text-gray-400" />
+                      <span>{t('todo')}</span>
+                    </button>
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleStatusChange(task.id, 'inProgress');
+                        setShowStatusDropdown(null);
+                      }}
+                      className="w-full px-3 py-2 text-left text-xs hover:bg-gray-700 text-white flex items-center gap-2"
+                    >
+                      <Loader size={14} className="text-amber-400" />
+                      <span>{t('inProgress')}</span>
+                    </button>
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        if (task.requirePhoto && (!task.photo || !task.photo.approved)) {
+                          setShowPhotoModal(true);
+                          setShowStatusDropdown(null);
+                        } else {
+                          handleStatusChange(task.id, 'done');
+                          setShowStatusDropdown(null);
+                        }
+                      }}
+                      className="w-full px-3 py-2 text-left text-xs hover:bg-gray-700 text-white flex items-center gap-2"
+                    >
+                      <CheckSquare size={14} className="text-emerald-400" />
+                      <span>{t('done')}</span>
+                    </button>
+                  </div>
+                </>
+              )}
             </div>
-          )}
-          
-          {task.status === 'todo' && new Date(task.dueDate || new Date()) < new Date() && (
-            <div className="flex items-center gap-1 text-red-400 ml-auto">
-              <AlertCircle size={10} />
-              <span>Overdue</span>
+            
+            <div className="flex items-center text-amber-400 text-xs font-medium">
+              <Award size={12} className="mr-1" />
+              <span>{task.points}</span>
             </div>
-          )}
-          
-          <div className="flex items-center gap-2 ml-auto">
-            {Array.isArray(task.comments) && task.comments.length > 0 && (
-              <div className="flex items-center gap-1 text-gray-400">
-                <MessageSquare size={10} />
-                <span>{task.comments.length}</span>
+            
+            {isAdmin && (
+              <div className="flex gap-1 ml-auto">
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleEdit(task);
+                  }}
+                  className="p-1 bg-gray-700/50 hover:bg-blue-500/20 text-blue-400 hover:text-blue-300 rounded transition-colors"
+                >
+                  <Edit size={12} />
+                </button>
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setShowConfirmDelete(task.id);
+                  }}
+                  className="p-1 bg-gray-700/50 hover:bg-red-500/20 text-red-400 hover:text-red-300 rounded transition-colors"
+                >
+                  <Trash2 size={12} />
+                </button>
               </div>
             )}
-            {Array.isArray(task.checklist) && task.checklist.length > 0 && (
-              <div className="flex items-center gap-1 text-emerald-400">
-                <CheckSquare size={10} />
-                <span>
-                  {task.checklist.filter(item => item.completed).length}/{task.checklist.length}
+          </div>
+        </div>
+        
+        <div className="p-3">
+          <p className="text-xs text-gray-300 mb-2.5 line-clamp-2">
+            {task.description}
+          </p>
+          
+          {Array.isArray(task.tags) && task.tags.length > 0 && (
+            <div className="flex flex-wrap gap-1 mb-2.5">
+              {task.tags.map(tag => (
+                <span
+                  key={tag}
+                  className="text-[10px] px-2 py-0.5 rounded-full bg-gray-700/50 text-gray-300"
+                >
+                  {tag}
+                </span>
+              ))}
+            </div>
+          )}
+          
+          <div className="flex flex-wrap items-center gap-2 text-[10px] text-gray-400">
+            <div className="flex items-center gap-1">
+              <Clock size={10} className="text-gray-300" />
+              <span className="text-gray-300 truncate">
+                {format(new Date(task.dueDate || new Date()), 'MMM d, yyyy')}
+              </span>
+            </div>
+            
+            {Array.isArray(task.assignedTo) && task.assignedTo.length > 0 && (
+              <div className="flex items-center gap-1">
+                <User size={10} className="text-gray-300" />
+                <span className="text-gray-300 truncate max-w-[100px]">
+                  {task.assignedTo.map(id => 
+                    users.find(u => u.id === id)?.name.split(' ')[0]
+                  ).join(', ')}
                 </span>
               </div>
             )}
+            
+            {task.status === 'todo' && new Date(task.dueDate || new Date()) < new Date() && (
+              <div className="flex items-center gap-1 text-red-400 ml-auto">
+                <AlertCircle size={10} />
+                <span>Overdue</span>
+              </div>
+            )}
+            
+            <div className="flex items-center gap-2 ml-auto">
+              {Array.isArray(task.comments) && task.comments.length > 0 && (
+                <div className="flex items-center gap-1 text-gray-400">
+                  <MessageSquare size={10} />
+                  <span>{task.comments.length}</span>
+                </div>
+              )}
+              {Array.isArray(task.checklist) && task.checklist.length > 0 && (
+                <div className="flex items-center gap-1 text-emerald-400">
+                  <CheckSquare size={10} />
+                  <span>
+                    {task.checklist.filter(item => item.completed).length}/{task.checklist.length}
+                  </span>
+                </div>
+              )}
+            </div>
           </div>
         </div>
+
+        {task.requirePhoto && task.photo && (
+          <div className="mt-2 text-xs px-3 pb-3">
+            {task.photo.approved === true ? (
+              <span className="flex items-center text-green-400">
+                <CheckCircle size={12} className="mr-1" />
+                {t('approvals.photoApproved')}
+              </span>
+            ) : task.photo.approved === false ? (
+              <span className="flex items-center text-red-400">
+                <XCircle size={12} className="mr-1" />
+                {t('approvals.rejected')}
+              </span>
+            ) : (
+              <span className="flex items-center text-amber-400">
+                <span className="relative flex h-2 w-2 mr-2">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75"></span>
+                  <span className="relative inline-flex rounded-full h-2 w-2 bg-amber-500"></span>
+                </span>
+                {t('approvals.waitingApproval')}
+              </span>
+            )}
+          </div>
+        )}
+
+        {task.requirePhoto && !task.photo && (
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              setShowPhotoModal(true);
+            }}
+            className="mt-2 mx-3 mb-3 w-auto py-1 px-2 text-xs bg-amber-500/20 text-amber-300 rounded-lg hover:bg-amber-500/30 transition-colors flex items-center justify-center"
+          >
+            <Camera size={12} className="mr-1" />
+            {t('approvals.takePhoto')}
+          </button>
+        )}
+
+        {showPhotoModal && (
+          <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4">
+            <div className="bg-gray-800 rounded-xl w-full max-w-md overflow-hidden">
+              <div className="p-4 border-b border-gray-700">
+                <h3 className="text-xl font-medium">{t('approvals.takePhoto')}</h3>
+              </div>
+              
+              <div className="p-4">
+                {isCapturing ? (
+                  <div className="relative w-full aspect-[4/3] bg-black overflow-hidden rounded-lg">
+                    <video 
+                      ref={videoRef} 
+                      autoPlay 
+                      playsInline 
+                      className="absolute inset-0 w-full h-full object-cover"
+                    />
+                  </div>
+                ) : photoUrl ? (
+                  <div className="w-full aspect-[4/3] bg-black overflow-hidden rounded-lg">
+                    <img 
+                      src={photoUrl} 
+                      alt="Capturada" 
+                      className="w-full h-full object-contain"
+                    />
+                  </div>
+                ) : (
+                  <div className="w-full aspect-[4/3] bg-gray-900 rounded-lg flex items-center justify-center">
+                    <button
+                      onClick={startCapture}
+                      className="px-4 py-2 bg-amber-500 text-white rounded-lg hover:bg-amber-600"
+                    >
+                      <Camera className="inline-block mr-2" size={18} />
+                      {t('approvals.takePhoto')}
+                    </button>
+                  </div>
+                )}
+                
+                <canvas ref={canvasRef} className="hidden" />
+              </div>
+              
+              <div className="p-4 border-t border-gray-700 flex justify-between">
+                <button
+                  onClick={cancelCapture}
+                  className="px-4 py-2 bg-gray-700 text-white rounded-lg hover:bg-gray-600"
+                >
+                  {t('cancel')}
+                </button>
+                
+                {isCapturing ? (
+                  <button
+                    onClick={capturePhoto}
+                    className="px-4 py-2 bg-amber-500 text-white rounded-lg hover:bg-amber-600"
+                  >
+                    {t('approvals.takePhoto')}
+                  </button>
+                ) : photoUrl ? (
+                  <button
+                    onClick={submitPhoto}
+                    disabled={uploadingPhoto}
+                    className={`px-4 py-2 rounded-lg ${
+                      uploadingPhoto 
+                        ? 'bg-gray-600 text-gray-400' 
+                        : 'bg-green-500 text-white hover:bg-green-600'
+                    }`}
+                  >
+                    {uploadingPhoto ? t('approvals.uploadingPhoto') : t('send')}
+                  </button>
+                ) : null}
+              </div>
+            </div>
+          </div>
+        )}
       </div>
-    </div>
-  );
+    );
+  };
 
   const TaskColumn = ({ status, title }: { status: Task['status'], title: string }) => {
     const tasksInColumn = tasks.filter(t => t.status === status);
@@ -409,7 +628,6 @@ export default function Tasks() {
     );
   };
 
-  // Função para excluir todas as tarefas
   const handleDeleteAllTasks = async () => {
     try {
       setIsLoadingAction(true);
@@ -418,10 +636,8 @@ export default function Tasks() {
       setShowConfirmAllDelete(false);
       
       if (success) {
-        // Notificação de sucesso aqui se tiver um sistema de notificações
         console.log('Todas as tarefas foram excluídas com sucesso');
       } else {
-        // Notificação de erro aqui se tiver um sistema de notificações
         console.error('Erro ao excluir todas as tarefas');
       }
     } catch (error) {
@@ -431,7 +647,6 @@ export default function Tasks() {
     }
   };
 
-  // Função para limpar tarefas excluídas
   const handleCleanupDeletedTasks = async () => {
     try {
       setIsLoadingAction(true);
@@ -440,10 +655,8 @@ export default function Tasks() {
       setShowConfirmCleanup(false);
       
       if (success) {
-        // Notificação de sucesso aqui se tiver um sistema de notificações
         console.log('Limpeza de tarefas excluídas concluída com sucesso');
       } else {
-        // Notificação de erro aqui se tiver um sistema de notificações
         console.error('Erro ao limpar tarefas excluídas');
       }
     } catch (error) {
@@ -456,30 +669,24 @@ export default function Tasks() {
   const TaskDetail = () => {
     if (!selectedTask) return null;
     
-    // Verificação de segurança para o usuário atual
     if (!user) return null;
 
     const canCompleteTask = () => {
-      // Se a tarefa não requer foto, pode ser completada normalmente
       if (!selectedTask.requirePhoto) return true;
       
-      // Se requer foto, verifica se tem foto e se foi aprovada
       return selectedTask.photo && selectedTask.photo.approved;
     };
 
     const handleCompleteTask = () => {
-      // Impede a conclusão se a tarefa requer foto e não tem foto aprovada
       if (selectedTask.requirePhoto && (!selectedTask.photo || !selectedTask.photo.approved)) {
         return;
       }
       
-      // Mover para 'done'
       moveTask(selectedTask.id, 'done');
       setSelectedTask({ ...selectedTask, status: 'done' });
     };
 
     const handlePhotoUploaded = () => {
-      // Atualiza a tarefa selecionada para refletir a adição da foto
       const updatedTask = tasks.find(t => t.id === selectedTask.id);
       if (updatedTask) {
         setSelectedTask(updatedTask);
@@ -488,13 +695,11 @@ export default function Tasks() {
 
     const isTaskAdmin = user.role === 'admin';
 
-    // Função para garantir que o objeto de foto tenha todos os campos necessários
     const approvePhoto = () => {
       if (!selectedTask.photo) return;
       
       approveTaskPhoto(selectedTask.id, user.id);
       
-      // Criar uma cópia segura do objeto photo
       const updatedPhoto: typeof selectedTask.photo = {
         ...selectedTask.photo,
         approved: true,
@@ -699,7 +904,6 @@ export default function Tasks() {
         </div>
       </div>
 
-      {/* Task Columns Container */}
       <div className="page-content bg-gray-800/50 backdrop-blur-sm rounded-lg p-3 xs:p-4 sm:p-6">
         <div className="flex flex-col lg:flex-row gap-4 h-full">
           <TaskColumn status="todo" title="To Do" />
@@ -708,7 +912,6 @@ export default function Tasks() {
         </div>
       </div>
 
-      {/* Task Form Modal */}
       {showForm && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-3 xs:p-4 overflow-y-auto">
           <div className="bg-gray-800 rounded-lg p-4 xs:p-6 w-full max-w-2xl my-4">
@@ -873,7 +1076,7 @@ export default function Tasks() {
                             const newAssignedTo = [...(formData.assignedTo || []), userId];
                             setFormData({ ...formData, assignedTo: newAssignedTo });
                           }
-                          e.target.value = ''; // Reset select after adding
+                          e.target.value = '';
                         }}
                         value=""
                       >
@@ -976,12 +1179,10 @@ export default function Tasks() {
         </div>
       )}
 
-      {/* Task Details Modal */}
       {selectedTask && (
         <TaskDetail />
       )}
 
-      {/* Delete Confirmation Modal */}
       {showConfirmDelete && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-3 xs:p-4">
           <div className="bg-gray-800 rounded-lg p-4 xs:p-6 w-full max-w-md">
@@ -1009,7 +1210,6 @@ export default function Tasks() {
         </div>
       )}
 
-      {/* Confirmação para excluir todas as tarefas */}
       {showConfirmAllDelete && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-3 xs:p-4">
           <div className="bg-gray-800 rounded-lg p-4 xs:p-6 w-full max-w-md">
@@ -1048,7 +1248,6 @@ export default function Tasks() {
         </div>
       )}
       
-      {/* Confirmação para limpar tarefas excluídas */}
       {showConfirmCleanup && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-3 xs:p-4">
           <div className="bg-gray-800 rounded-lg p-4 xs:p-6 w-full max-w-md">
