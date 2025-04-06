@@ -1,6 +1,6 @@
-import React, { useEffect, Suspense, lazy } from 'react';
+import React, { useEffect, Suspense, lazy, useState } from 'react';
 import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
-import { Sun, Moon } from 'lucide-react';
+import { Sun, Moon, X } from 'lucide-react';
 import { useStore } from './store/useStore';
 import { useTranslation } from './hooks/useTranslation';
 import { Toaster } from 'react-hot-toast';
@@ -41,6 +41,15 @@ function App() {
   const { theme, language, setTheme, setLanguage, init, setUser } = useStore();
   const { t } = useTranslation();
   const { currentUser, isAuthenticated } = useAuth();
+  const [showLanguageModal, setShowLanguageModal] = useState(false);
+
+  // Verificar se é a primeira visita
+  useEffect(() => {
+    const hasSeenLanguageModal = localStorage.getItem('has_seen_language_modal');
+    if (!hasSeenLanguageModal) {
+      setShowLanguageModal(true);
+    }
+  }, []);
 
   // Initialize data from Firebase
   useEffect(() => {
@@ -67,6 +76,19 @@ function App() {
   // Alternar idioma
   const toggleLanguage = () => {
     setLanguage(language === 'pt' ? 'en' : 'pt');
+  };
+
+  // Selecionar idioma específico e fechar o modal
+  const selectLanguage = (lang: 'en' | 'pt') => {
+    setLanguage(lang);
+    localStorage.setItem('has_seen_language_modal', 'true');
+    setShowLanguageModal(false);
+  };
+
+  // Fechar o modal de idioma
+  const closeLanguageModal = () => {
+    localStorage.setItem('has_seen_language_modal', 'true');
+    setShowLanguageModal(false);
   };
 
   return (
@@ -98,9 +120,56 @@ function App() {
           }}
         />
         
+        {/* Modal de seleção de idioma na primeira visita */}
+        {showLanguageModal && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+            <div className={`mx-4 p-6 rounded-lg shadow-xl ${theme === 'dark' ? 'bg-gray-800 text-white' : 'bg-white text-gray-800'} max-w-md`}>
+              <div className="flex justify-between items-center mb-4">
+                <h2 className="text-xl font-semibold">{language === 'pt' ? 'Selecione o idioma' : 'Select language'}</h2>
+                <button 
+                  onClick={closeLanguageModal}
+                  className={`p-1 rounded-full hover:bg-opacity-10 ${theme === 'dark' ? 'hover:bg-white' : 'hover:bg-gray-800'}`}
+                >
+                  <X size={20} />
+                </button>
+              </div>
+              
+              <p className="mb-4">
+                {language === 'pt' 
+                  ? 'Escolha o idioma de sua preferência. Esta opção pode ser alterada posteriormente nas configurações do sistema.'
+                  : 'Choose your preferred language. This option can be changed later in the system settings.'
+                }
+              </p>
+              
+              <div className="flex gap-4 justify-center">
+                <button
+                  onClick={() => selectLanguage('pt')}
+                  className={`py-2 px-4 rounded transition ${
+                    language === 'pt' 
+                      ? 'bg-yellow-500 text-gray-900 font-medium' 
+                      : theme === 'dark' ? 'bg-gray-700 hover:bg-gray-600' : 'bg-gray-100 hover:bg-gray-200'
+                  }`}
+                >
+                  Português
+                </button>
+                <button
+                  onClick={() => selectLanguage('en')}
+                  className={`py-2 px-4 rounded transition ${
+                    language === 'en' 
+                      ? 'bg-yellow-500 text-gray-900 font-medium' 
+                      : theme === 'dark' ? 'bg-gray-700 hover:bg-gray-600' : 'bg-gray-100 hover:bg-gray-200'
+                  }`}
+                >
+                  English
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+        
         {/* Mostra botões de tema e idioma APENAS na página de login ou quando não estiver autenticado */}
         {!isAuthenticated && (
-          <div className="fixed top-4 right-4 z-50 flex gap-2">
+          <div className="fixed top-4 right-4 z-40 flex gap-2">
             <button
               onClick={toggleTheme}
               className={`p-2 rounded-full ${theme === 'dark' ? 'bg-gray-700 text-white hover:bg-gray-600' : 'bg-white text-gray-800 shadow-md hover:bg-gray-100'} transition-colors`}
@@ -120,6 +189,7 @@ function App() {
         
         <div className="page-content">
           <Suspense fallback={<LoadingFallback />}>
+            <ScrollToTop />
             <Routes>
               <Route path="/" element={<Navigate to="/login" replace />} />
               <Route path="/login" element={<Login />} />
