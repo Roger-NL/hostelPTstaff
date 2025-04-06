@@ -108,6 +108,9 @@ export const register = async (userData: UserRegistrationData): Promise<User | n
   try {
     console.log(`Iniciando registro para o email: ${userData.email}`);
     
+    // Guarda o usuário atual
+    const currentUser = auth.currentUser;
+    
     // 1. Criar usuário no Firebase Auth
     const userCredential = await createUserWithEmailAndPassword(auth, userData.email, userData.password);
     const authUser = userCredential.user;
@@ -147,6 +150,19 @@ export const register = async (userData: UserRegistrationData): Promise<User | n
     // 5. Salvar no Firestore
     await setDoc(doc(firestore, 'users', authUser.uid), firestoreData);
     console.log('Dados do usuário salvos com sucesso no Firestore');
+    
+    // 6. Se havia um usuário logado antes, fazer logout do novo e voltar para o original
+    if (currentUser && currentUser.uid !== authUser.uid) {
+      try {
+        // Fazer logout do usuário recém-criado
+        await signOut(auth);
+        
+        // Não precisamos fazer login novamente, o onAuthStateChanged vai cuidar disso
+        console.log('Voltando ao usuário original após criar novo usuário');
+      } catch (signOutError) {
+        console.error('Erro ao fazer logout após criar usuário:', signOutError);
+      }
+    }
     
     return userDoc;
   } catch (error) {

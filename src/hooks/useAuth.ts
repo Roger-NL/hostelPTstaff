@@ -130,14 +130,14 @@ export const useAuth = () => {
   }, [storeLogin]);
 
   // Otimização: memoiza a função de registro para não recriar a cada render
-  const register = useCallback(async (userData: Partial<User>, password: string) => {
+  const register = useCallback(async (email: string, password: string, userData: Partial<User>) => {
     try {
-      if (!userData.email) {
+      if (!email) {
         throw new Error('Email é obrigatório para registro');
       }
       
       const registrationData = {
-        email: userData.email,
+        email: email,
         password: password,
         name: userData.name || '',
         country: userData.country || '',
@@ -149,15 +149,25 @@ export const useAuth = () => {
         departureDate: userData.departureDate || ''
       };
       
-      const newUser = await authService.register(registrationData);
+      // Verificar se o usuário atual é admin para determinar qual função usar
+      const isAdmin = user && user.role === 'admin';
+      
+      // Se for admin, usar registerStaffOnly para não mudar a autenticação
+      // Se não for admin (cadastro próprio), usar o método register normal
+      const newUser = isAdmin 
+        ? await authService.registerStaffOnly(registrationData)
+        : await authService.register(registrationData);
       
       if (newUser) {
-        storeLogin(userData.email, password);
-        setAuthState({
-          isAuthenticated: true,
-          isLoading: false,
-          currentUser: newUser
-        });
+        // Se não for admin (cadastro próprio), fazer login com o novo usuário
+        if (!isAdmin) {
+          storeLogin(email, password);
+          setAuthState({
+            isAuthenticated: true,
+            isLoading: false,
+            currentUser: newUser
+          });
+        }
         return newUser;
       } else {
         throw new Error('Falha ao registrar usuário');
@@ -166,7 +176,7 @@ export const useAuth = () => {
       console.error('Registration error:', error);
       throw error;
     }
-  }, [storeLogin]);
+  }, [storeLogin, user]);
 
   // Otimização: memoiza a função de logout para não recriar a cada render
   const logout = useCallback(async () => {

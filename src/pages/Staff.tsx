@@ -48,7 +48,7 @@ const initialFormData: StaffFormData = {
 export default function Staff() {
   const { t } = useTranslation();
   const { users, addStaff, removeStaff, updateStaff, makeAdmin, removeAdmin, user: currentUser } = useStore();
-  const { loadAllUsers, getUsers } = useAuth();
+  const { loadAllUsers, getUsers, register } = useAuth();
   const [showForm, setShowForm] = useState(false);
   const [formData, setFormData] = useState<StaffFormData>(initialFormData);
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -115,67 +115,39 @@ export default function Staff() {
         setIsLoading(true);
         
         // Preparar dados para registro, convertendo Date para string
-        const registrationData = {
-          email: formData.email,
-          password: formData.password,
+        const userData: Partial<User> = {
           name: formData.name,
           country: formData.country,
-          age: formData.age,
-          relationshipStatus: 'single' as 'single' | 'dating' | 'married', // Valor padrão
+          age: parseInt(formData.age),
+          relationshipStatus: 'single',
           gender: formData.gender as 'male' | 'female' | 'other',
           phone: formData.phone,
           arrivalDate: formData.arrivalDate.toISOString().split('T')[0],
-          departureDate: formData.departureDate.toISOString().split('T')[0]
+          departureDate: formData.departureDate.toISOString().split('T')[0],
+          role: 'user',
+          points: 0
         };
         
         try {
-          // Registrar usuário DESCONECTADO do auth atual
-          // NÃO usar async/await para evitar que o Firebase mude o usuário atual
-          const registerPromise = authService.registerStaffOnly(registrationData);
-          
-          registerPromise.then((newUser: User | null) => {
-            if (newUser) {
-              // Apenas atualizar a lista localmente, sem reload
-              const newUserData: UserData = {
-                id: newUser.id,
-                email: newUser.email,
-                name: newUser.name,
-                password: '',
-                country: newUser.country || '',
-                age: String(newUser.age || 0),
-                relationshipStatus: newUser.relationshipStatus as string,
-                gender: newUser.gender as string,
-                phone: newUser.phone || '',
-                arrivalDate: newUser.arrivalDate || '',
-                departureDate: newUser.departureDate || '',
-                isAuthenticated: false,
-                role: 'user',
-                points: 0
-              };
-              
-              // Atualizar a lista de usuários sem recarregar
-              useStore.getState().setUsers([...users, newUserData]);
-              
-              // Fechar o formulário
-              setFormData(initialFormData);
-              setShowForm(false);
-              setEditingId(null);
-              setIsLoading(false);
-              
-              alert('Usuário registrado com sucesso!');
-            } else {
-              throw new Error('Falha ao registrar usuário');
-            }
-          }).catch((error: Error) => {
-            console.error('Erro ao registrar usuário:', error);
-            setError(error instanceof Error ? error.message : t('error.general'));
+          // Usar o método register do hook useAuth
+          const newUser = await register(formData.email, formData.password, userData);
+
+          if (newUser) {
+            // Após o registro bem-sucedido, recarregar a lista de usuários
+            await loadAllUsers();
+            
+            // Fechar o formulário
+            setFormData(initialFormData);
+            setShowForm(false);
+            setEditingId(null);
             setIsLoading(false);
-          });
-          
-          // Não esperar a promessa terminar para evitar problemas com o auth
-          return;
+            
+            alert(t('staff.userRegistered'));
+          } else {
+            throw new Error(t('staff.registerFailed'));
+          }
         } catch (error) {
-          console.error('Erro ao iniciar registro:', error);
+          console.error('Erro ao registrar usuário:', error);
           throw error;
         }
       }

@@ -4,6 +4,7 @@ import { useAuth } from '../hooks/useAuth';
 import { useTranslation } from '../hooks/useTranslation';
 import { User } from '../types';
 import { ArrowLeft } from 'lucide-react';
+import { toast } from 'react-hot-toast';
 
 export default function Register() {
   const { t } = useTranslation();
@@ -50,7 +51,7 @@ export default function Register() {
     
     try {
       // Prepara os dados para registro no Firebase
-      const userData: Omit<User, 'id'> = {
+      const userData: Partial<User> = {
         name: formData.name,
         email: formData.email,
         country: formData.country,
@@ -65,8 +66,14 @@ export default function Register() {
       };
       
       // Registra no Firebase
-      await register(formData.email, formData.password, userData);
-      navigate('/dashboard');
+      const newUser = await register(formData.email, formData.password, userData);
+      
+      if (newUser) {
+        toast.success(t('register.success'));
+        navigate('/dashboard');
+      } else {
+        setError(t('error.general'));
+      }
     } catch (err: any) {
       console.error('Registration error:', err);
       if (err.code === 'auth/email-already-in-use') {
