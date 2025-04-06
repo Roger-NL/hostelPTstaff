@@ -1,6 +1,7 @@
-import { doc, setDoc, getDoc, deleteDoc, collection, getDocs } from 'firebase/firestore';
+import { doc, setDoc, getDoc, deleteDoc, collection, getDocs, updateDoc, getFirestore, serverTimestamp } from 'firebase/firestore';
+import { ref, uploadString, getDownloadURL, getStorage } from 'firebase/storage';
 import { firestore } from '../config/firebase';
-import type { Task } from '../types';
+import type { Task, TaskPhoto } from '../types';
 
 // Função para carregar tarefas do Firebase
 export async function loadTasksFromFirebase(): Promise<Task[]> {
@@ -314,6 +315,134 @@ export async function cleanupDeletedTasks(): Promise<boolean> {
     return success;
   } catch (error) {
     console.error("Erro durante limpeza de tarefas:", error);
+    return false;
+  }
+}
+
+// Função para fazer upload de uma foto para uma tarefa
+export async function uploadTaskPhoto(taskId: string, photoData: string, userId: string): Promise<boolean> {
+  try {
+    console.log(`Fazendo upload de foto para tarefa ${taskId}`);
+    
+    // Verificar se a tarefa existe
+    const taskRef = doc(firestore, 'tasks', taskId);
+    const taskDoc = await getDoc(taskRef);
+    
+    if (!taskDoc.exists()) {
+      console.error(`Tarefa ${taskId} não encontrada`);
+      return false;
+    }
+    
+    // Obter a tarefa atual
+    const task = taskDoc.data() as Task;
+    
+    // Verificar se a tarefa requer foto
+    if (!task.requirePhoto) {
+      console.error(`Tarefa ${taskId} não requer foto`);
+      return false;
+    }
+    
+    // Fazer upload da foto para o Firebase Storage
+    const storage = getStorage();
+    const photoRef = ref(storage, `task-photos/${taskId}/${Date.now()}.jpg`);
+    
+    // Remover o prefixo 'data:image/jpeg;base64,' do base64
+    const base64Data = photoData.split(',')[1];
+    
+    // Upload da imagem
+    await uploadString(photoRef, base64Data, 'base64');
+    
+    // Obter URL de download
+    const downloadUrl = await getDownloadURL(photoRef);
+    
+    // Criar objeto TaskPhoto
+    const photo: TaskPhoto = {
+      url: downloadUrl,
+      uploadedAt: new Date().toISOString(),
+      uploadedBy: userId,
+      approved: false
+    };
+    
+    // Atualizar a tarefa com a foto
+    await updateDoc(taskRef, {
+      photo: photo
+    });
+    
+    console.log(`Foto adicionada com sucesso à tarefa ${taskId}`);
+    return true;
+  } catch (error) {
+    console.error("Erro ao fazer upload de foto:", error);
+    return false;
+  }
+}
+
+// Função para aprovar uma foto de tarefa (por administrador)
+export async function approveTaskPhoto(taskId: string, adminId: string): Promise<boolean> {
+  try {
+    console.log(`Aprovando foto da tarefa ${taskId}`);
+    
+    // Verificar se a tarefa existe
+    const taskRef = doc(firestore, 'tasks', taskId);
+    const taskDoc = await getDoc(taskRef);
+    
+    if (!taskDoc.exists()) {
+      console.error(`Tarefa ${taskId} não encontrada`);
+      return false;
+    }
+    
+    // Obter a tarefa atual
+    const task = taskDoc.data() as Task;
+    
+    // Verificar se a tarefa tem foto
+    if (!task.photo) {
+      console.error(`Tarefa ${taskId} não tem foto para aprovar`);
+      return false;
+    }
+    
+    // Atualizar o status de aprovação da foto
+    const updatedPhoto: TaskPhoto = {
+      ...task.photo,
+      approved: true,
+      approvedBy: adminId,
+      approvedAt: new Date().toISOString()
+    };
+    
+    // Atualizar a tarefa com a foto aprovada
+    await updateDoc(taskRef, {
+      photo: updatedPhoto
+    });
+    
+    console.log(`Foto da tarefa ${taskId} aprovada com sucesso`);
+    return true;
+  } catch (error) {
+    console.error("Erro ao aprovar foto:", error);
+    return false;
+  }
+}
+
+// Função para rejeitar uma foto de tarefa (por administrador)
+export async function rejectTaskPhoto(taskId: string): Promise<boolean> {
+  try {
+    console.log(`Rejeitando foto da tarefa ${taskId}`);
+    
+    // Verificar se a tarefa existe
+    const taskRef = doc(firestore, 'tasks', taskId);
+    const taskDoc = await getDoc(taskRef);
+    
+    if (!taskDoc.exists()) {
+      console.error(`Tarefa ${taskId} não encontrada`);
+      return false;
+    }
+    
+    // Apagar a foto da tarefa
+    await updateDoc(taskRef, {
+      photo: null
+    });
+    
+    console.log(`Foto da tarefa ${taskId} rejeitada com sucesso`);
+    return true;
+  } catch (error) {
+    console.error("Erro ao rejeitar foto:", error);
     return false;
   }
 } 

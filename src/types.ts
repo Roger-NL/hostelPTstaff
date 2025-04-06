@@ -95,6 +95,8 @@ export interface Task {
   createdBy: string;
   type: 'hostel' | 'personal';
   reminder?: string;
+  requirePhoto?: boolean;
+  photo?: TaskPhoto;
 }
 
 export interface TaskComment {
@@ -108,6 +110,15 @@ export interface TaskChecklistItem {
   id: string;
   content: string;
   completed: boolean;
+}
+
+export interface TaskPhoto {
+  url: string;
+  uploadedAt: string;
+  uploadedBy: string;
+  approved: boolean;
+  approvedBy?: string;
+  approvedAt?: string;
 }
 
 export interface Event {

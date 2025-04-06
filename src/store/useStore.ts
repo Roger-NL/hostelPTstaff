@@ -9,6 +9,17 @@ import * as eventService from '../services/event.service';
 import * as taskService from '../services/task.service';
 import { collection, getDocs } from 'firebase/firestore';
 import { query, where, deleteDoc } from 'firebase/firestore';
+import { 
+  loadTasksFromFirebase, 
+  saveTaskToFirebase, 
+  deleteTaskFromFirebase, 
+  updateTaskInFirebase, 
+  deleteAllTasks, 
+  cleanupDeletedTasks,
+  uploadTaskPhoto,
+  approveTaskPhoto,
+  rejectTaskPhoto
+} from '../services/task.service';
 
 interface AppState {
   theme: 'light' | 'dark';
@@ -75,6 +86,10 @@ interface AppState {
   
   // Add initialization function to load data from Firebase
   init: () => Promise<void>;
+  
+  // Funções para gerenciamento de fotos
+  approveTaskPhoto: (taskId: string, adminId: string) => Promise<void>;
+  rejectTaskPhoto: (taskId: string) => Promise<void>;
 }
 
 // Definindo dados padrão vazios
@@ -1471,5 +1486,58 @@ export const useStore = create<AppState>((set, get) => ({
   
   // System state
   systemSettings: defaultSystemSettings,
-  setSystemSettings: (systemSettings) => set({ systemSettings })
+  setSystemSettings: (systemSettings) => set({ systemSettings }),
+  
+  // Funções para gerenciamento de fotos
+  approveTaskPhoto: async (taskId: string, adminId: string) => {
+    try {
+      const success = await approveTaskPhoto(taskId, adminId);
+      if (success) {
+        // Atualizar a tarefa no estado com a foto aprovada
+        const tasks = [...get().tasks];
+        const taskIndex = tasks.findIndex(t => t.id === taskId);
+        
+        if (taskIndex !== -1) {
+          const task = tasks[taskIndex];
+          if (task.photo) {
+            tasks[taskIndex] = {
+              ...task,
+              photo: {
+                ...task.photo,
+                approved: true,
+                approvedBy: adminId,
+                approvedAt: new Date().toISOString()
+              }
+            };
+            
+            set({ tasks });
+          }
+        }
+      }
+    } catch (error) {
+      console.error('Erro ao aprovar foto:', error);
+    }
+  },
+  
+  rejectTaskPhoto: async (taskId: string) => {
+    try {
+      const success = await rejectTaskPhoto(taskId);
+      if (success) {
+        // Atualizar a tarefa no estado removendo a foto
+        const tasks = [...get().tasks];
+        const taskIndex = tasks.findIndex(t => t.id === taskId);
+        
+        if (taskIndex !== -1) {
+          tasks[taskIndex] = {
+            ...tasks[taskIndex],
+            photo: undefined
+          };
+          
+          set({ tasks });
+        }
+      }
+    } catch (error) {
+      console.error('Erro ao rejeitar foto:', error);
+    }
+  }
 }));

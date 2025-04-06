@@ -2,26 +2,30 @@ import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { useStore } from '../store/useStore';
 import { translations } from '../i18n/translations';
 import {
-  Plus,
-  Trash2,
-  Award,
-  Edit,
   Clock,
-  AlertCircle,
-  User,
-  MessageSquare,
-  CheckSquare,
   Tag,
-  CheckCircle2,
-  XCircle,
+  CheckCircle,
+  Edit,
+  Trash2,
+  MoreVertical,
+  Plus,
+  PlusCircle,
+  Users,
   AlertTriangle,
   Send,
   X,
-  ChevronDown
+  ChevronDown,
+  Camera,
+  Award,
+  User,
+  AlertCircle,
+  MessageSquare,
+  CheckSquare
 } from 'lucide-react';
 import { format } from 'date-fns';
 import type { Task, TaskComment, TaskChecklistItem } from '../types';
 import usePerformanceOptimizer from '../hooks/usePerformanceOptimizer';
+import PhotoCapture from '../components/PhotoCapture';
 
 interface TaskFormData {
   title: string;
@@ -33,6 +37,7 @@ interface TaskFormData {
   tags?: string[];
   type: 'hostel' | 'personal';
   isPrivate?: boolean;
+  requirePhoto: boolean;
 }
 
 const initialFormData: TaskFormData = {
@@ -44,7 +49,8 @@ const initialFormData: TaskFormData = {
   assignedTo: [],
   tags: [],
   type: 'hostel',
-  isPrivate: false
+  isPrivate: false,
+  requirePhoto: false
 };
 
 export default function Tasks() {
@@ -65,7 +71,9 @@ export default function Tasks() {
     addTaskTag,
     removeTaskTag,
     deleteAllTasks,
-    cleanupDeletedTasks
+    cleanupDeletedTasks,
+    approveTaskPhoto,
+    rejectTaskPhoto
   } = useStore();
   
   // Aplica otimizações de performance
@@ -124,14 +132,15 @@ export default function Tasks() {
     console.log('Editing task:', task);
     setFormData({
       title: task.title,
-      description: task.description,
-      points: task.points,
-      priority: task.priority,
-      dueDate: task.dueDate?.split('T')[0] || new Date().toISOString().split('T')[0],
-      assignedTo: Array.isArray(task.assignedTo) ? [...task.assignedTo] : [],
+      description: task.description || '',
+      points: task.points || 10,
+      priority: task.priority || 'medium',
+      dueDate: task.dueDate ? task.dueDate.split('T')[0] : new Date().toISOString().split('T')[0],
+      assignedTo: task.assignedTo || [],
       tags: Array.isArray(task.tags) ? [...task.tags] : [],
       type: task.type,
-      isPrivate: task.isPrivate
+      isPrivate: task.isPrivate || false,
+      requirePhoto: task.requirePhoto || false
     });
     setEditingTaskId(task.id);
     setShowForm(true);
@@ -177,11 +186,11 @@ export default function Tasks() {
   const getStatusIcon = (status: Task['status']) => {
     switch (status) {
       case 'done':
-        return <CheckCircle2 className="text-emerald-400" />;
+        return <CheckCircle className="text-emerald-400" />;
       case 'inProgress':
         return <AlertTriangle className="text-amber-400" />;
       default:
-        return <XCircle className="text-gray-400" />;
+        return <AlertCircle className="text-gray-400" />;
     }
   };
 
@@ -194,6 +203,11 @@ export default function Tasks() {
         <div className="flex items-start justify-between gap-2 mb-2">
           <h4 className="font-medium text-white text-sm truncate flex-1">
             {task.title}
+            {task.requirePhoto && (
+              <div className="ml-2 flex items-center" title="Foto necessária para conclusão">
+                <Camera size={14} className="text-amber-400" />
+              </div>
+            )}
           </h4>
           <div className="flex items-center gap-1.5 shrink-0">
             <div className={`text-xs px-2 py-0.5 rounded-full ${getPriorityColor(task.priority)} font-normal`}>
@@ -229,7 +243,7 @@ export default function Tasks() {
                     onClick={() => handleStatusChange(task.id, 'todo')}
                     className="w-full px-3 py-2 text-left text-xs hover:bg-gray-700 text-white flex items-center gap-2"
                   >
-                    <XCircle size={14} className="text-gray-400" />
+                    <X size={14} className="text-gray-400" />
                     <span>To Do</span>
                   </button>
                   <button
@@ -243,7 +257,7 @@ export default function Tasks() {
                     onClick={() => handleStatusChange(task.id, 'done')}
                     className="w-full px-3 py-2 text-left text-xs hover:bg-gray-700 text-white flex items-center gap-2"
                   >
-                    <CheckCircle2 size={14} className="text-emerald-400" />
+                    <CheckCircle size={14} className="text-emerald-400" />
                     <span>Done</span>
                   </button>
                 </div>
@@ -354,11 +368,11 @@ export default function Tasks() {
         <div className="flex items-center gap-2 p-3 border-b border-white/10 bg-gray-800/50">
           <h3 className="text-base font-medium text-white tracking-wide flex items-center gap-2">
             {status === 'todo' ? (
-              <XCircle size={16} className="text-gray-400" />
+              <AlertCircle size={16} className="text-gray-400" />
             ) : status === 'inProgress' ? (
               <AlertTriangle size={16} className="text-amber-400" />
             ) : (
-              <CheckCircle2 size={16} className="text-emerald-400" />
+              <CheckCircle size={16} className="text-emerald-400" />
             )}
             {title}
           </h3>
@@ -377,11 +391,11 @@ export default function Tasks() {
               <div className="text-center">
                 <div className="w-10 h-10 mx-auto bg-gray-700/50 rounded-full flex items-center justify-center mb-2">
                   {status === 'todo' ? (
-                    <XCircle size={16} className="text-gray-400" />
+                    <AlertCircle size={16} className="text-gray-400" />
                   ) : status === 'inProgress' ? (
                     <AlertTriangle size={16} className="text-amber-400" />
                   ) : (
-                    <CheckCircle2 size={16} className="text-emerald-400" />
+                    <CheckCircle size={16} className="text-emerald-400" />
                   )}
                 </div>
                 <p className="text-xs text-gray-400">
@@ -437,6 +451,212 @@ export default function Tasks() {
       setIsLoadingAction(false);
       setShowConfirmCleanup(false);
     }
+  };
+
+  const TaskDetail = () => {
+    if (!selectedTask) return null;
+    
+    // Verificação de segurança para o usuário atual
+    if (!user) return null;
+
+    const canCompleteTask = () => {
+      // Se a tarefa não requer foto, pode ser completada normalmente
+      if (!selectedTask.requirePhoto) return true;
+      
+      // Se requer foto, verifica se tem foto e se foi aprovada
+      return selectedTask.photo && selectedTask.photo.approved;
+    };
+
+    const handleCompleteTask = () => {
+      // Impede a conclusão se a tarefa requer foto e não tem foto aprovada
+      if (selectedTask.requirePhoto && (!selectedTask.photo || !selectedTask.photo.approved)) {
+        return;
+      }
+      
+      // Mover para 'done'
+      moveTask(selectedTask.id, 'done');
+      setSelectedTask({ ...selectedTask, status: 'done' });
+    };
+
+    const handlePhotoUploaded = () => {
+      // Atualiza a tarefa selecionada para refletir a adição da foto
+      const updatedTask = tasks.find(t => t.id === selectedTask.id);
+      if (updatedTask) {
+        setSelectedTask(updatedTask);
+      }
+    };
+
+    const isTaskAdmin = user.role === 'admin';
+
+    // Função para garantir que o objeto de foto tenha todos os campos necessários
+    const approvePhoto = () => {
+      if (!selectedTask.photo) return;
+      
+      approveTaskPhoto(selectedTask.id, user.id);
+      
+      // Criar uma cópia segura do objeto photo
+      const updatedPhoto: typeof selectedTask.photo = {
+        ...selectedTask.photo,
+        approved: true,
+        approvedBy: user.id,
+        approvedAt: new Date().toISOString()
+      };
+      
+      setSelectedTask({
+        ...selectedTask,
+        photo: updatedPhoto
+      });
+    };
+    
+    const rejectPhoto = () => {
+      rejectTaskPhoto(selectedTask.id);
+      setSelectedTask({
+        ...selectedTask,
+        photo: undefined
+      });
+    };
+
+    return (
+      <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 p-4 overflow-y-auto">
+        <div className="bg-gray-800 rounded-xl border border-white/10 w-full max-w-2xl max-h-[90vh] flex flex-col overflow-hidden">
+          <div className="flex items-center justify-between p-4 border-b border-white/10">
+            <div className="flex items-center gap-2">
+              <div className={`w-3 h-3 rounded-full ${
+                selectedTask.status === 'todo' ? 'bg-gray-400' :
+                selectedTask.status === 'inProgress' ? 'bg-amber-400' : 'bg-emerald-400'
+              }`} />
+              <h3 className="text-lg font-medium text-white">{selectedTask.title}</h3>
+            </div>
+            <button
+              onClick={() => setSelectedTask(null)}
+              className="text-gray-400 hover:text-white transition-colors"
+            >
+              <X size={20} />
+            </button>
+          </div>
+          
+          <div className="flex-1 overflow-y-auto p-4 content-scrollable space-y-4">
+            <div className="bg-gray-700/50 rounded-lg p-3 xs:p-4 border border-white/10">
+              <h4 className="text-sm font-medium text-gray-300 mb-2 flex items-center gap-2">
+                <Clock size={16} className="text-amber-400" />
+                {format(new Date(selectedTask.dueDate || new Date()), 'MMM d, yyyy')}
+              </h4>
+            </div>
+            
+            <div className="bg-gray-700/50 rounded-lg p-3 xs:p-4 border border-white/10">
+              <h4 className="text-sm font-medium text-gray-300 mb-2 flex items-center gap-2">
+                <Award size={16} className="text-amber-400" />
+                {selectedTask.points} points
+              </h4>
+            </div>
+            
+            <div className="bg-gray-700/50 rounded-lg p-3 xs:p-4 border border-white/10">
+              <h3 className="text-base xs:text-lg font-medium text-white mb-2">Description</h3>
+              <p className="text-sm text-gray-300 leading-relaxed">{selectedTask.description}</p>
+            </div>
+            
+            {selectedTask.requirePhoto && (
+              <div className="bg-gray-700/30 rounded-lg p-4 border border-white/10">
+                <h4 className="text-sm font-medium text-gray-300 mb-2 flex items-center gap-2">
+                  <Camera size={16} className="text-amber-400" />
+                  Foto necessária para conclusão
+                </h4>
+                
+                {selectedTask.photo ? (
+                  <div>
+                    <img 
+                      src={selectedTask.photo.url} 
+                      alt="Foto da tarefa" 
+                      className="w-full h-auto rounded-lg mb-3"
+                    />
+                    
+                    <div className="text-xs text-gray-300 space-y-1">
+                      <p>Enviada por: {users.find(u => u.id === selectedTask.photo?.uploadedBy)?.name || 'Desconhecido'}</p>
+                      <p>Data: {selectedTask.photo.uploadedAt ? new Date(selectedTask.photo.uploadedAt).toLocaleString() : '-'}</p>
+                      
+                      {selectedTask.photo.approved ? (
+                        <div className="bg-green-500/20 text-green-400 p-2 rounded-lg mt-2 flex items-center gap-2">
+                          <CheckCircle size={14} />
+                          Foto aprovada por {users.find(u => u.id === selectedTask.photo?.approvedBy)?.name || 'Administrador'}
+                        </div>
+                      ) : (
+                        <div className="bg-amber-500/20 text-amber-400 p-2 rounded-lg mt-2 flex items-center gap-2">
+                          <AlertTriangle size={14} />
+                          Aguardando aprovação de administrador
+                        </div>
+                      )}
+                      
+                      {isTaskAdmin && !selectedTask.photo.approved && (
+                        <div className="flex gap-2 mt-3">
+                          <button
+                            onClick={approvePhoto}
+                            className="flex-1 bg-green-600 hover:bg-green-700 text-white p-2 rounded-lg text-xs"
+                          >
+                            Aprovar Foto
+                          </button>
+                          
+                          <button
+                            onClick={rejectPhoto}
+                            className="flex-1 bg-red-600 hover:bg-red-700 text-white p-2 rounded-lg text-xs"
+                          >
+                            Rejeitar Foto
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                ) : (
+                  <div>
+                    <p className="text-sm text-gray-400 mb-4">
+                      Esta tarefa requer uma foto tirada diretamente da câmera para ser marcada como concluída.
+                    </p>
+                    
+                    {selectedTask.status !== 'done' && (
+                      <PhotoCapture 
+                        task={selectedTask}
+                        currentUser={user}
+                        onPhotoUploaded={handlePhotoUploaded}
+                      />
+                    )}
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+          
+          <div className="p-4 border-t border-white/10 flex items-center justify-end gap-2">
+            {selectedTask.status !== 'done' && (
+              <button
+                onClick={handleCompleteTask}
+                disabled={!canCompleteTask()}
+                className={`px-4 py-2 rounded-lg text-white ${
+                  canCompleteTask() 
+                    ? 'bg-green-500 hover:bg-green-600' 
+                    : 'bg-gray-600 cursor-not-allowed'
+                }`}
+              >
+                {selectedTask.requirePhoto && (!selectedTask.photo || !selectedTask.photo.approved)
+                  ? 'Aguardando Foto Aprovada'
+                  : 'Marcar como Concluída'
+                }
+              </button>
+            )}
+            <button
+              onClick={handleEdit.bind(null, selectedTask)}
+              className="px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg"
+            >
+              Editar
+            </button>
+            <button
+              onClick={() => setShowConfirmDelete(selectedTask.id)}
+              className="px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded-lg"
+            >
+              Excluir
+            </button>
+          </div>
+        </div>
+      </div>
+    );
   };
 
   return (
@@ -564,6 +784,41 @@ export default function Tasks() {
                       required
                     />
                   </div>
+                </div>
+                
+                <div className="bg-gray-700/50 rounded-lg p-3 xs:p-4 border border-white/10">
+                  <div className="flex items-center justify-between">
+                    <label className="text-sm font-medium text-gray-300">
+                      Foto necessária para conclusão
+                    </label>
+                    <div className="relative inline-block w-10 align-middle select-none">
+                      <input 
+                        type="checkbox" 
+                        id="requirePhoto"
+                        checked={formData.requirePhoto} 
+                        onChange={() => setFormData({ ...formData, requirePhoto: !formData.requirePhoto })}
+                        className="sr-only"
+                      />
+                      <label 
+                        htmlFor="requirePhoto"
+                        className={`block overflow-hidden h-6 rounded-full cursor-pointer ${
+                          formData.requirePhoto ? 'bg-green-500' : 'bg-gray-600'
+                        }`}
+                      >
+                        <span 
+                          className={`block h-6 w-6 rounded-full bg-white transform transition-transform duration-200 ease-in-out ${
+                            formData.requirePhoto ? 'translate-x-4' : 'translate-x-0'
+                          }`}
+                        />
+                      </label>
+                    </div>
+                  </div>
+                  {formData.requirePhoto && (
+                    <p className="text-xs text-amber-400 mt-2">
+                      <AlertTriangle size={12} className="inline mr-1" />
+                      A tarefa só poderá ser concluída se o usuário enviar uma foto tirada pela câmera e esta for aprovada por um administrador.
+                    </p>
+                  )}
                 </div>
                 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 xs:gap-4">
@@ -723,52 +978,7 @@ export default function Tasks() {
 
       {/* Task Details Modal */}
       {selectedTask && (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-3 xs:p-4 overflow-y-auto">
-          <div className="bg-gray-800 rounded-lg w-full max-w-4xl max-h-[90vh] overflow-hidden flex flex-col my-4">
-            <div className="p-4 xs:p-6 border-b border-gray-700">
-              <div className="flex items-start justify-between">
-                <div>
-                  <h2 className="text-lg xs:text-xl font-medium text-white mb-2">
-                    {selectedTask.title}
-                  </h2>
-                  <div className="flex flex-wrap items-center gap-3 text-sm text-gray-400">
-                    <div className="flex items-center gap-1.5">
-                      <Clock size={16} />
-                      <span>
-                        {format(new Date(selectedTask.dueDate || new Date()), 'MMM d, yyyy')}
-                      </span>
-                    </div>
-                    <div className="flex items-center gap-1.5">
-                      <Award size={16} />
-                      <span className="text-amber-400">{selectedTask.points} points</span>
-                    </div>
-                  </div>
-                </div>
-                <button
-                  onClick={() => setSelectedTask(null)}
-                  className="text-white/60 hover:text-white p-1.5 rounded-lg hover:bg-white/10 transition-all"
-                >
-                  <X size={20} />
-                </button>
-              </div>
-            </div>
-
-            <div className="flex-1 overflow-y-auto p-4 xs:p-6 overflow-x-hidden">
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 xs:gap-6">
-                <div className="space-y-4 xs:space-y-6">
-                  <div className="bg-gray-700/50 rounded-lg p-3 xs:p-4 border border-white/10">
-                    <h3 className="text-base xs:text-lg font-medium text-white mb-2">Description</h3>
-                    <p className="text-sm text-gray-300 leading-relaxed">{selectedTask.description}</p>
-                  </div>
-                </div>
-
-                <div className="space-y-4 xs:space-y-6">
-                  {/* Second column contents */}
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
+        <TaskDetail />
       )}
 
       {/* Delete Confirmation Modal */}
