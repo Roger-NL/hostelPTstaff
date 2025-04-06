@@ -82,22 +82,38 @@ const AppContent = () => {
   // Manipulador para o botão voltar do navegador mobile
   useEffect(() => {
     const handleBackButton = (event: PopStateEvent) => {
-      // Previne o comportamento padrão do botão voltar
-      event.preventDefault();
+      // Não desconectar o usuário quando pressionar voltar
       
-      // Redireciona para a página inicial
-      navigate('/', { replace: true });
+      // Se estiver logado, previne o comportamento padrão
+      if (isAuthenticated) {
+        event.preventDefault();
+        
+        // Verifica se a rota atual é o dashboard
+        if (location.pathname === '/dashboard') {
+          // Se já estiver no dashboard, não faz nada, permanece na página
+          window.history.pushState(null, '', location.pathname);
+        } else {
+          // Se estiver em outra página, volta para o dashboard
+          navigate('/dashboard');
+        }
+      } else {
+        // Se não estiver logado, deixa o comportamento padrão de voltar acontecer
+        if (location.pathname === '/login') {
+          // Se já estiver no login, previne o comportamento de sair da aplicação
+          event.preventDefault();
+          window.history.pushState(null, '', location.pathname);
+        }
+      }
     };
     
     // Adiciona o evento ao histórico do navegador
-    window.history.pushState(null, '', window.location.pathname);
     window.addEventListener('popstate', handleBackButton);
     
     // Limpeza ao desmontar
     return () => {
       window.removeEventListener('popstate', handleBackButton);
     };
-  }, [navigate]);
+  }, [navigate, isAuthenticated, location.pathname]);
 
   // Alternar tema
   const toggleTheme = () => {
