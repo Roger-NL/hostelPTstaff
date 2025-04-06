@@ -77,173 +77,10 @@ interface AppState {
   init: () => Promise<void>;
 }
 
-// Create some default users for testing
-const defaultUsers: UserData[] = [
-  {
-    id: '1',
-    email: 'admin@example.com',
-    name: 'Admin User',
-    password: 'admin',
-    country: 'Portugal',
-    age: '30',
-    relationshipStatus: 'single',
-    phone: '+351123456789',
-    arrivalDate: '2024-03-01',
-    departureDate: '2024-09-01',
-    gender: 'other',
-    isAuthenticated: true,
-    role: 'admin',
-    points: 100
-  },
-  {
-    id: '2',
-    email: 'john@example.com',
-    name: 'John Doe',
-    password: 'password',
-    country: 'USA',
-    age: '25',
-    relationshipStatus: 'single',
-    phone: '+1234567890',
-    arrivalDate: '2024-03-01',
-    departureDate: '2024-08-31',
-    gender: 'male',
-    isAuthenticated: true,
-    role: 'user',
-    points: 50
-  },
-  {
-    id: '3',
-    email: 'jane@example.com',
-    name: 'Jane Smith',
-    password: 'password',
-    country: 'UK',
-    age: '28',
-    relationshipStatus: 'married',
-    phone: '+4412345678',
-    arrivalDate: '2024-03-15',
-    departureDate: '2024-09-15',
-    gender: 'female',
-    isAuthenticated: true,
-    role: 'user',
-    points: 75
-  },
-  {
-    id: '4',
-    email: 'maria@example.com',
-    name: 'Maria Silva',
-    password: 'maria123',
-    country: 'Brasil',
-    age: '23',
-    relationshipStatus: 'single',
-    phone: '+5511987654321',
-    arrivalDate: '2024-03-20',
-    departureDate: '2024-06-20',
-    gender: 'female',
-    isAuthenticated: true,
-    role: 'user',
-    points: 0
-  }
-];
-
-// Create some default tasks for testing
-const defaultTasks: Task[] = [
-  {
-    id: '1',
-    title: 'Clean the kitchen',
-    description: 'Sweep and mop the floor, clean counters',
-    points: 10,
-    status: 'todo',
-    createdAt: new Date().toISOString(),
-    priority: 'medium',
-    dueDate: new Date(Date.now() + 86400000).toISOString(),
-    assignedTo: ['2'],
-    comments: [],
-    checklist: [
-      { id: '1', content: 'Sweep floor', completed: false },
-      { id: '2', content: 'Mop floor', completed: false },
-      { id: '3', content: 'Clean counters', completed: true }
-    ],
-    tags: ['cleaning', 'kitchen'],
-    type: 'hostel',
-    createdBy: '1'
-  },
-  {
-    id: '2',
-    title: 'Check-in new guests',
-    description: 'Welcome new guests and show them around',
-    points: 15,
-    status: 'inProgress',
-    createdAt: new Date().toISOString(),
-    priority: 'high',
-    dueDate: new Date(Date.now() + 86400000).toISOString(),
-    assignedTo: ['2', '3'],
-    comments: [
-      {
-        id: '1',
-        userId: '1',
-        content: 'Make sure to show them the beach access',
-        createdAt: new Date().toISOString()
-      }
-    ],
-    checklist: [],
-    tags: ['guests', 'reception'],
-    type: 'hostel',
-    createdBy: '1'
-  },
-  {
-    id: '3',
-    title: 'Buy groceries',
-    description: 'Personal shopping list for the week',
-    points: 0,
-    status: 'todo',
-    createdAt: new Date().toISOString(),
-    priority: 'medium',
-    dueDate: new Date(Date.now() + 86400000).toISOString(),
-    checklist: [
-      { id: '1', content: 'Milk', completed: false },
-      { id: '2', content: 'Bread', completed: false },
-      { id: '3', content: 'Eggs', completed: false }
-    ],
-    tags: ['shopping', 'personal'],
-    type: 'personal',
-    createdBy: '1',
-    isPrivate: true
-  }
-];
-
-// Create some default events for testing
-const defaultEvents: Event[] = [
-  {
-    id: crypto.randomUUID(),
-    title: 'Beach Volleyball Tournament',
-    description: 'Join us for a fun beach volleyball tournament! All skill levels welcome.',
-    startDate: new Date(Date.now() + 7 * 86400000).toISOString(),
-    endDate: new Date(Date.now() + 7 * 86400000 + 3600000 * 4).toISOString(),
-    location: 'Carcavelos Beach - Volleyball Courts',
-    type: 'activity',
-    status: 'upcoming',
-    capacity: 24,
-    attendees: ['2', '3'],
-    organizer: '1',
-    createdAt: new Date().toISOString(),
-    tags: ['sports', 'volleyball', 'tournament']
-  },
-  {
-    id: crypto.randomUUID(),
-    title: 'Welcome Dinner',
-    description: 'Welcome dinner for new volunteers. Come meet your fellow volunteers!',
-    startDate: new Date(Date.now() + 2 * 86400000).toISOString(),
-    endDate: new Date(Date.now() + 2 * 86400000 + 3600000 * 3).toISOString(),
-    location: 'Community Kitchen',
-    type: 'invitation',
-    status: 'upcoming',
-    capacity: 30,
-    attendees: ['2'],
-    organizer: '1',
-    createdAt: new Date().toISOString(),
-    tags: ['social', 'dinner', 'welcome']
-  }
-];
+// Definindo dados padrão vazios
+const defaultUsers: UserData[] = [];
+const defaultTasks: Task[] = [];
+const defaultEvents: Event[] = [];
 
 // Create default empty schedule
 const defaultSchedule: Schedule = {};
@@ -320,15 +157,11 @@ export const useStore = create<AppState>((set, get) => ({
     
     // Verificar se a aplicação já foi inicializada antes
     const appInitialized = localStorage.getItem('app_initialized');
-    // Verificar se as tarefas padrão já foram excluídas
-    const tasksDeleted = localStorage.getItem('default_tasks_deleted') === 'true';
-    // Verificar se os eventos padrão já foram excluídos
-    const eventsDeleted = localStorage.getItem('default_events_deleted') === 'true';
     
     const isFirstRun = !appInitialized;
     
     if (isFirstRun) {
-      console.log('Primeira execução detectada, inicializando dados padrão...');
+      console.log('Primeira execução detectada, inicializando aplicação...');
       localStorage.setItem('app_initialized', 'true');
     } else {
       console.log('Aplicação já inicializada anteriormente, carregando dados existentes...');
@@ -343,10 +176,10 @@ export const useStore = create<AppState>((set, get) => ({
       }
     }
     
-    // Inicializar com valores padrão
+    // Inicializar com valores vazios
     set({ 
       schedule: {},
-      users: defaultUsers
+      users: []
     });
     
     // Função segura para salvar agenda vazia
@@ -415,7 +248,7 @@ export const useStore = create<AppState>((set, get) => ({
     try {
       console.log('Tentando carregar eventos do Firebase...');
       
-      // Tenta carregar eventos existentes
+      // Verificação de eventos
       console.log('1. Iniciando carregamento de eventos');
       const events = await eventService.loadEventsFromFirebase();
       console.log('2. Resposta recebida do loadEventsFromFirebase');
@@ -428,72 +261,23 @@ export const useStore = create<AppState>((set, get) => ({
           set({ events });
           console.log('5. Estado atualizado com sucesso');
         } else {
-          console.log('4. Nenhum evento encontrado');
-          
-          // Verificar se já tem documentos na coleção
-          const eventsCollection = collection(firestore, 'events');
-          const eventsSnapshot = await getDocs(eventsCollection);
-          
-          // Criar eventos padrão apenas na primeira execução e se não foram excluídos
-          if (eventsSnapshot.empty && isFirstRun && !eventsDeleted) {
-            console.log('Primeira execução e nenhum evento existe, salvando eventos padrão no Firebase');
-            
-            // Se não houver eventos no Firebase, salvar os eventos padrão
-            const eventsToSave = JSON.parse(JSON.stringify(defaultEvents));
-            
-            // Primeiro atualiza o estado local
-            set({ events: eventsToSave });
-            
-            // Depois salva cada evento no Firebase de forma confiável
-            console.log('5. Salvando eventos padrão no Firebase...');
-            let successCount = 0;
-            
-            for (const event of eventsToSave) {
-              try {
-                const saved = await eventService.saveEventToFirebase(event);
-                if (saved) {
-                  successCount++;
-                  console.log(`Evento padrão ${event.id} salvo com sucesso (${successCount}/${eventsToSave.length})`);
-                } else {
-                  console.error(`Falha ao salvar evento padrão ${event.id}`);
-                }
-              } catch (error) {
-                console.error(`Erro ao salvar evento padrão ${event.id}:`, error);
-              }
-            }
-            
-            console.log(`6. ${successCount}/${eventsToSave.length} eventos padrão salvos no Firebase`);
-            
-            // Recarrega os eventos para garantir sincronização
-            if (successCount > 0) {
-              console.log('7. Recarregando eventos para garantir sincronização');
-              const refreshedEvents = await eventService.loadEventsFromFirebase();
-              if (refreshedEvents && refreshedEvents.length > 0) {
-                set({ events: refreshedEvents });
-                console.log(`8. Estado atualizado com ${refreshedEvents.length} eventos recarregados`);
-              }
-            }
-          } else {
-            console.log('A coleção de eventos existe ou não é primeira execução ou os eventos padrão foram excluídos. Mantendo estado vazio.');
-            set({ events: [] });
-          }
+          console.log('4. Nenhum evento encontrado (array vazio)');
+          set({ events: [] });
         }
       } else {
         console.error('3. ERRO: Resposta inválida do loadEventsFromFirebase:', events);
-        // Mantenha eventos padrão para segurança apenas na primeira execução se não foram excluídos
-        set({ events: (isFirstRun && !eventsDeleted) ? defaultEvents : [] });
+        set({ events: [] });
       }
     } catch (e) {
       console.error('ERRO crítico ao carregar eventos:', e);
-      // Em caso de erro, garantir que o estado tem eventos padrão apenas na primeira execução
-      set({ events: (isFirstRun && !eventsDeleted) ? defaultEvents : [] });
+      set({ events: [] });
     }
 
     // Carregar tarefas de forma segura
     try {
       console.log('Tentando carregar tarefas do Firebase...');
       
-      // Tenta carregar tarefas existentes
+      // Verificação de tarefas
       console.log('1. Iniciando carregamento de tarefas');
       const tasks = await taskService.loadTasksFromFirebase();
       console.log('2. Resposta recebida do loadTasksFromFirebase');
@@ -506,65 +290,16 @@ export const useStore = create<AppState>((set, get) => ({
           set({ tasks });
           console.log('5. Estado atualizado com sucesso');
         } else {
-          console.log('4. Nenhuma tarefa encontrada');
-          
-          // Verificar se já tem documentos na coleção
-          const tasksCollection = collection(firestore, 'tasks');
-          const tasksSnapshot = await getDocs(tasksCollection);
-          
-          // Criar tarefas padrão apenas na primeira execução e se não foram excluídas
-          if (tasksSnapshot.empty && isFirstRun && !tasksDeleted) {
-            console.log('Primeira execução e nenhuma tarefa existe, salvando tarefas padrão no Firebase');
-            
-            // Se não houver tarefas no Firebase, salvar as tarefas padrão
-            const tasksToSave = JSON.parse(JSON.stringify(defaultTasks));
-            
-            // Primeiro atualiza o estado local
-            set({ tasks: tasksToSave });
-            
-            // Depois salva cada tarefa no Firebase de forma confiável
-            console.log('5. Salvando tarefas padrão no Firebase...');
-            let successCount = 0;
-            
-            for (const task of tasksToSave) {
-              try {
-                const saved = await taskService.saveTaskToFirebase(task);
-                if (saved) {
-                  successCount++;
-                  console.log(`Tarefa padrão ${task.id} salva com sucesso (${successCount}/${tasksToSave.length})`);
-                } else {
-                  console.error(`Falha ao salvar tarefa padrão ${task.id}`);
-                }
-              } catch (error) {
-                console.error(`Erro ao salvar tarefa padrão ${task.id}:`, error);
-              }
-            }
-            
-            console.log(`6. ${successCount}/${tasksToSave.length} tarefas padrão salvas no Firebase`);
-            
-            // Recarrega as tarefas para garantir sincronização
-            if (successCount > 0) {
-              console.log('7. Recarregando tarefas para garantir sincronização');
-              const refreshedTasks = await taskService.loadTasksFromFirebase();
-              if (refreshedTasks && refreshedTasks.length > 0) {
-                set({ tasks: refreshedTasks });
-                console.log(`8. Estado atualizado com ${refreshedTasks.length} tarefas recarregadas`);
-              }
-            }
-          } else {
-            console.log('A coleção de tarefas existe ou não é primeira execução ou as tarefas padrão foram excluídas. Mantendo estado vazio.');
-            set({ tasks: [] });
-          }
+          console.log('4. Nenhuma tarefa encontrada (array vazio)');
+          set({ tasks: [] });
         }
       } else {
         console.error('3. ERRO: Resposta inválida do loadTasksFromFirebase:', tasks);
-        // Mantenha tarefas padrão para segurança apenas na primeira execução se não foram excluídas
-        set({ tasks: (isFirstRun && !tasksDeleted) ? defaultTasks : [] });
+        set({ tasks: [] });
       }
     } catch (e) {
       console.error('ERRO crítico ao carregar tarefas:', e);
-      // Em caso de erro, garantir que o estado tem tarefas padrão apenas na primeira execução
-      set({ tasks: (isFirstRun && !tasksDeleted) ? defaultTasks : [] });
+      set({ tasks: [] });
     }
 
     // Carregar mensagens de forma segura
@@ -1166,11 +901,6 @@ export const useStore = create<AppState>((set, get) => ({
       // Depois exclui todas as tarefas do Firebase
       const success = await taskService.deleteAllTasks();
       
-      // Marcar que as tarefas padrão foram excluídas para evitar recriar no próximo carregamento
-      if (success) {
-        localStorage.setItem('default_tasks_deleted', 'true');
-      }
-      
       console.log(`Exclusão de todas as tarefas ${success ? 'concluída com sucesso' : 'falhou'}`);
       return success;
     } catch (error) {
@@ -1206,11 +936,6 @@ export const useStore = create<AppState>((set, get) => ({
       
       // Depois exclui todos os eventos do Firebase
       const success = await eventService.deleteAllEvents();
-      
-      // Marcar que os eventos padrão foram excluídos para evitar recriar no próximo carregamento
-      if (success) {
-        localStorage.setItem('default_events_deleted', 'true');
-      }
       
       console.log(`Exclusão de todos os eventos ${success ? 'concluída com sucesso' : 'falhou'}`);
       return success;
@@ -1456,18 +1181,6 @@ export const useStore = create<AppState>((set, get) => ({
       const success = await eventService.deleteEventFromFirebase(eventId);
       
       console.log(`Exclusão do evento ${eventId} ${success ? 'concluída com sucesso' : 'falhou'}`);
-      
-      // Verifica se foi excluído um dos eventos padrão para marcar isso no localStorage
-      const { events } = get();
-      const remainingDefaultEvents = events.filter(event => 
-        event.title === 'Beach Volleyball Tournament' || 
-        event.title === 'Welcome Dinner'
-      );
-      
-      // Se não restarem eventos padrão, marcar como excluídos
-      if (remainingDefaultEvents.length === 0) {
-        localStorage.setItem('default_events_deleted', 'true');
-      }
       
       return success;
     } catch (error) {

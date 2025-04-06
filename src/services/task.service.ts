@@ -88,21 +88,6 @@ export async function loadTasksFromFirebase(): Promise<Task[]> {
           reminder: docData.reminder
         };
         
-        // Verificação final: não adicionar tarefas com títulos padrão que foram excluídos anteriormente
-        // ou com IDs que foram excluídos
-        if (taskData.id === '1' || 
-            taskData.id === '2' || 
-            taskData.id === '3' ||
-            taskData.title === 'Clean the kitchen' || 
-            taskData.title === 'Check-in new guests' ||
-            taskData.title === 'Buy groceries') {
-          // Verifica se já existe uma versão excluída desta tarefa
-          if (deletedIds.has(taskData.id) || deletedIds.has(`title:${taskData.title}`)) {
-            console.log(`Tarefa padrão ${taskData.id} (${taskData.title}) já foi excluída anteriormente, ignorando`);
-            return;
-          }
-        }
-        
         tasks.push(taskData);
       } catch (err) {
         console.error(`Erro ao processar documento ${doc.id}:`, err);

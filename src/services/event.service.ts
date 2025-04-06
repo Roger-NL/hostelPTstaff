@@ -72,28 +72,18 @@ export async function loadEventsFromFirebase(): Promise<Event[]> {
           startDate: docData.startDate || new Date().toISOString(),
           endDate: docData.endDate || new Date().toISOString(),
           location: docData.location || '',
-          type: (docData.type === 'activity' || docData.type === 'invitation') 
-            ? docData.type 
+          type: ['activity', 'meeting', 'invitation'].includes(docData.type) 
+            ? docData.type as Event['type']
             : 'activity',
-          status: docData.status || 'upcoming',
-          capacity: typeof docData.capacity === 'number' ? docData.capacity : 0,
+          status: ['upcoming', 'ongoing', 'completed', 'cancelled'].includes(docData.status)
+            ? docData.status as Event['status']
+            : 'upcoming',
+          capacity: typeof docData.capacity === 'number' ? docData.capacity : undefined,
           attendees: Array.isArray(docData.attendees) ? docData.attendees : [],
           organizer: docData.organizer || '',
           createdAt: docData.createdAt || new Date().toISOString(),
           tags: Array.isArray(docData.tags) ? docData.tags : []
         };
-        
-        // Verificação final: não adicionar eventos com títulos padrão que foram excluídos anteriormente
-        // ou com IDs que foram excluídos
-        if (eventData.id === '1' || eventData.id === '2' ||
-            eventData.title === 'Beach Volleyball Tournament' || 
-            eventData.title === 'Welcome Dinner') {
-          // Verifica se já existe uma versão excluída deste evento
-          if (deletedIds.has(eventData.id) || deletedIds.has(`title:${eventData.title}`)) {
-            console.log(`Evento padrão ${eventData.id} (${eventData.title}) já foi excluído anteriormente, ignorando`);
-            return;
-          }
-        }
         
         events.push(eventData);
       } catch (err) {
