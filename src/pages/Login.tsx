@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import { useTranslation } from '../hooks/useTranslation';
-import { UserCircle, ChevronDown, LogIn, User } from 'lucide-react';
+import { UserCircle, ChevronDown, LogIn, User, Check } from 'lucide-react';
 
 // Definição do tipo para logins salvos
 interface SavedLogin {
@@ -10,12 +10,23 @@ interface SavedLogin {
   name?: string;
   timestamp: number;
   lastUsed?: number;
+  password?: string; // Campo opcional para senha (criptografada)
 }
 
 const BACKGROUND_IMAGE = "url('https://images.unsplash.com/photo-1502680390469-be75c86b636f?ixlib=rb-1.2.1&auto=format&fit=crop&w=3200&q=80')";
 
 // Chave para armazenar logins no localStorage
 const SAVED_LOGINS_KEY = 'hostel_saved_logins';
+
+// Função simples de criptografia para senhas (apenas ofuscação básica)
+const encryptPassword = (password: string): string => {
+  return btoa(password); // Codificação base64 simples
+};
+
+// Função para descriptografar senhas
+const decryptPassword = (encrypted: string): string => {
+  return atob(encrypted); // Decodificação base64 simples
+};
 
 const Login: React.FC = () => {
   const { t } = useTranslation();
@@ -24,6 +35,7 @@ const Login: React.FC = () => {
   
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [rememberPassword, setRememberPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [savedLogins, setSavedLogins] = useState<SavedLogin[]>([]);
@@ -47,6 +59,12 @@ const Login: React.FC = () => {
           if (sorted.length > 0) {
             setEmail(sorted[0].email);
             
+            // Se tiver a senha salva, preencher automaticamente
+            if (sorted[0].password) {
+              setPassword(decryptPassword(sorted[0].password));
+              setRememberPassword(true);
+            }
+            
             // Sempre mostrar a opção de login rápido se houver logins salvos
             setShowQuickLogin(true);
           }
@@ -60,7 +78,7 @@ const Login: React.FC = () => {
   }, []);
   
   // Função para salvar um login usado
-  const saveLogin = (email: string, name?: string) => {
+  const saveLogin = (email: string, name?: string, savePassword?: boolean) => {
     try {
       // Busca logins existentes
       const existingSaved = localStorage.getItem(SAVED_LOGINS_KEY);
@@ -76,14 +94,26 @@ const Login: React.FC = () => {
         if (name && !logins[existingIndex].name) {
           logins[existingIndex].name = name;
         }
+        
+        // Se marcou para lembrar senha, salva a senha criptografada
+        if (savePassword && password) {
+          logins[existingIndex].password = encryptPassword(password);
+        }
       } else {
         // Adiciona novo login
-        logins.push({
+        const newLogin: SavedLogin = {
           email,
           name,
           timestamp: now,
           lastUsed: now
-        });
+        };
+        
+        // Se marcou para lembrar senha, salva a senha criptografada
+        if (savePassword && password) {
+          newLogin.password = encryptPassword(password);
+        }
+        
+        logins.push(newLogin);
       }
       
       // Limita a 5 logins salvos
@@ -136,7 +166,7 @@ const Login: React.FC = () => {
         console.log('Login rápido bem-sucedido:', userProfile.name);
         
         // Atualiza login usado
-        saveLogin(lastLogin.email, userProfile.name);
+        saveLogin(lastLogin.email, userProfile.name, rememberPassword);
         
         // Redireciona para o dashboard
         navigate('/dashboard');
@@ -193,11 +223,13 @@ const Login: React.FC = () => {
       const userProfile = await login(email, password);
       console.log('Login: Login bem-sucedido, redirecionando para dashboard. Papel do usuário:', userProfile.role);
       
-      // Salva o login usado
-      saveLogin(email, userProfile.name);
+      // Salva o login usado, com a senha se escolheu lembrar
+      saveLogin(email, userProfile.name, rememberPassword);
       
-      // Salva a senha temporariamente para login rápido futuro
-      saveTempPassword(password);
+      // Se não escolheu lembrar senha, ainda salva temporariamente para login rápido
+      if (!rememberPassword) {
+        saveTempPassword(password);
+      }
       
       navigate('/dashboard');
     } catch (err: any) {
@@ -228,6 +260,15 @@ const Login: React.FC = () => {
   const selectSavedLogin = (saved: SavedLogin) => {
     setEmail(saved.email);
     setShowSavedLogins(false);
+    
+    // Se tiver senha salva, preenche automaticamente
+    if (saved.password) {
+      setPassword(decryptPassword(saved.password));
+      setRememberPassword(true);
+    } else {
+      setPassword('');
+    }
+    
     // Foca no campo de senha para facilitar o preenchimento
     const passwordField = document.getElementById('password-field');
     if (passwordField) {
@@ -367,6 +408,26 @@ const Login: React.FC = () => {
                     className="input-field w-full text-white placeholder-white/50"
                     required
                   />
+                </div>
+
+                {/* "Lembrar senha" checkbox */}
+                <div className="flex items-center">
+                  <div 
+                    className={`w-5 h-5 rounded flex items-center justify-center cursor-pointer mr-2 transition-colors duration-200 ${
+                      rememberPassword 
+                        ? 'bg-yellow-500 border-yellow-500' 
+                        : 'bg-black/30 border border-white/30 hover:bg-black/40'
+                    }`}
+                    onClick={() => setRememberPassword(!rememberPassword)}
+                  >
+                    {rememberPassword && <Check className="w-4 h-4 text-gray-900" />}
+                  </div>
+                  <label 
+                    className="text-sm text-white/80 cursor-pointer select-none"
+                    onClick={() => setRememberPassword(!rememberPassword)}
+                  >
+                    {t('rememberPassword')}
+                  </label>
                 </div>
 
                 <div className="flex items-center justify-between">

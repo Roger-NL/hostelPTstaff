@@ -16,6 +16,7 @@ export const translations = {
     quickLogin: 'Login with this account',
     useAnotherAccount: 'Use another account',
     quickLoginHint: 'Quick access with your saved credentials',
+    rememberPassword: 'Remember password',
     
     // User Information
     name: 'Name',
@@ -364,6 +365,7 @@ export const translations = {
     quickLogin: 'Entrar com esta conta',
     useAnotherAccount: 'Usar outra conta',
     quickLoginHint: 'Acesso rápido com suas credenciais salvas',
+    rememberPassword: 'Lembrar senha',
     
     // User Information
     name: 'Nome',
