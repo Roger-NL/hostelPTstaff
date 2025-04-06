@@ -1,6 +1,6 @@
 import React, { useEffect, Suspense, lazy, useState } from 'react';
 import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
-import { X } from 'lucide-react';
+import { Sun, Moon, X } from 'lucide-react';
 import { useStore } from './store/useStore';
 import { useTranslation } from './hooks/useTranslation';
 import { Toaster } from 'react-hot-toast';
@@ -38,10 +38,38 @@ const ScrollToTop = () => {
 };
 
 function App() {
-  const { theme, language, setLanguage, init, setUser } = useStore();
+  const { theme, language, setTheme, setLanguage, init, setUser } = useStore();
   const { t } = useTranslation();
   const { currentUser, isAuthenticated } = useAuth();
   const [showLanguageModal, setShowLanguageModal] = useState(false);
+  
+  // Ajustar a altura do viewport para dispositivos móveis
+  useEffect(() => {
+    // Função para ajustar a altura do viewport em dispositivos móveis
+    const setAppHeight = () => {
+      // Primeiro obter a altura real do viewport (sem barras de navegação)
+      const vh = window.innerHeight * 0.01;
+      document.documentElement.style.setProperty('--vh', `${vh}px`);
+      
+      // Em alguns navegadores móveis, precisamos atualizar após orientação mudar
+      setTimeout(() => {
+        const vh = window.innerHeight * 0.01;
+        document.documentElement.style.setProperty('--vh', `${vh}px`);
+      }, 100);
+    };
+    
+    // Configurar no início
+    setAppHeight();
+    
+    // Atualizar quando redimensionar ou mudar orientação
+    window.addEventListener('resize', setAppHeight);
+    window.addEventListener('orientationchange', setAppHeight);
+    
+    return () => {
+      window.removeEventListener('resize', setAppHeight);
+      window.removeEventListener('orientationchange', setAppHeight);
+    };
+  }, []);
 
   // Verificar se é a primeira visita
   useEffect(() => {
@@ -67,6 +95,16 @@ function App() {
       setUser(currentUser);
     }
   }, [isAuthenticated, currentUser, setUser]);
+
+  // Alternar tema
+  const toggleTheme = () => {
+    setTheme(theme === 'dark' ? 'light' : 'dark');
+  };
+
+  // Alternar idioma
+  const toggleLanguage = () => {
+    setLanguage(language === 'pt' ? 'en' : 'pt');
+  };
 
   // Selecionar idioma específico e fechar o modal
   const selectLanguage = (lang: 'en' | 'pt') => {
@@ -154,6 +192,26 @@ function App() {
                 </button>
               </div>
             </div>
+          </div>
+        )}
+        
+        {/* Mostra botões de tema e idioma APENAS na página de login ou quando não estiver autenticado */}
+        {!isAuthenticated && (
+          <div className="fixed top-4 right-4 z-40 flex gap-2">
+            <button
+              onClick={toggleTheme}
+              className={`p-2 rounded-full ${theme === 'dark' ? 'bg-gray-700 text-white hover:bg-gray-600' : 'bg-white text-gray-800 shadow-md hover:bg-gray-100'} transition-colors`}
+              aria-label={theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
+            >
+              {theme === 'dark' ? <Sun size={18} /> : <Moon size={18} />}
+            </button>
+            <button
+              onClick={toggleLanguage}
+              className={`p-2 rounded-full ${theme === 'dark' ? 'bg-gray-700 text-white hover:bg-gray-600' : 'bg-white text-gray-800 shadow-md hover:bg-gray-100'} transition-colors font-medium text-xs`}
+              aria-label={language === 'pt' ? 'Switch to English' : 'Alternar para Português'}
+            >
+              {language === 'pt' ? 'EN' : 'PT'}
+            </button>
           </div>
         )}
         

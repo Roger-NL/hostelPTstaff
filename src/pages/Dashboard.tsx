@@ -110,107 +110,98 @@ export default function MainDashboard() {
   ];
 
   return (
-    <div className="page-container bg-gradient-to-br from-sky-200 to-violet-200 dark:from-gray-900 dark:to-gray-800 flex relative font-sans text-gray-800 dark:text-white">
-      {/* Background with light effect */}
-      <div className="fixed inset-0 z-0">
-        <div className="absolute inset-0 bg-gradient-to-br from-sky-200 to-violet-200 dark:from-gray-900 dark:to-gray-800" />
-        <div className="absolute top-0 -left-10 w-72 h-72 bg-purple-400 dark:bg-purple-900 rounded-full mix-blend-multiply filter blur-3xl opacity-30" />
-        <div className="absolute top-40 -right-10 w-96 h-96 bg-blue-400 dark:bg-blue-900 rounded-full mix-blend-multiply filter blur-3xl opacity-30" />
-        <div className="absolute bottom-0 left-20 w-80 h-80 bg-pink-300 dark:bg-pink-900 rounded-full mix-blend-multiply filter blur-3xl opacity-30" />
-      </div>
-
-      {/* Menu Toggle Button for Mobile/Collapsed View */}
-      <button 
-        onClick={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
-        className={`fixed top-4 left-4 z-20 p-2 bg-white/90 dark:bg-gray-800/90 backdrop-blur-md rounded-xl text-gray-700 dark:text-white hover:bg-white dark:hover:bg-gray-700 shadow-lg transition-all duration-300 ${!isSidebarCollapsed ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}
-      >
-        <Menu size={18} />
-      </button>
-
-      {/* Sidebar Overlay - only shows when sidebar is expanded */}
-      {!isSidebarCollapsed && (
-        <div 
-          className="fixed inset-0 bg-black/20 backdrop-blur-sm z-30 lg:hidden"
-          onClick={() => setIsSidebarCollapsed(true)}
-        />
-      )}
-
+    <div className="flex h-screen bg-gray-900 text-white">
       {/* Sidebar */}
-      <div 
-        className={`fixed top-0 left-0 h-screen transition-all duration-500 flex flex-col z-40 
-          ${isSidebarCollapsed 
-            ? 'w-0 -translate-x-full opacity-0 pointer-events-none invisible' 
-            : 'w-[260px] xs:w-[280px] translate-x-0 opacity-100 bg-white/90 dark:bg-gray-800/90 backdrop-blur-xl shadow-2xl border-r border-white/20 dark:border-gray-700/30'}`}
+      <div
+        className={`bg-gray-800/50 w-64 shrink-0 transition-all duration-300 fixed lg:static top-0 bottom-0 z-20 ${
+          isSidebarCollapsed ? '-translate-x-full lg:translate-x-0 lg:w-16' : 'translate-x-0'
+        }`}
       >
-        <div className="p-4 xs:p-5 border-b border-gray-100 dark:border-gray-700/30 flex items-center justify-between">
-          <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 xs:w-9 xs:h-9 rounded-lg xs:rounded-xl bg-gradient-to-br from-blue-500 to-violet-500 flex items-center justify-center text-white font-bold text-lg">
-              H
-            </div>
-            <h1 className="text-lg xs:text-xl font-extralight tracking-wide">Hostel</h1>
-          </div>
+        {/* Logo */}
+        <div className="p-4 border-b border-gray-700/30 flex items-center justify-between">
+          <h1 className={`text-xl font-extralight tracking-wider ${isSidebarCollapsed ? 'lg:hidden' : ''}`}>
+            Hostel PT Staff
+          </h1>
           <button
-            onClick={() => setIsSidebarCollapsed(true)}
-            className="p-1.5 hover:bg-gray-100 dark:hover:bg-gray-700/50 rounded-lg transition-colors flex items-center justify-center"
+            onClick={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
+            className="text-gray-400 hover:text-white transition-colors hidden lg:block"
           >
-            <ChevronsLeft size={18} />
+            <ChevronLeft size={20} className={`transition-transform duration-300 ${isSidebarCollapsed ? 'rotate-180' : ''}`} />
           </button>
         </div>
-        
-        <div className="flex-1 content-scrollable p-3 xs:p-4 space-y-1.5 xs:space-y-2">
-          {menuItems.map(item => (
+
+        {/* Menu */}
+        <div className="p-4 content-scrollable">
+          {menuItems.map((item) => (
             <button
               key={item.view}
-              onClick={() => {
-                setView(item.view);
-                setIsSidebarCollapsed(window.innerWidth < 1024);
-              }}
-              className={`flex items-center gap-2.5 p-2.5 xs:p-3 w-full rounded-lg xs:rounded-xl transition-all duration-300 relative font-light text-sm xs:text-base
-                ${view === item.view 
-                  ? 'bg-gradient-to-r from-blue-500/20 to-violet-500/20 text-blue-700 dark:text-blue-300 font-normal' 
-                  : 'text-gray-600 dark:text-gray-300 hover:bg-gray-100/50 dark:hover:bg-gray-700/30 hover:text-gray-900 dark:hover:text-white'}`}
+              onClick={() => setView(item.view)}
+              className={`w-full flex items-center gap-3 p-2 rounded-lg transition-colors text-left mb-1
+                ${view === item.view ? 'bg-gray-700/60 text-white' : 'text-gray-400 hover:text-white hover:bg-gray-700/30'}`}
             >
-              <item.icon size={18} className={view === item.view ? 'text-blue-500' : ''} />
-              <span>{item.label}</span>
-              {item.badge !== undefined && item.badge > 0 && (
-                <div className="absolute top-1.5 right-2 min-w-[18px] h-[18px] rounded-full bg-red-500 text-white text-xxs xs:text-xs flex items-center justify-center px-1 shadow-lg">
+              <item.icon size={18} />
+              <span className={`text-sm ${isSidebarCollapsed ? 'lg:hidden' : ''}`}>{item.label}</span>
+              {item.badge ? (
+                <span className="ml-auto bg-pink-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
                   {item.badge}
-                </div>
-              )}
-              {view === item.view && (
-                <div className="absolute right-3 w-1 h-1 xs:w-1.5 xs:h-1.5 rounded-full bg-blue-500"></div>
-              )}
+                </span>
+              ) : null}
             </button>
           ))}
         </div>
-        
-        <div className="p-3 xs:p-4 border-t border-gray-100 dark:border-gray-700/30">
-          <div className="p-2.5 xs:p-3 rounded-lg xs:rounded-xl bg-gradient-to-r from-blue-500/10 to-violet-500/10">
-            <div className="flex items-center gap-2.5 mb-2.5">
-              <div className="w-8 h-8 xs:w-9 xs:h-9 rounded-lg xs:rounded-xl bg-gradient-to-br from-blue-500 to-violet-500 flex items-center justify-center text-white font-bold">
-                {user?.name?.[0] || 'U'}
+
+        {/* User Profile */}
+        <div className="absolute bottom-0 left-0 right-0 p-4 border-t border-gray-700/30 mobile-safe-bottom">
+          <div className="p-3 rounded-xl bg-gradient-to-r from-blue-500/10 to-violet-500/10">
+            <div className="flex items-center gap-3 mb-3">
+              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-500 to-violet-500 flex items-center justify-center text-white font-bold">
+                {user?.name?.[0]?.toUpperCase() || 'U'}
               </div>
-              <div className="flex-1">
-                <h3 className="text-xs xs:text-sm font-medium">{user?.name || 'User'}</h3>
-                <p className="text-xxs xs:text-xs text-gray-500 dark:text-gray-400 font-light">{getUserRoleText(user?.role)}</p>
+              <div className={`flex-1 ${isSidebarCollapsed ? 'lg:hidden' : ''}`}>
+                <h3 className="text-sm font-medium">{user?.name || 'User'}</h3>
+                <p className="text-xs text-gray-500 dark:text-gray-400 font-light">{getUserRoleText(user?.role)}</p>
               </div>
             </div>
             <button
               onClick={handleLogout}
-              className="w-full p-2 xs:p-2.5 rounded-lg bg-gray-100 dark:bg-gray-700/50 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors text-xs xs:text-sm font-light flex items-center justify-center gap-2"
+              className={`w-full p-2.5 rounded-lg bg-gray-700/50 hover:bg-gray-700 transition-colors text-sm font-light flex items-center ${
+                isSidebarCollapsed ? 'lg:justify-center' : 'justify-center gap-2'
+              }`}
             >
-              <LogOut size={14} /> {t('logout')}
+              <LogOut size={14} />
+              <span className={isSidebarCollapsed ? 'lg:hidden' : ''}>{t('logout')}</span>
             </button>
           </div>
         </div>
       </div>
+      
+      {/* Mobile sidebar overlay */}
+      {!isSidebarCollapsed && (
+        <div
+          className="fixed inset-0 bg-black/50 z-10 lg:hidden"
+          onClick={() => setIsSidebarCollapsed(true)}
+        ></div>
+      )}
 
       {/* Main Content */}
-      <div 
-        className={`flex-1 transition-all duration-500 content-scrollable
-          ${!isSidebarCollapsed ? 'lg:pl-[280px]' : ''}`}
-      >
-        <div className="content-area relative z-10 h-full">
+      <div className="flex-1 overflow-hidden flex flex-col">
+        {/* Top Bar */}
+        <div className="bg-gray-800/50 backdrop-blur-sm p-4 border-b border-gray-700/30 flex items-center justify-between mobile-safe-top">
+          <div className="flex items-center gap-3">
+            <button
+              onClick={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
+              className="text-gray-400 hover:text-white transition-colors lg:hidden"
+            >
+              <Menu size={20} />
+            </button>
+            <h2 className="text-lg font-light">{menuItems.find((item) => item.view === view)?.label}</h2>
+          </div>
+          <div className="text-sm font-light hidden md:block">{getGreeting()}</div>
+        </div>
+
+        {/* Content */}
+        <div className="flex-1 overflow-auto p-4 content-scrollable">
+          {/* Render the selected view component */}
           {view === 'dashboard' && <DashboardContent />}
           {view === 'schedule' && <Schedule />}
           {view === 'tasks' && <Tasks />}
