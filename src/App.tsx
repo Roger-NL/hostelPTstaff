@@ -94,7 +94,7 @@ function App() {
   return (
     <BrowserRouter>
       <div className={`min-h-screen page-container ${theme === 'dark' ? 'bg-gradient-to-b from-gray-900 to-gray-800' : 'bg-gradient-to-b from-gray-100 to-gray-200'}`}>
-        <AdminInitializer masterEmail="raugerac@gmail.com" />
+        <AdminInitializer masterEmail="" />
         <Toaster
           position="top-center"
           toastOptions={{
