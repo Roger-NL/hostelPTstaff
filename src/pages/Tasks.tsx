@@ -27,11 +27,11 @@ import {
   Loader
 } from 'lucide-react';
 import { format } from 'date-fns';
-import type { Task, TaskComment, TaskChecklistItem } from '../types';
-import usePerformanceOptimizer from '../hooks/usePerformanceOptimizer';
+import type { Task, TaskComment, TaskChecklistItem, User as UserType } from '../types';
 import PhotoCapture from '../components/PhotoCapture';
 import { toast } from 'react-hot-toast';
 import { Popover, PopoverTrigger, PopoverContent } from '../components/ui/popover';
+import { uploadTaskPhoto } from '../services/task.service';
 
 interface TaskFormData {
   title: string;
@@ -79,16 +79,8 @@ export default function Tasks() {
     deleteAllTasks,
     cleanupDeletedTasks,
     approveTaskPhoto,
-    rejectTaskPhoto,
-    uploadTaskPhoto
+    rejectPhoto
   } = useStore();
-  
-  // Aplica otimizações de performance
-  const { 
-    shouldVirtualize, 
-    isLowEndDevice, 
-    shouldSimplifyUI 
-  } = usePerformanceOptimizer();
   
   const { t } = useTranslation();
   const [showForm, setShowForm] = useState(false);
@@ -240,24 +232,26 @@ export default function Tasks() {
       const canvas = canvasRef.current;
       if (video && canvas) {
         const context = canvas.getContext('2d');
-        canvas.width = video.videoWidth;
-        canvas.height = video.videoHeight;
-        context.drawImage(video, 0, 0, canvas.width, canvas.height);
-        
-        const photo = canvas.toDataURL('image/jpeg');
-        setPhotoUrl(photo);
-        
-        const stream = video.srcObject;
-        if (stream) {
-          const tracks = stream.getTracks();
-          tracks.forEach(track => track.stop());
+        if (context) {
+          canvas.width = video.videoWidth;
+          canvas.height = video.videoHeight;
+          context.drawImage(video, 0, 0, canvas.width, canvas.height);
+          
+          const photo = canvas.toDataURL('image/jpeg');
+          setPhotoUrl(photo);
+          
+          const stream = video.srcObject as MediaStream;
+          if (stream) {
+            const tracks = stream.getTracks();
+            tracks.forEach((track: MediaStreamTrack) => track.stop());
+          }
+          setIsCapturing(false);
         }
-        setIsCapturing(false);
       }
     };
 
     const submitPhoto = async () => {
-      if (!photoUrl) return;
+      if (!photoUrl || !user) return;
       
       setUploadingPhoto(true);
       try {
@@ -274,10 +268,10 @@ export default function Tasks() {
 
     const cancelCapture = () => {
       if (isCapturing && videoRef.current) {
-        const stream = videoRef.current.srcObject;
+        const stream = videoRef.current.srcObject as MediaStream;
         if (stream) {
           const tracks = stream.getTracks();
-          tracks.forEach(track => track.stop());
+          tracks.forEach((track: MediaStreamTrack) => track.stop());
         }
       }
       setIsCapturing(false);
@@ -504,7 +498,7 @@ export default function Tasks() {
         )}
 
         {showPhotoModal && (
-          <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4">
+          <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4 overflow-y-auto">
             <div className="bg-gray-800 rounded-xl w-full max-w-md overflow-hidden">
               <div className="p-4 border-b border-gray-700">
                 <h3 className="text-xl font-medium">{t('approvals.takePhoto')}</h3>
@@ -695,26 +689,9 @@ export default function Tasks() {
 
     const isTaskAdmin = user.role === 'admin';
 
-    const approvePhoto = () => {
+    const handleRejectPhoto = () => {
       if (!selectedTask.photo) return;
-      
-      approveTaskPhoto(selectedTask.id, user.id);
-      
-      const updatedPhoto: typeof selectedTask.photo = {
-        ...selectedTask.photo,
-        approved: true,
-        approvedBy: user.id,
-        approvedAt: new Date().toISOString()
-      };
-      
-      setSelectedTask({
-        ...selectedTask,
-        photo: updatedPhoto
-      });
-    };
-    
-    const rejectPhoto = () => {
-      rejectTaskPhoto(selectedTask.id);
+      rejectPhoto(selectedTask.id, user.id);
       setSelectedTask({
         ...selectedTask,
         photo: undefined
@@ -794,14 +771,27 @@ export default function Tasks() {
                       {isTaskAdmin && !selectedTask.photo.approved && (
                         <div className="flex gap-2 mt-3">
                           <button
-                            onClick={approvePhoto}
+                            onClick={() => {
+                              if(!selectedTask.photo) return;
+                              approveTaskPhoto(selectedTask.id, user.id);
+                              const updatedPhoto = {
+                                ...selectedTask.photo,
+                                approved: true,
+                                approvedBy: user.id,
+                                approvedAt: new Date().toISOString()
+                              };
+                              setSelectedTask({
+                                ...selectedTask,
+                                photo: updatedPhoto
+                              });
+                            }}
                             className="flex-1 bg-green-600 hover:bg-green-700 text-white p-2 rounded-lg text-xs"
                           >
                             Aprovar Foto
                           </button>
                           
                           <button
-                            onClick={rejectPhoto}
+                            onClick={handleRejectPhoto}
                             className="flex-1 bg-red-600 hover:bg-red-700 text-white p-2 rounded-lg text-xs"
                           >
                             Rejeitar Foto
@@ -819,7 +809,7 @@ export default function Tasks() {
                     {selectedTask.status !== 'done' && (
                       <PhotoCapture 
                         task={selectedTask}
-                        currentUser={user}
+                        currentUser={user as unknown as UserType}
                         onPhotoUploaded={handlePhotoUploaded}
                       />
                     )}

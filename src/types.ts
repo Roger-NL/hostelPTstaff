@@ -159,7 +159,6 @@ export interface Message {
 }
 
 export interface AppState {
-  // ... existing state ...
   messages: Message[];
   addMessage: (content: string, attachments?: string[]) => void;
   deleteMessage: (messageId: string) => void;
@@ -173,10 +172,9 @@ export interface AppState {
   addEvent: (event: Event) => void;
   updateEvent: (eventId: string, updates: Partial<Event>) => void;
   deleteEvent: (eventId: string) => void;
-  addMessage: (message: Message) => void;
-  // Funções para gerenciar fotos das tarefas
   approvePhoto: (taskId: string, adminId: string) => void;
   rejectPhoto: (taskId: string, adminId: string) => void;
+  uploadTaskPhoto: (taskId: string, photoData: string, userId: string) => Promise<boolean>;
 }
 
 // Definição para usuários do Firebase
