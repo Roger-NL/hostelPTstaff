@@ -143,7 +143,7 @@ const AppContent = () => {
     min-h-screen 
     mobile-fullscreen 
     page-container 
-    ${theme === 'dark' ? 'bg-gradient-to-b from-gray-900 to-gray-800' : 'bg-gradient-to-b from-gray-100 to-gray-200'}
+    ${theme === 'dark' ? 'dark bg-gradient-to-b from-gray-900 to-gray-800' : 'bg-gradient-to-b from-gray-100 to-gray-200'}
     ${deviceInfo.isIOS ? 'ios-safe-bottom ios-safe-top' : ''}
     ${deviceInfo.hasNotch ? 'notch-aware' : ''}
   `;
