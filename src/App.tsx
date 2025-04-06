@@ -1,6 +1,6 @@
-import React, { useEffect, Suspense, lazy, useState } from 'react';
-import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
-import { Sun, Moon, X } from 'lucide-react';
+import React, { useEffect, Suspense, lazy, useState, useRef } from 'react';
+import { BrowserRouter, Routes, Route, Navigate, useLocation, useNavigate } from 'react-router-dom';
+import { Sun, Moon, X, Menu, Home, CheckSquare, Calendar, Clock, Settings } from 'lucide-react';
 import { useStore } from './store/useStore';
 import { useTranslation } from './hooks/useTranslation';
 import { Toaster } from 'react-hot-toast';
@@ -38,11 +38,17 @@ const ScrollToTop = () => {
 };
 
 function App() {
-  const { theme, language, setTheme, setLanguage, init, setUser } = useStore();
+  const { theme, language, setTheme, setLanguage, init, setUser, user } = useStore();
   const { t } = useTranslation();
   const { currentUser, isAuthenticated } = useAuth();
   const [showLanguageModal, setShowLanguageModal] = useState(false);
+  const [showMenu, setShowMenu] = useState(false);
+  const location = useLocation();
+  const navigate = useNavigate();
   
+  // Referência para o menu flutuante
+  const menuRef = useRef<HTMLDivElement>(null);
+
   // Ajustar a altura do viewport para dispositivos móveis
   useEffect(() => {
     // Função para ajustar a altura do viewport em dispositivos móveis
@@ -96,6 +102,47 @@ function App() {
     }
   }, [isAuthenticated, currentUser, setUser]);
 
+  // Manipulador para o botão voltar do navegador mobile
+  useEffect(() => {
+    const handleBackButton = (event: PopStateEvent) => {
+      // Previne o comportamento padrão do botão voltar
+      event.preventDefault();
+      
+      // Redireciona para a página inicial
+      navigate('/', { replace: true });
+    };
+    
+    // Adiciona o evento ao histórico do navegador
+    window.history.pushState(null, '', window.location.pathname);
+    window.addEventListener('popstate', handleBackButton);
+    
+    // Limpeza ao desmontar
+    return () => {
+      window.removeEventListener('popstate', handleBackButton);
+    };
+  }, [navigate]);
+
+  // Efeito para fechar o menu quando clicar fora dele
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent | TouchEvent) {
+      if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
+        setShowMenu(false);
+      }
+    }
+    
+    // Adiciona o event listener
+    if (showMenu) {
+      document.addEventListener('mousedown', handleClickOutside);
+      document.addEventListener('touchstart', handleClickOutside as EventListener);
+    }
+    
+    // Limpeza
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener('touchstart', handleClickOutside as EventListener);
+    };
+  }, [showMenu]);
+
   // Alternar tema
   const toggleTheme = () => {
     setTheme(theme === 'dark' ? 'light' : 'dark');
@@ -118,6 +165,10 @@ function App() {
     localStorage.setItem('has_seen_language_modal', 'true');
     setShowLanguageModal(false);
   };
+
+  // Determina se deve mostrar o menu flutuante (bolinha) 
+  // True para todas as páginas
+  const showFloatingMenu = true;
 
   return (
     <BrowserRouter>
@@ -266,6 +317,83 @@ function App() {
             </Routes>
           </Suspense>
         </div>
+
+        {/* Menu flutuante (bolinha) - agora visível em todas as páginas */}
+        {showFloatingMenu && user && (
+          <>
+            {/* Overlay para melhorar a experiência ao clicar fora */}
+            {showMenu && (
+              <div 
+                className="fixed inset-0 bg-black/30 backdrop-blur-sm z-40 transition-opacity duration-200 ease-in-out"
+                onClick={() => setShowMenu(false)}
+              />
+            )}
+            <div className="fixed bottom-4 right-4 z-50" ref={menuRef}>
+              <div className="relative">
+                {showMenu && (
+                  <div className="absolute bottom-16 right-0 bg-gray-800 rounded-lg shadow-xl p-2 w-48 border border-gray-700 flex flex-col gap-1 animate-fadeIn">
+                    <button 
+                      onClick={() => {
+                        navigate('/');
+                        setShowMenu(false);
+                      }}
+                      className="w-full text-left px-4 py-2 text-white hover:bg-gray-700 rounded-lg text-sm flex items-center gap-2"
+                    >
+                      <Home size={16} />
+                      {t('home')}
+                    </button>
+                    <button 
+                      onClick={() => {
+                        navigate('/tasks');
+                        setShowMenu(false);
+                      }}
+                      className="w-full text-left px-4 py-2 text-white hover:bg-gray-700 rounded-lg text-sm flex items-center gap-2"
+                    >
+                      <CheckSquare size={16} />
+                      {t('tasks')}
+                    </button>
+                    <button 
+                      onClick={() => {
+                        navigate('/events');
+                        setShowMenu(false);
+                      }}
+                      className="w-full text-left px-4 py-2 text-white hover:bg-gray-700 rounded-lg text-sm flex items-center gap-2"
+                    >
+                      <Calendar size={16} />
+                      {t('events')}
+                    </button>
+                    <button 
+                      onClick={() => {
+                        navigate('/schedule');
+                        setShowMenu(false);
+                      }}
+                      className="w-full text-left px-4 py-2 text-white hover:bg-gray-700 rounded-lg text-sm flex items-center gap-2"
+                    >
+                      <Clock size={16} />
+                      {t('schedule')}
+                    </button>
+                    <button 
+                      onClick={() => {
+                        navigate('/settings');
+                        setShowMenu(false);
+                      }}
+                      className="w-full text-left px-4 py-2 text-white hover:bg-gray-700 rounded-lg text-sm flex items-center gap-2"
+                    >
+                      <Settings size={16} />
+                      {t('settings')}
+                    </button>
+                  </div>
+                )}
+                <button
+                  className="w-12 h-12 bg-blue-600 hover:bg-blue-700 rounded-full flex items-center justify-center shadow-lg transition-colors"
+                  onClick={() => setShowMenu(!showMenu)}
+                >
+                  {showMenu ? <X size={20} className="text-white" /> : <Menu size={20} className="text-white" />}
+                </button>
+              </div>
+            </div>
+          </>
+        )}
       </div>
     </BrowserRouter>
   );
