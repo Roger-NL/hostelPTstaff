@@ -90,6 +90,12 @@ interface AppState {
   // Funções para gerenciamento de fotos
   approveTaskPhoto: (taskId: string, adminId: string) => Promise<void>;
   rejectTaskPhoto: (taskId: string) => Promise<void>;
+  
+  // Função para aprovar foto de tarefa
+  approvePhoto: (taskId: string, adminId: string) => void;
+  
+  // Função para rejeitar foto de tarefa
+  rejectPhoto: (taskId: string, adminId: string) => void;
 }
 
 // Definindo dados padrão vazios
@@ -1539,5 +1545,61 @@ export const useStore = create<AppState>((set, get) => ({
     } catch (error) {
       console.error('Erro ao rejeitar foto:', error);
     }
+  },
+  
+  // Função para aprovar foto de tarefa
+  approvePhoto: (taskId: string, adminId: string) => {
+    set((state) => {
+      const taskIndex = state.tasks.findIndex(task => task.id === taskId);
+      
+      // Se a tarefa não existir ou não tiver foto, não faz nada
+      if (taskIndex === -1 || !state.tasks[taskIndex].photo) {
+        return state;
+      }
+      
+      // Clona o array de tarefas para evitar mutação
+      const updatedTasks = [...state.tasks];
+      
+      // Atualiza a foto para aprovada
+      updatedTasks[taskIndex] = {
+        ...updatedTasks[taskIndex],
+        photo: {
+          ...updatedTasks[taskIndex].photo!,
+          approved: true,
+          approvedBy: adminId,
+          approvedAt: new Date().toISOString()
+        }
+      };
+      
+      return { tasks: updatedTasks };
+    });
+  },
+  
+  // Função para rejeitar foto de tarefa
+  rejectPhoto: (taskId: string, adminId: string) => {
+    set((state) => {
+      const taskIndex = state.tasks.findIndex(task => task.id === taskId);
+      
+      // Se a tarefa não existir ou não tiver foto, não faz nada
+      if (taskIndex === -1 || !state.tasks[taskIndex].photo) {
+        return state;
+      }
+      
+      // Clona o array de tarefas para evitar mutação
+      const updatedTasks = [...state.tasks];
+      
+      // Atualiza a foto para rejeitada (usando approved: false)
+      updatedTasks[taskIndex] = {
+        ...updatedTasks[taskIndex],
+        photo: {
+          ...updatedTasks[taskIndex].photo!,
+          approved: false,
+          approvedBy: adminId,
+          approvedAt: new Date().toISOString()
+        }
+      };
+      
+      return { tasks: updatedTasks };
+    });
   }
 }));

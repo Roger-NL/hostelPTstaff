@@ -1,6 +1,6 @@
-import React, { useEffect, Suspense, lazy, useState, useRef } from 'react';
+import React, { useEffect, Suspense, lazy, useState } from 'react';
 import { BrowserRouter, Routes, Route, Navigate, useLocation, useNavigate } from 'react-router-dom';
-import { Sun, Moon, X, Menu, Home, CheckSquare, Calendar, Clock, Settings, User } from 'lucide-react';
+import { Sun, Moon, X } from 'lucide-react';
 import { useStore } from './store/useStore';
 import { useTranslation } from './hooks/useTranslation';
 import { Toaster } from 'react-hot-toast';
@@ -43,12 +43,8 @@ const AppContent = () => {
   const { t } = useTranslation();
   const { currentUser, isAuthenticated } = useAuth();
   const [showLanguageModal, setShowLanguageModal] = useState(false);
-  const [showMenu, setShowMenu] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
-  
-  // Referência para o menu flutuante
-  const menuRef = useRef<HTMLDivElement>(null);
 
   // Ajustar a altura do viewport para dispositivos móveis
   useEffect(() => {
@@ -123,27 +119,6 @@ const AppContent = () => {
     };
   }, [navigate]);
 
-  // Efeito para fechar o menu quando clicar fora dele
-  useEffect(() => {
-    function handleClickOutside(event: MouseEvent | TouchEvent) {
-      if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
-        setShowMenu(false);
-      }
-    }
-    
-    // Adiciona o event listener
-    if (showMenu) {
-      document.addEventListener('mousedown', handleClickOutside);
-      document.addEventListener('touchstart', handleClickOutside as EventListener);
-    }
-    
-    // Limpeza
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-      document.removeEventListener('touchstart', handleClickOutside as EventListener);
-    };
-  }, [showMenu]);
-
   // Alternar tema
   const toggleTheme = () => {
     setTheme(theme === 'dark' ? 'light' : 'dark');
@@ -166,10 +141,6 @@ const AppContent = () => {
     localStorage.setItem('has_seen_language_modal', 'true');
     setShowLanguageModal(false);
   };
-
-  // Determina se deve mostrar o menu flutuante (bolinha) 
-  // True para todas as páginas
-  const showFloatingMenu = true;
 
   return (
     <div className={`min-h-screen page-container ${theme === 'dark' ? 'bg-gradient-to-b from-gray-900 to-gray-800' : 'bg-gradient-to-b from-gray-100 to-gray-200'}`}>
@@ -317,106 +288,6 @@ const AppContent = () => {
           </Routes>
         </Suspense>
       </div>
-
-      {/* Menu flutuante (bolinha) - agora visível em todas as páginas */}
-      {showFloatingMenu && user && (
-        <>
-          {/* Overlay para melhorar a experiência ao clicar fora */}
-          {showMenu && (
-            <div 
-              className="fixed inset-0 bg-black/30 backdrop-blur-sm z-40 transition-opacity duration-200 ease-in-out"
-              onClick={() => setShowMenu(false)}
-            />
-          )}
-          <div className="fixed bottom-4 right-4 z-50" ref={menuRef}>
-            <div className="relative">
-              {showMenu && (
-                <div className="absolute bottom-16 right-0 bg-gray-800 rounded-lg shadow-xl p-2 w-48 border border-gray-700 flex flex-col gap-1 animate-fadeIn">
-                  <button 
-                    onClick={() => {
-                      navigate('/');
-                      setShowMenu(false);
-                    }}
-                    className="w-full text-left px-4 py-2 text-white hover:bg-gray-700 rounded-lg text-sm flex items-center gap-2"
-                  >
-                    <Home size={16} />
-                    {t('home')}
-                  </button>
-                  <button 
-                    onClick={() => {
-                      navigate('/tasks');
-                      setShowMenu(false);
-                    }}
-                    className="w-full text-left px-4 py-2 text-white hover:bg-gray-700 rounded-lg text-sm flex items-center gap-2"
-                  >
-                    <CheckSquare size={16} />
-                    {t('tasks')}
-                  </button>
-                  <button 
-                    onClick={() => {
-                      navigate('/events');
-                      setShowMenu(false);
-                    }}
-                    className="w-full text-left px-4 py-2 text-white hover:bg-gray-700 rounded-lg text-sm flex items-center gap-2"
-                  >
-                    <Calendar size={16} />
-                    {t('events')}
-                  </button>
-                  <button 
-                    onClick={() => {
-                      navigate('/schedule');
-                      setShowMenu(false);
-                    }}
-                    className="w-full text-left px-4 py-2 text-white hover:bg-gray-700 rounded-lg text-sm flex items-center gap-2"
-                  >
-                    <Clock size={16} />
-                    {t('schedule')}
-                  </button>
-                  <button 
-                    onClick={() => {
-                      navigate('/staff');
-                      setShowMenu(false);
-                    }}
-                    className="w-full text-left px-4 py-2 text-white hover:bg-gray-700 rounded-lg text-sm flex items-center gap-2"
-                  >
-                    <User size={16} />
-                    {t('staff')}
-                  </button>
-                  <button 
-                    onClick={() => {
-                      toggleTheme();
-                      setShowMenu(false);
-                    }}
-                    className="w-full text-left px-4 py-2 text-white hover:bg-gray-700 rounded-lg text-sm flex items-center gap-2"
-                  >
-                    {theme === 'dark' ? <Sun size={16} /> : <Moon size={16} />}
-                    {theme === 'dark' ? t('light_mode') : t('dark_mode')}
-                  </button>
-                  <button 
-                    onClick={() => {
-                      toggleLanguage();
-                      setShowMenu(false);
-                    }}
-                    className="w-full text-left px-4 py-2 text-white hover:bg-gray-700 rounded-lg text-sm flex items-center gap-2"
-                  >
-                    <span className="w-4 h-4 flex items-center justify-center">{language === 'pt' ? 'EN' : 'PT'}</span>
-                    {language === 'pt' ? 'English' : 'Português'}
-                  </button>
-                </div>
-              )}
-              
-              {/* Botão flutuante principal */}
-              <button
-                onClick={() => setShowMenu(!showMenu)}
-                className="shadow-lg bg-yellow-500 hover:bg-yellow-600 text-white rounded-full w-14 h-14 flex items-center justify-center focus:outline-none focus:ring-2 focus:ring-yellow-400 focus:ring-opacity-50 transition-all"
-                aria-label="Menu"
-              >
-                {showMenu ? <X size={24} /> : <Menu size={24} />}
-              </button>
-            </div>
-          </div>
-        </>
-      )}
     </div>
   );
 };

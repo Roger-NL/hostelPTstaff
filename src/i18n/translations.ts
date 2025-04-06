@@ -320,7 +320,32 @@ export const translations = {
     no: 'No',
     ok: 'OK',
     close: 'Close',
-    refresh: 'Refresh'
+    refresh: 'Refresh',
+    
+    // Approval system
+    approvals: {
+      title: 'Approvals',
+      photoApprovals: 'Photo Approvals',
+      pendingPhotos: 'Pending Photos',
+      approvePhoto: 'Approve Photo',
+      rejectPhoto: 'Reject Photo',
+      noPhotosPending: 'No photos pending approval',
+      photoApproved: 'Photo approved successfully',
+      photoRejected: 'Photo rejected',
+      viewTask: 'View Task',
+      taskTitle: 'Task',
+      uploadedBy: 'Uploaded by',
+      uploadedAt: 'Uploaded at',
+      approvalRequired: 'Requires approval',
+      photoRequired: 'Photo required',
+      requirePhotoExplanation: 'When selected, this task can only be marked as done after a photo is submitted and approved',
+      cannotComplete: 'This task requires an approved photo to be completed',
+      takePhoto: 'Take Photo',
+      uploadingPhoto: 'Uploading photo...',
+      photoUploaded: 'Photo submitted for approval',
+      waitingApproval: 'Waiting for approval',
+      rejected: 'Rejected'
+    },
   },
   pt: {
     // Common
@@ -643,6 +668,31 @@ export const translations = {
     no: 'Não',
     ok: 'OK',
     close: 'Fechar',
-    refresh: 'Atualizar'
+    refresh: 'Atualizar',
+    
+    // Sistema de aprovação
+    approvals: {
+      title: 'Autorizações',
+      photoApprovals: 'Aprovação de Fotos',
+      pendingPhotos: 'Fotos Pendentes',
+      approvePhoto: 'Aprovar Foto',
+      rejectPhoto: 'Rejeitar Foto',
+      noPhotosPending: 'Nenhuma foto pendente de aprovação',
+      photoApproved: 'Foto aprovada com sucesso',
+      photoRejected: 'Foto rejeitada',
+      viewTask: 'Ver Tarefa',
+      taskTitle: 'Tarefa',
+      uploadedBy: 'Enviada por',
+      uploadedAt: 'Enviada em',
+      approvalRequired: 'Requer aprovação',
+      photoRequired: 'Foto obrigatória',
+      requirePhotoExplanation: 'Quando selecionado, esta tarefa só pode ser marcada como concluída após uma foto ser enviada e aprovada',
+      cannotComplete: 'Esta tarefa requer uma foto aprovada para ser concluída',
+      takePhoto: 'Tirar Foto',
+      uploadingPhoto: 'Enviando foto...',
+      photoUploaded: 'Foto enviada para aprovação',
+      waitingApproval: 'Aguardando aprovação',
+      rejected: 'Rejeitada'
+    },
   }
 };

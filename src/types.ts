@@ -167,6 +167,16 @@ export interface AppState {
   removeReaction: (messageId: string, emoji: string) => void;
   markMessageAsRead: (messageId: string) => void;
   markAllMessagesAsRead: () => void;
+  addTask: (task: Task) => void;
+  updateTask: (taskId: string, updates: Partial<Task>) => void;
+  deleteTask: (taskId: string) => void;
+  addEvent: (event: Event) => void;
+  updateEvent: (eventId: string, updates: Partial<Event>) => void;
+  deleteEvent: (eventId: string) => void;
+  addMessage: (message: Message) => void;
+  // Funções para gerenciar fotos das tarefas
+  approvePhoto: (taskId: string, adminId: string) => void;
+  rejectPhoto: (taskId: string, adminId: string) => void;
 }
 
 // Definição para usuários do Firebase

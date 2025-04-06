@@ -27,7 +27,8 @@ import {
   Menu,
   HomeIcon,
   ChevronsLeft,
-  ChevronsRight
+  ChevronsRight,
+  CheckSquare
 } from 'lucide-react';
 import { format } from 'date-fns';
 import Schedule from './Schedule';
@@ -98,7 +99,8 @@ export default function MainDashboard() {
     }
   };
 
-  const menuItems = [
+  // Construir os itens do menu, incluindo autorizações apenas para admin
+  const baseMenuItems = [
     { icon: LayoutDashboard, label: t('dashboard.title'), view: 'dashboard' },
     { icon: Calendar, label: t('schedule.title'), view: 'schedule' },
     { icon: ClipboardList, label: t('taskManagement'), view: 'tasks' },
@@ -108,6 +110,15 @@ export default function MainDashboard() {
     { icon: HomeIcon, label: t('laundry.title'), view: 'laundry' },
     { icon: SettingsIcon, label: t('settings.title'), view: 'settings' }
   ];
+  
+  // Adicionar opção de autorizações se o usuário for admin
+  const menuItems = user?.role === 'admin' 
+    ? [
+        ...baseMenuItems.slice(0, 7),
+        { icon: CheckSquare, label: t('approvals.title'), view: 'approvals' },
+        baseMenuItems[7]
+      ] 
+    : baseMenuItems;
 
   return (
     <div className="flex h-screen bg-gray-900 text-white">
@@ -210,6 +221,16 @@ export default function MainDashboard() {
           {view === 'settings' && <SettingsPage />}
           {view === 'messages' && <Messages />}
           {view === 'laundry' && <LaundrySchedule />}
+          {view === 'approvals' && user?.role === 'admin' && (
+            <div className="space-y-6">
+              <h2 className="text-xl font-light">{t('approvals.photoApprovals')}</h2>
+              <div className="bg-gray-800/50 backdrop-blur-sm rounded-xl p-6 border border-gray-700/30">
+                <p className="text-center text-gray-400 py-8">
+                  {t('approvals.noPhotosPending')}
+                </p>
+              </div>
+            </div>
+          )}
         </div>
       </div>
     </div>
