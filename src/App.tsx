@@ -1,6 +1,6 @@
 import React, { useEffect, Suspense, lazy, useState } from 'react';
 import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
-import { Sun, Moon, X } from 'lucide-react';
+import { X } from 'lucide-react';
 import { useStore } from './store/useStore';
 import { useTranslation } from './hooks/useTranslation';
 import { Toaster } from 'react-hot-toast';
@@ -38,7 +38,7 @@ const ScrollToTop = () => {
 };
 
 function App() {
-  const { theme, language, setTheme, setLanguage, init, setUser } = useStore();
+  const { theme, language, setLanguage, init, setUser } = useStore();
   const { t } = useTranslation();
   const { currentUser, isAuthenticated } = useAuth();
   const [showLanguageModal, setShowLanguageModal] = useState(false);
@@ -67,16 +67,6 @@ function App() {
       setUser(currentUser);
     }
   }, [isAuthenticated, currentUser, setUser]);
-
-  // Alternar tema
-  const toggleTheme = () => {
-    setTheme(theme === 'dark' ? 'light' : 'dark');
-  };
-
-  // Alternar idioma
-  const toggleLanguage = () => {
-    setLanguage(language === 'pt' ? 'en' : 'pt');
-  };
 
   // Selecionar idioma específico e fechar o modal
   const selectLanguage = (lang: 'en' | 'pt') => {
@@ -164,26 +154,6 @@ function App() {
                 </button>
               </div>
             </div>
-          </div>
-        )}
-        
-        {/* Mostra botões de tema e idioma APENAS na página de login ou quando não estiver autenticado */}
-        {!isAuthenticated && (
-          <div className="fixed top-4 right-4 z-40 flex gap-2">
-            <button
-              onClick={toggleTheme}
-              className={`p-2 rounded-full ${theme === 'dark' ? 'bg-gray-700 text-white hover:bg-gray-600' : 'bg-white text-gray-800 shadow-md hover:bg-gray-100'} transition-colors`}
-              aria-label={theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
-            >
-              {theme === 'dark' ? <Sun size={18} /> : <Moon size={18} />}
-            </button>
-            <button
-              onClick={toggleLanguage}
-              className={`p-2 rounded-full ${theme === 'dark' ? 'bg-gray-700 text-white hover:bg-gray-600' : 'bg-white text-gray-800 shadow-md hover:bg-gray-100'} transition-colors font-medium text-xs`}
-              aria-label={language === 'pt' ? 'Switch to English' : 'Alternar para Português'}
-            >
-              {language === 'pt' ? 'EN' : 'PT'}
-            </button>
           </div>
         )}
         
