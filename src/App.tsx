@@ -7,6 +7,7 @@ import { Toaster } from 'react-hot-toast';
 import PrivateRoute from './components/PrivateRoute';
 import AdminInitializer from './components/AdminInitializer';
 import { useAuth } from './hooks/useAuth';
+import { initDeviceMonitor, useDeviceInfo } from './utils/deviceDetector';
 
 // Lazy loading de componentes pesados
 const Login = lazy(() => import('./pages/Login'));
@@ -43,35 +44,14 @@ const AppContent = () => {
   const { t } = useTranslation();
   const { currentUser, isAuthenticated } = useAuth();
   const [showLanguageModal, setShowLanguageModal] = useState(false);
+  const deviceInfo = useDeviceInfo();
   const location = useLocation();
   const navigate = useNavigate();
 
-  // Ajustar a altura do viewport para dispositivos móveis
+  // Inicializar o monitor de dispositivos
   useEffect(() => {
-    // Função para ajustar a altura do viewport em dispositivos móveis
-    const setAppHeight = () => {
-      // Primeiro obter a altura real do viewport (sem barras de navegação)
-      const vh = window.innerHeight * 0.01;
-      document.documentElement.style.setProperty('--vh', `${vh}px`);
-      
-      // Em alguns navegadores móveis, precisamos atualizar após orientação mudar
-      setTimeout(() => {
-        const vh = window.innerHeight * 0.01;
-        document.documentElement.style.setProperty('--vh', `${vh}px`);
-      }, 100);
-    };
-    
-    // Configurar no início
-    setAppHeight();
-    
-    // Atualizar quando redimensionar ou mudar orientação
-    window.addEventListener('resize', setAppHeight);
-    window.addEventListener('orientationchange', setAppHeight);
-    
-    return () => {
-      window.removeEventListener('resize', setAppHeight);
-      window.removeEventListener('orientationchange', setAppHeight);
-    };
+    const cleanup = initDeviceMonitor();
+    return cleanup;
   }, []);
 
   // Verificar se é a primeira visita
@@ -142,8 +122,25 @@ const AppContent = () => {
     setShowLanguageModal(false);
   };
 
+  // Classes que consideram o tipo de dispositivo
+  const containerClasses = `
+    min-h-screen 
+    mobile-fullscreen 
+    page-container 
+    ${theme === 'dark' ? 'bg-gradient-to-b from-gray-900 to-gray-800' : 'bg-gradient-to-b from-gray-100 to-gray-200'}
+    ${deviceInfo.isIOS ? 'ios-safe-bottom ios-safe-top' : ''}
+    ${deviceInfo.hasNotch ? 'notch-aware' : ''}
+  `;
+
+  const contentClasses = `
+    page-content 
+    ${deviceInfo.isMobile ? 'mobile-safe-bottom' : ''} 
+    ${deviceInfo.isIOS ? 'ios-safe-bottom' : ''}
+    ${deviceInfo.hasNotch ? 'home-indicator-aware' : ''}
+  `;
+
   return (
-    <div className={`min-h-screen page-container ${theme === 'dark' ? 'bg-gradient-to-b from-gray-900 to-gray-800' : 'bg-gradient-to-b from-gray-100 to-gray-200'}`}>
+    <div className={containerClasses}>
       <AdminInitializer masterEmail="" />
       <Toaster
         position="top-center"
@@ -237,7 +234,8 @@ const AppContent = () => {
         </div>
       )}
       
-      <div className="page-content">
+      {/* Corpo da aplicação com classes adequadas para diferentes dispositivos */}
+      <div className={contentClasses}>
         <Suspense fallback={<LoadingFallback />}>
           <ScrollToTop />
           <Routes>

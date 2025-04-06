@@ -1,72 +1,46 @@
-import { StrictMode } from 'react';
-import { createRoot } from 'react-dom/client';
-import App from './App.tsx';
+import React from 'react';
+import ReactDOM from 'react-dom/client';
+import App from './App';
 import './index.css';
+import { applyDeviceClasses } from './utils/deviceDetector';
 
-// Detecção de dispositivo móvel
-const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-
-// Configurar o tema escuro como padrão
-const savedTheme = localStorage.getItem('theme');
-if (!savedTheme) {
-  document.documentElement.classList.add('dark');
-  localStorage.setItem('theme', 'dark');
-} else if (savedTheme === 'dark') {
-  document.documentElement.classList.add('dark');
-}
-
-// Otimizações para dispositivos móveis
-if (isMobile) {
-  // Adiciona classe específica para mobile no body
-  document.body.classList.add('mobile-device');
+// Configurar viewport para dispositivos móveis
+const setViewportForMobile = () => {
+  // Inicializa as classes de detecção de dispositivo
+  applyDeviceClasses();
   
-  // Desativa transições e animações complexas em devices de baixa performance
-  const styleElement = document.createElement('style');
-  styleElement.textContent = `
-    @media (max-width: 767px) {
-      .backdrop-blur-xl {
-        backdrop-filter: none !important;
-      }
-      
-      .transition-all, .transition-opacity, .transition-transform {
-        transition-duration: 0.1s !important;
-      }
-      
-      /* Garante que animações de carregamento continuem funcionando */
-      .animate-spin {
-        animation-duration: 1.5s !important;
-      }
-    }
-  `;
-  document.head.appendChild(styleElement);
-  
-  // Otimização adicional para telas menores
-  if (window.innerWidth < 480) {
-    // Desativa efeitos visuais custosos
-    document.documentElement.classList.add('reduce-animation');
-    
-    // Ajuste para melhorar a performance de renderização
-    const performanceStyle = document.createElement('style');
-    performanceStyle.textContent = `
-      .glass-morphism {
-        background-color: rgba(0, 0, 0, 0.2) !important;
-        backdrop-filter: none !important;
-        -webkit-backdrop-filter: none !important;
-      }
-      
-      .bg-opacity-60, .bg-opacity-50, .bg-opacity-40, .bg-opacity-30 {
-        background-color: rgba(0, 0, 0, 0.2) !important;
-      }
-    `;
-    document.head.appendChild(performanceStyle);
+  // Define o meta viewport dinamicamente
+  const viewport = document.querySelector('meta[name="viewport"]');
+  if (viewport) {
+    // Configura o viewport para prevenir zoom em inputs em iOS
+    viewport.setAttribute('content', 'width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover');
+  } else {
+    // Cria a tag meta viewport se não existir
+    const meta = document.createElement('meta');
+    meta.name = 'viewport';
+    meta.content = 'width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover';
+    document.getElementsByTagName('head')[0].appendChild(meta);
   }
-}
+  
+  // Adiciona meta tag para Apple PWA
+  const metaApple = document.createElement('meta');
+  metaApple.name = 'apple-mobile-web-app-capable';
+  metaApple.content = 'yes';
+  document.getElementsByTagName('head')[0].appendChild(metaApple);
+  
+  // Adiciona meta tag para cor da barra de status
+  const metaStatusBar = document.createElement('meta');
+  metaStatusBar.name = 'apple-mobile-web-app-status-bar-style';
+  metaStatusBar.content = 'black-translucent';
+  document.getElementsByTagName('head')[0].appendChild(metaStatusBar);
+};
 
-// Desabilita StrictMode em produção para melhorar performance
-const AppWithMode = import.meta.env.DEV ? (
-  <StrictMode>
+// Configurar o ambiente antes de renderizar
+setViewportForMobile();
+
+// Renderizar a aplicação
+ReactDOM.createRoot(document.getElementById('root') as HTMLElement).render(
+  <React.StrictMode>
     <App />
-  </StrictMode>
-) : <App />;
-
-createRoot(document.getElementById('root')!).render(AppWithMode);
+  </React.StrictMode>
+);

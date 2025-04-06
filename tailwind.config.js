@@ -4,12 +4,23 @@ export default {
   darkMode: 'class',
   theme: {
     screens: {
-      'xs': '375px',
-      'sm': '640px',
-      'md': '768px',
-      'lg': '1024px',
-      'xl': '1280px',
-      '2xl': '1536px',
+      'xxs': '320px',  // Dispositivos muito pequenos
+      'xs': '375px',   // iPhone SE, iPhone 8
+      'sm': '640px',   // Tablets pequenos, dispositivos maiores
+      'md': '768px',   // Tablets
+      'lg': '1024px',  // Desktops e tablets landscape
+      'xl': '1280px',  // Desktops grandes
+      '2xl': '1536px', // Telas extra grandes
+      // Breakpoints específicos para diferentes modelos de iPhone
+      'iphone-se': {'raw': '(device-width: 375px) and (device-height: 667px)'},
+      'iphone-x': {'raw': '(device-width: 375px) and (device-height: 812px)'},
+      'iphone-plus': {'raw': '(device-width: 414px) and (device-height: 736px)'},
+      'iphone-12': {'raw': '(device-width: 390px) and (device-height: 844px)'},
+      'iphone-12-max': {'raw': '(device-width: 428px) and (device-height: 926px)'},
+      // Breakpoints específicos para diferentes modelos de Android
+      'android-small': {'raw': '(max-width: 360px)'},
+      'android-medium': {'raw': '(min-width: 361px) and (max-width: 400px)'},
+      'android-large': {'raw': '(min-width: 401px) and (max-width: 480px)'},
     },
     extend: {
       fontFamily: {
@@ -31,12 +42,39 @@ export default {
       spacing: {
         '4.5': '1.125rem',
         '5.5': '1.375rem',
+        // Valores específicos para safe-area em diferentes dispositivos
+        'safe-top': 'var(--safe-area-inset-top, 0px)',
+        'safe-bottom': 'var(--safe-area-inset-bottom, 0px)',
+        'safe-left': 'var(--safe-area-inset-left, 0px)',
+        'safe-right': 'var(--safe-area-inset-right, 0px)',
       },
       fontSize: {
         'xxs': '0.65rem',
         'tiny': '0.7rem',
       },
+      height: {
+        'screen-ios': 'var(--app-height)',
+        'screen-dynamic': 'calc(var(--vh, 1vh) * 100)',
+      },
+      minHeight: {
+        'screen-ios': 'var(--app-height)',
+        'screen-dynamic': 'calc(var(--vh, 1vh) * 100)',
+      },
+      maxHeight: {
+        'screen-ios': 'var(--app-height)',
+        'screen-dynamic': 'calc(var(--vh, 1vh) * 100)',
+      },
     },
   },
-  plugins: [],
+  // Adicionar variantes para detectar diferentes dispositivos
+  plugins: [
+    function({ addVariant }) {
+      // Variantes para iOS
+      addVariant('ios', '.ios-device &');
+      // Variantes para Android
+      addVariant('android', ':not(.ios-device).mobile-device &');
+      // Variante para PWA
+      addVariant('pwa', '.pwa-mode &');
+    }
+  ],
 };
