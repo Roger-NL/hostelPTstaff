@@ -7,7 +7,7 @@ Este documento contém instruções sobre como resolver os problemas de autentic
 De acordo com os logs, foram identificados os seguintes problemas:
 
 1. **Problemas com o usuário master**:
-   - O email `raugerac@gmail.com` já existe no Firebase Authentication (erro `auth/email-already-in-use`), mas o script está tendo problemas para fazer login com ele.
+   - Já existe um usuário na Firebase Authentication (erro `auth/email-already-in-use`), mas o script está tendo problemas para fazer login com ele.
    - Quando o login é tentado, aparece um erro `User profile not found`, indicando que o usuário existe na autenticação, mas não há um documento correspondente no Firestore.
 
 2. **Problemas com as regras do Firestore**:
@@ -53,10 +53,7 @@ service cloud.firestore {
 
 ### 2. Credenciais do Usuário Master
 
-O sistema está configurado para criar/usar um usuário master com as seguintes credenciais:
-
-- Email: `raugerac@gmail.com`
-- Senha: `Senha123!`
+O sistema está configurado para criar/usar um usuário master.
 
 ### 3. Correção Manual de Problemas (se necessário)
 
@@ -65,9 +62,9 @@ Se ainda houver problemas, você pode:
 #### Redefinir a Senha do Usuário Master
 
 1. Acesse o [Firebase Console](https://console.firebase.google.com/project/hostel-538d2/authentication/users)
-2. Encontre o usuário com o email `raugerac@gmail.com`
+2. Encontre o usuário administrador
 3. Clique no menu "..." e selecione "Reset Password"
-4. Defina a senha como `Senha123!` (ou outra senha de sua escolha)
+4. Defina uma nova senha
 5. Atualize o arquivo `src/scripts/setupMasterUser.ts` com a nova senha, se necessário
 
 #### Criar Manualmente o Perfil no Firestore
@@ -78,7 +75,7 @@ Se ainda houver problemas, você pode:
 4. Se não existir, crie um novo documento com o ID do usuário master (você pode obter este ID na seção Authentication do console)
 5. Adicione os seguintes campos:
    - `id`: [ID do usuário]
-   - `email`: "raugerac@gmail.com"
+   - `email`: [email do usuário]
    - `name`: "Super Admin"
    - `role`: "superadmin"
    - `points`: 0
@@ -93,7 +90,7 @@ Se ainda houver problemas, você pode:
 
 6. Na coleção "system", crie um documento chamado "master" com os campos:
    - `userId`: [ID do usuário]
-   - `email`: "raugerac@gmail.com"
+   - `email`: [email do usuário]
    - `createdAt`: [data atual em formato ISO]
    - `isMaster`: true
 

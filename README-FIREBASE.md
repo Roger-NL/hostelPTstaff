@@ -55,12 +55,9 @@ Se você tem o Firebase CLI instalado, você pode fazer o deploy das regras dire
 
 ## Configuração do Usuário Master
 
-O sistema tentará criar automaticamente um usuário master com as seguintes credenciais:
+O sistema tentará criar automaticamente um usuário master para administração.
 
-- Email: raugerac@gmail.com
-- Senha: Senha123!
-
-**IMPORTANTE:** Para ambientes de produção, modifique a senha no arquivo `src/scripts/setupMasterUser.ts` antes de fazer o deploy.
+**IMPORTANTE:** Para ambientes de produção, modifique a senha do administrador no arquivo `src/scripts/setupMasterUser.ts` antes de fazer o deploy.
 
 ## Notas para Produção
 
