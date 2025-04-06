@@ -4,17 +4,73 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Estilos base para todos os dispositivos */
+:root {
+  --font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+  --mobile-browser-chrome-height: env(safe-area-inset-top, 0px);
+  --mobile-browser-bottom-nav: env(safe-area-inset-bottom, 0px);
+  touch-action: manipulation; /* Previne delays de toque em dispositivos móveis */
+}
+
+/* Viewport height dinâmico - corrige problemas de altura em navegadores móveis */
+:root {
+  --vh: 1vh;
+}
+
+/* Melhor controle de altura para dispositivos móveis */
+@media (max-width: 767px) {
+  html {
+    height: -webkit-fill-available;
+  }
+  body {
+    min-height: 100vh;
+    min-height: -webkit-fill-available;
+    min-height: calc(var(--vh, 1vh) * 100);
+  }
+}
+
 html, body {
   height: 100%;
-  overflow: hidden; /* Impede rolagem no documento global */
-  position: fixed;
   width: 100%;
+  margin: 0;
+  padding: 0;
   overscroll-behavior: none;
+}
+
+/* Layout adaptativo baseado no tipo de dispositivo */
+@media (min-width: 768px) {
+  /* Desktop: layout fixo com overflow escondido */
+  html, body {
+    overflow: hidden;
+    position: fixed;
+  }
+}
+
+@media (max-width: 767px) {
+  /* Mobile: permite view adaptativo */
+  html, body {
+    overflow: hidden;
+    position: fixed;
+    /* Ajustes para browser chrome */
+    height: calc(100% - var(--mobile-browser-chrome-height));
+    padding-top: var(--mobile-browser-chrome-height);
+    padding-bottom: var(--mobile-browser-bottom-nav);
+  }
+}
+
+/* Viewport height adaptativo para iOS */
+.fixed-layout {
+  height: 100% !important;
+  height: 100vh !important; 
+  height: calc(var(--vh, 1vh) * 100) !important;
+  overflow: hidden;
 }
 
 #root {
   height: 100%;
   overflow: hidden;
+  display: flex;
+  flex-direction: column;
 }
 
 /* Esconder a scrollbar enquanto mantém a funcionalidade */
@@ -33,6 +89,8 @@ html, body {
   overflow-x: hidden;
   scrollbar-width: thin;
   -webkit-overflow-scrolling: touch; /* Scroll suave em iOS */
+  overscroll-behavior: contain; /* Previne scroll cascading */
+  padding-bottom: calc(env(safe-area-inset-bottom) + 1rem); /* Espaço extra para evitar conteúdo oculto */
 }
 
 /* Adiciona classe para texto muito pequeno */
@@ -41,15 +99,28 @@ html, body {
     font-size: 0.7rem;
     line-height: 1rem;
   }
-}
-
-:root {
-  --font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
-  touch-action: manipulation; /* Previne delays de toque em dispositivos móveis */
+  
+  /* Utilitários para ajustar em dispositivos com notch ou barra de navegação */
+  .pt-safe {
+    padding-top: env(safe-area-inset-top, 0px);
+  }
+  
+  .pb-safe {
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+  
+  .pl-safe {
+    padding-left: env(safe-area-inset-left, 0px);
+  }
+  
+  .pr-safe {
+    padding-right: env(safe-area-inset-right, 0px);
+  }
 }
 
 * {
   font-family: var(--font-family) !important;
+  -webkit-tap-highlight-color: transparent; /* Remove highlight ao tocar em elementos */
 }
 
 body {
@@ -97,6 +168,13 @@ input, select, textarea, button {
   .font-pirate {
     font-family: var(--font-pirate);
     font-weight: normal;
+  }
+  
+  /* Melhoria para inputs - prevenindo zoom em iOS */
+  @media screen and (max-width: 767px) {
+    input, select, textarea {
+      font-size: 16px !important; /* Previne zoom automático em inputs no iOS */
+    }
   }
 }
 
@@ -148,10 +226,17 @@ input, select, textarea, button {
   height: 100%;
   position: relative;
   overflow: hidden;
+  /* Safe area insets para notches e barras de navegação */
+  padding-top: env(safe-area-inset-top, 0px);
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+  padding-left: env(safe-area-inset-left, 0px);
+  padding-right: env(safe-area-inset-right, 0px);
 }
 
 .page-header {
   flex-shrink: 0;
+  position: relative;
+  z-index: 10;
 }
 
 .page-content {
@@ -159,10 +244,28 @@ input, select, textarea, button {
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;
   overscroll-behavior: contain;
+  position: relative;
+  z-index: 5;
 }
 
 .page-footer {
   flex-shrink: 0;
+  position: relative;
+  z-index: 10;
+  margin-bottom: env(safe-area-inset-bottom, 0px); /* Respeita a área segura inferior */
+}
+
+/* Script para atualizar --vh quando a altura da viewport muda */
+@media (max-width: 767px) {
+  body::before {
+    content: "";
+    display: block;
+    position: fixed;
+    width: 100%;
+    height: 0;
+    /* Este script será executado inline no head */
+    background-image: url('data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" height="0" width="0" onload="(function(){function setVH(){var vh=window.innerHeight*0.01;document.documentElement.style.setProperty(%27--vh%27,vh+%27px%27)}setVH();window.addEventListener(%27resize%27,setVH)})()"%3E%3C/svg%3E');
+  }
 }
 
 /* Otimizado para mobile - desativa ou reduz a intensidade do efeito grain em dispositivos móveis */
@@ -196,6 +299,18 @@ input, select, textarea, button {
   font-family: Arial, sans-serif;
 }
 
+/* Fix para teclado virtual em dispositivos iOS */
+@supports (-webkit-touch-callout: none) {
+  .page-container {
+    height: -webkit-fill-available;
+  }
+  
+  .ios-keyboard-open {
+    height: auto !important;
+    position: absolute !important;
+  }
+}
+
 /* Otimizações para performance mobile */
 @media (max-width: 768px) {
   /* Força uma animação mais suave em celulares */
@@ -214,6 +329,19 @@ input, select, textarea, button {
   /* Reduz a complexidade de sombras */
   .shadow-md, .shadow-lg, .shadow-xl {
     box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+  }
+  
+  /* Ajustes para navegação de tela cheia em browsers mobile */
+  .fullscreen-mobile {
+    height: 100vh;
+    height: calc(var(--vh, 1vh) * 100);
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    width: 100%;
+    z-index: 9999;
   }
 }
 
@@ -250,88 +378,4 @@ input, select, textarea, button {
   .backdrop-blur-xl {
     backdrop-filter: none !important;
   }
-}
-
-/* Simplifica a UI para melhorar performance */
-.simplified-ui {
-  /* Reduz opacidade e blur */
-  --opacity-level: 1 !important; /* Remove transparências parciais */
-  
-  /* Remove bordas arredondadas complexas */
-  --rounded-complex: 0.25rem !important;
-  
-  /* Simplifica backgrounds gradientes */
-  .bg-gradient-to-b, 
-  .bg-gradient-to-r, 
-  .bg-gradient-to-l, 
-  .bg-gradient-to-t {
-    background: #1f2937 !important; /* Substitui gradientes por cor sólida */
-  }
-  
-  /* Outras simplificações para componentes específicos podem ser adicionadas aqui */
-}
-
-/* Layout fixo global */
-.fixed-layout {
-  height: 100%;
-  overflow: hidden;
-  position: fixed;
-  width: 100%;
-  touch-action: manipulation;
-  overscroll-behavior: none;
-  user-select: none;
-}
-
-.fixed-layout #root {
-  height: 100%;
-  overflow: hidden;
-  display: flex;
-  flex-direction: column;
-}
-
-/* Garantir que as páginas internas respeitem o layout fixo */
-.fixed-layout .page-container,
-.page-container {
-  display: flex;
-  flex-direction: column;
-  height: 100%;
-  max-height: 100%;
-  overflow: hidden;
-  position: relative;
-}
-
-/* Componentes de uma página de layout fixo */
-.fixed-layout .page-header,
-.page-header {
-  flex-shrink: 0;
-  position: relative;
-  z-index: 10;
-}
-
-.fixed-layout .page-content, 
-.page-content {
-  flex: 1;
-  overflow-y: auto;
-  -webkit-overflow-scrolling: touch;
-  overscroll-behavior: contain;
-  position: relative;
-}
-
-.fixed-layout .page-footer,
-.page-footer {
-  flex-shrink: 0;
-  position: relative;
-  z-index: 10;
-}
-
-/* Ajustes para containers internos com rolagem */
-.fixed-layout .content-scrollable,
-.content-scrollable {
-  overflow-y: auto;
-  -webkit-overflow-scrolling: touch;
-  scrollbar-width: thin;
-  overscroll-behavior: contain;
-  position: relative;
-  height: 100%;
-  max-height: 100%;
 }
