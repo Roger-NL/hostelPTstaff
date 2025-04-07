@@ -951,24 +951,15 @@ export default function Tasks() {
         showBackButton={true}
         actions={
           isAdmin && (
-            <div className="flex-shrink-0 flex items-center gap-2">
-              <button
-                onClick={() => setShowConfirmCleanup(true)}
-                className="h-10 px-3 bg-gradient-to-r from-amber-400 to-amber-500 text-white rounded-xl shadow-lg hover:shadow-amber-500/30 transition-all flex items-center gap-1.5 text-xs xs:text-sm font-medium"
-                disabled={isLoadingAction}
-              >
-                <Trash2 size={16} />
-                <span className="hidden sm:inline">{t('tasks.cleanup')}</span>
-                <span className="sm:hidden">{t('cleanup')}</span>
-              </button>
+            <div className="flex-shrink-0 flex items-center">
               <button
                 onClick={() => setShowConfirmAllDelete(true)}
-                className="h-10 px-3 bg-gradient-to-r from-red-400 to-red-500 text-white rounded-xl shadow-lg hover:shadow-red-500/30 transition-all flex items-center gap-1.5 text-xs xs:text-sm font-medium"
+                className="h-10 px-4 bg-gradient-to-r from-red-400 to-red-500 text-white rounded-xl shadow-lg hover:shadow-red-500/30 transition-all flex items-center gap-2 text-sm font-medium"
                 disabled={isLoadingAction}
+                title={t('tasks.deleteAll')}
               >
                 <AlertTriangle size={16} />
-                <span className="hidden sm:inline">{t('tasks.deleteAll')}</span>
-                <span className="sm:hidden">{t('delete')}</span>
+                <span>{t('tasks.deleteAll')}</span>
               </button>
             </div>
           )
@@ -1314,44 +1305,6 @@ export default function Tasks() {
                   <>
                     <AlertTriangle size={14} />
                     <span>Excluir Todas</span>
-                  </>
-                )}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-      
-      {showConfirmCleanup && (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-3 xs:p-4">
-          <div className="bg-gray-800 rounded-lg p-4 xs:p-6 w-full max-w-md">
-            <h2 className="text-lg xs:text-xl font-semibold text-white mb-3">
-              Limpar Tarefas Excluídas
-            </h2>
-            <p className="text-sm text-white/80 mb-4 xs:mb-6">
-              Esta ação removerá permanentemente todas as tarefas marcadas como excluídas do banco de dados. Deseja continuar?
-            </p>
-            <div className="flex justify-end gap-3">
-              <button
-                onClick={() => setShowConfirmCleanup(false)}
-                className="px-3 xs:px-4 py-2 text-white/60 hover:text-white transition-colors text-sm"
-                disabled={isLoadingAction}
-              >
-                Cancelar
-              </button>
-              <button
-                onClick={handleCleanupDeletedTasks}
-                className="px-3 xs:px-4 py-2 bg-amber-500 text-white rounded-lg hover:bg-amber-600 transition-colors text-sm flex items-center gap-2"
-                disabled={isLoadingAction}
-              >
-                {isLoadingAction ? (
-                  <>
-                    <span className="animate-pulse">Processando...</span>
-                  </>
-                ) : (
-                  <>
-                    <Trash2 size={14} />
-                    <span>Limpar</span>
                   </>
                 )}
               </button>
