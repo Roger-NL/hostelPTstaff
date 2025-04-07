@@ -236,6 +236,7 @@ export default function Tasks() {
     }
   };
 
+  // Modified TaskCard component with open layout
   const TaskCard = ({ task, index }: { task: Task; index: number }) => {
     const { t } = useTranslation();
     const [showPhotoModal, setShowPhotoModal] = useState(false);
@@ -312,180 +313,215 @@ export default function Tasks() {
       setShowPhotoModal(false);
     };
 
-    const getCardStyle = () => {
+    // Determine background color based on status
+    const getCardBg = () => {
       switch(task.status) {
         case 'todo':
-          return 'border-blue-500/30 hover:border-blue-400/50';
+          return 'bg-blue-950/30 hover:bg-blue-900/40';
         case 'inProgress':
-          return 'border-amber-500/30 hover:border-amber-400/50';
+          return 'bg-amber-950/30 hover:bg-amber-900/40';
         case 'done':
-          return 'border-emerald-500/30 hover:border-emerald-400/50';
+          return 'bg-emerald-950/30 hover:bg-emerald-900/40';
         default:
-          return 'border-gray-500/30 hover:border-gray-400/50';
+          return 'bg-gray-900/30 hover:bg-gray-800/40';
       }
     };
 
     return (
       <div
-        className="bg-gray-800/80 backdrop-blur-sm rounded-lg border border-gray-700 hover:border-white/20 hover:bg-gray-800/90 transition-all shadow-sm cursor-pointer"
+        className={`${getCardBg()} backdrop-blur-sm rounded-lg transition-all cursor-pointer mb-3 border-l-4 ${
+          task.status === 'todo' ? 'border-blue-500/60' : 
+          task.status === 'inProgress' ? 'border-amber-500/60' : 
+          'border-emerald-500/60'
+        }`}
         onClick={() => setSelectedTask(task)}
       >
-        <div className="p-2.5 flex flex-col">
-          {/* Header with title and priority */}
-          <div className="flex items-start justify-between mb-2">
-            <h4 className="font-medium text-white text-sm flex-1 line-clamp-1 pr-2">
-              {task.title}
-            </h4>
-            <div className={`text-xs px-1.5 py-0.5 rounded-full ${getPriorityColor(task.priority)} shrink-0`}>
-              {task.priority === 'high' ? 'H' : task.priority === 'medium' ? 'M' : 'L'}
+        <div className="p-3 sm:p-4">
+          {/* Main content area */}
+          <div className="flex flex-col space-y-3">
+            {/* Top row with title and priority */}
+            <div className="flex items-start justify-between">
+              <h4 className="font-medium text-white text-base">
+                {task.title}
+                {task.requirePhoto && (
+                  <span className="ml-2 inline-flex items-center" title={t('approvals.photoRequired')}>
+                    <Camera size={14} className="text-amber-400" />
+                  </span>
+                )}
+              </h4>
+              <div className={`text-xs font-medium px-2 py-1 rounded-full ${getPriorityColor(task.priority)} ml-2 shrink-0`}>
+                {task.priority}
+              </div>
             </div>
-          </div>
-          
-          {/* Status and points in one row */}
-          <div className="flex items-center justify-between gap-1.5 mb-2">
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                setShowStatusDropdown(showStatusDropdown === task.id ? null : task.id);
-              }}
-              className={`flex items-center gap-1 text-xs px-2 py-1 rounded-lg flex-1 ${
-                task.status === 'todo' 
-                  ? 'bg-blue-500/20 text-blue-300' 
-                  : task.status === 'inProgress' 
-                  ? 'bg-amber-500/20 text-amber-300' 
-                  : 'bg-emerald-500/20 text-emerald-300'
-              } border border-white/5`}
-            >
-              {task.status === 'todo' ? (
-                <ClipboardList size={10} />
-              ) : task.status === 'inProgress' ? (
-                <Loader size={10} />
-              ) : (
-                <CheckCircle size={10} />
-              )}
-              <span className="whitespace-nowrap text-[10px]">{task.status === 'todo' ? 'To Do' : task.status === 'inProgress' ? 'In Progress' : 'Done'}</span>
-            </button>
             
-            {showStatusDropdown === task.id && (
-              <>
-                <div 
-                  className="fixed inset-0 z-40"
-                  onClick={() => setShowStatusDropdown(null)}
-                />
-                <div 
-                  className="absolute top-0 left-0 mt-8 w-32 bg-gray-800 rounded-lg shadow-xl z-50 border border-white/10 overflow-hidden"
-                  onClick={(e) => e.stopPropagation()}
-                >
+            {/* Description */}
+            {task.description && (
+              <p className="text-sm text-gray-300">
+                {task.description.length > 120 ? `${task.description.substring(0, 120)}...` : task.description}
+              </p>
+            )}
+            
+            {/* Bottom row with metadata */}
+            <div className="flex flex-wrap items-center justify-between text-xs text-gray-400">
+              <div className="flex items-center gap-3">
+                {/* Status dropdown */}
+                <div className="relative">
                   <button
                     onClick={(e) => {
                       e.stopPropagation();
-                      handleStatusChange(task.id, 'todo');
-                      setShowStatusDropdown(null);
+                      setShowStatusDropdown(showStatusDropdown === task.id ? null : task.id);
                     }}
-                    className="w-full p-2 text-left text-xs hover:bg-blue-500/20 text-white flex items-center gap-2"
+                    className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-md ${
+                      task.status === 'todo' ? 'bg-blue-500/20 text-blue-300' : 
+                      task.status === 'inProgress' ? 'bg-amber-500/20 text-amber-300' : 
+                      'bg-emerald-500/20 text-emerald-300'
+                    }`}
                   >
-                    <ClipboardList size={12} className="text-blue-400" />
-                    <span>To Do</span>
+                    {task.status === 'todo' ? <ClipboardList size={13} /> : 
+                     task.status === 'inProgress' ? <Loader size={13} /> : 
+                     <CheckCircle size={13} />}
+                    <span>{task.status === 'todo' ? 'To Do' : task.status === 'inProgress' ? 'In Progress' : 'Done'}</span>
                   </button>
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      handleStatusChange(task.id, 'inProgress');
-                      setShowStatusDropdown(null);
-                    }}
-                    className="w-full p-2 text-left text-xs hover:bg-amber-500/20 text-white flex items-center gap-2"
-                  >
-                    <Loader size={12} className="text-amber-400" />
-                    <span>In Progress</span>
-                  </button>
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      handleStatusChange(task.id, 'done');
-                      setShowStatusDropdown(null);
-                    }}
-                    className="w-full p-2 text-left text-xs hover:bg-emerald-500/20 text-white flex items-center gap-2"
-                  >
-                    <CheckSquare size={12} className="text-emerald-400" />
-                    <span>Done</span>
-                  </button>
+                  
+                  {showStatusDropdown === task.id && (
+                    <>
+                      <div 
+                        className="fixed inset-0 z-40"
+                        onClick={() => setShowStatusDropdown(null)}
+                      />
+                      <div 
+                        className="absolute left-0 mt-1 w-32 bg-gray-800 rounded-lg shadow-xl z-50 border border-white/10 overflow-hidden"
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleStatusChange(task.id, 'todo');
+                            setShowStatusDropdown(null);
+                          }}
+                          className="w-full p-2 text-left text-xs hover:bg-blue-500/20 text-white flex items-center gap-2"
+                        >
+                          <ClipboardList size={12} className="text-blue-400" />
+                          <span>To Do</span>
+                        </button>
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleStatusChange(task.id, 'inProgress');
+                            setShowStatusDropdown(null);
+                          }}
+                          className="w-full p-2 text-left text-xs hover:bg-amber-500/20 text-white flex items-center gap-2"
+                        >
+                          <Loader size={12} className="text-amber-400" />
+                          <span>In Progress</span>
+                        </button>
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleStatusChange(task.id, 'done');
+                            setShowStatusDropdown(null);
+                          }}
+                          className="w-full p-2 text-left text-xs hover:bg-emerald-500/20 text-white flex items-center gap-2"
+                        >
+                          <CheckSquare size={12} className="text-emerald-400" />
+                          <span>Done</span>
+                        </button>
+                      </div>
+                    </>
+                  )}
                 </div>
-              </>
-            )}
-            
-            <div className="flex items-center text-amber-300 text-xs px-1.5 py-1 bg-amber-500/20 rounded-md shrink-0">
-              <Award size={10} className="mr-1" />
-              <span>{task.points}</span>
-            </div>
-          </div>
-          
-          {/* Bottom info row */}
-          <div className="flex items-center justify-between text-[10px] text-gray-400 mt-auto">
-            <div className="flex items-center gap-1">
-              <Clock size={10} className="text-gray-300" />
-              <span className="truncate">{format(new Date(task.dueDate || new Date()), 'MMM d')}</span>
-            </div>
-            
-            {task.requirePhoto && (
-              <div className="flex items-center">
-                <Camera size={10} className="text-amber-400" />
+                
+                {/* Date */}
+                <div className="flex items-center gap-1.5">
+                  <Clock size={12} />
+                  <span>{format(new Date(task.dueDate || new Date()), 'MMM d, yyyy')}</span>
+                </div>
+                
+                {/* Points */}
+                <div className="flex items-center text-amber-300 gap-1.5">
+                  <Award size={12} />
+                  <span>{task.points} points</span>
+                </div>
               </div>
-            )}
-            
-            {isAdmin && (
-              <div className="flex gap-1">
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    handleEdit(task);
-                  }}
-                  className="p-1 bg-blue-500/20 text-blue-300 rounded-md"
-                >
-                  <Edit size={10} />
-                </button>
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setShowConfirmDelete(task.id);
-                  }}
-                  className="p-1 bg-red-500/20 text-red-300 rounded-md"
-                >
-                  <Trash2 size={10} />
-                </button>
+              
+              {/* Action buttons */}
+              <div className="flex gap-2 mt-2 sm:mt-0">
+                {task.requirePhoto && !task.photo && (
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setShowPhotoModal(true);
+                    }}
+                    className="flex items-center gap-1 px-2 py-1 bg-amber-500/20 text-amber-300 rounded-md text-xs"
+                  >
+                    <Camera size={12} />
+                    <span>Take Photo</span>
+                  </button>
+                )}
+                
+                {task.requirePhoto && task.photo && (
+                  <div className={`flex items-center gap-1 px-2 py-1 rounded-md text-xs ${
+                    task.photo.approved ? 'bg-green-500/20 text-green-300' : 
+                    'bg-amber-500/20 text-amber-300'
+                  }`}>
+                    {task.photo.approved ? (
+                      <>
+                        <CheckCircle size={12} />
+                        <span>Approved</span>
+                      </>
+                    ) : (
+                      <>
+                        <Loader size={12} className="animate-spin" />
+                        <span>Pending</span>
+                      </>
+                    )}
+                  </div>
+                )}
+                
+                {isAdmin && (
+                  <>
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleEdit(task);
+                      }}
+                      className="p-1.5 bg-blue-500/20 text-blue-300 rounded-md hover:bg-blue-500/30"
+                    >
+                      <Edit size={14} />
+                    </button>
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setShowConfirmDelete(task.id);
+                      }}
+                      className="p-1.5 bg-red-500/20 text-red-300 rounded-md hover:bg-red-500/30"
+                    >
+                      <Trash2 size={14} />
+                    </button>
+                  </>
+                )}
               </div>
-            )}
+            </div>
           </div>
         </div>
       </div>
     );
   };
 
+  // Modified TaskColumn component with more open layout
   const TaskColumn = ({ status, title, isVisible = true }: { status: Task['status']; title: string; isVisible?: boolean }) => {
     const filteredTasks = tasks.filter(task => task.status === status);
-    
-    const getColumnStyle = () => {
-      switch(status) {
-        case 'todo':
-          return 'from-blue-900/30 to-blue-800/10 border-blue-500/30';
-        case 'inProgress':
-          return 'from-amber-900/30 to-amber-800/10 border-amber-500/30';
-        case 'done':
-          return 'from-emerald-900/30 to-emerald-800/10 border-emerald-500/30';
-        default:
-          return 'from-gray-900/30 to-gray-800/10 border-gray-500/30';
-      }
-    };
     
     const getHeaderStyle = () => {
       switch(status) {
         case 'todo':
-          return 'bg-blue-900/50 border-blue-500/30 text-blue-100';
+          return 'bg-blue-900/60 text-blue-100';
         case 'inProgress':
-          return 'bg-amber-900/50 border-amber-500/30 text-amber-100';
+          return 'bg-amber-900/60 text-amber-100';
         case 'done':
-          return 'bg-emerald-900/50 border-emerald-500/30 text-emerald-100';
+          return 'bg-emerald-900/60 text-emerald-100';
         default:
-          return 'bg-gray-900/50 border-gray-500/30 text-gray-100';
+          return 'bg-gray-900/60 text-gray-100';
       }
     };
     
@@ -505,35 +541,49 @@ export default function Tasks() {
     if (!isVisible) return null;
     
     return (
-      <div className={`flex-1 min-w-0 flex flex-col bg-gradient-to-b ${getColumnStyle()} backdrop-blur-sm rounded-xl border shadow-lg overflow-hidden`}>
-        <div className={`p-2 border-b flex items-center justify-between sticky top-0 backdrop-blur-sm ${getHeaderStyle()} z-10 rounded-t-xl`}>
-          <h3 className="font-medium text-white flex items-center gap-1.5">
+      <div className="flex-1 min-w-0 flex flex-col">
+        <div className={`px-4 py-3 flex items-center justify-between backdrop-blur-sm ${getHeaderStyle()} sticky top-0 z-10 mb-3 rounded-lg`}>
+          <h3 className="font-medium text-white flex items-center gap-2">
             {status === 'todo' ? (
-              <ClipboardList size={14} className={getIconStyle()} />
+              <ClipboardList size={16} className={getIconStyle()} />
             ) : status === 'inProgress' ? (
-              <Loader size={14} className={getIconStyle()} />
+              <Loader size={16} className={getIconStyle()} />
             ) : (
-              <CheckCircle size={14} className={getIconStyle()} />
+              <CheckCircle size={16} className={getIconStyle()} />
             )}
             {title}
-            <span className={`text-xs font-normal ${status === 'todo' ? 'bg-blue-500/20 text-blue-300' : status === 'inProgress' ? 'bg-amber-500/20 text-amber-300' : 'bg-emerald-500/20 text-emerald-300'} rounded-full h-5 min-w-5 px-1.5 inline-flex items-center justify-center`}>
+            <span className={`text-xs font-normal ${
+              status === 'todo' ? 'bg-blue-500/30 text-blue-200' : 
+              status === 'inProgress' ? 'bg-amber-500/30 text-amber-200' : 
+              'bg-emerald-500/30 text-emerald-200'
+            } rounded-full px-2 py-0.5 inline-flex items-center justify-center ml-2`}>
               {filteredTasks.length}
             </span>
           </h3>
         </div>
-        <div className="p-2 flex-1 overflow-y-auto grid gap-2 auto-rows-max">
+        
+        <div className="px-1 flex-1 overflow-y-auto">
           {filteredTasks.length === 0 ? (
-            <div className="h-24 md:h-32 flex flex-col items-center justify-center text-gray-500 p-2">
-              <div className={`w-8 h-8 rounded-full ${status === 'todo' ? 'bg-blue-500/10' : status === 'inProgress' ? 'bg-amber-500/10' : 'bg-emerald-500/10'} flex items-center justify-center mb-2`}>
+            <div className="h-32 flex flex-col items-center justify-center text-gray-500 my-4">
+              <div className={`w-10 h-10 rounded-full ${
+                status === 'todo' ? 'bg-blue-500/10' : 
+                status === 'inProgress' ? 'bg-amber-500/10' : 
+                'bg-emerald-500/10'
+              } flex items-center justify-center mb-3`}>
                 {status === 'todo' ? (
-                  <ClipboardList size={14} className={getIconStyle()} />
+                  <ClipboardList size={18} className={getIconStyle()} />
                 ) : status === 'inProgress' ? (
-                  <Loader size={14} className={getIconStyle()} />
+                  <Loader size={18} className={getIconStyle()} />
                 ) : (
-                  <CheckCircle size={14} className={getIconStyle()} />
+                  <CheckCircle size={18} className={getIconStyle()} />
                 )}
               </div>
-              <p className={`text-xs font-medium ${status === 'todo' ? 'text-blue-400' : status === 'inProgress' ? 'text-amber-400' : 'text-emerald-400'}`}>No tasks</p>
+              <p className={`text-sm font-medium ${
+                status === 'todo' ? 'text-blue-400' : 
+                status === 'inProgress' ? 'text-amber-400' : 
+                'text-emerald-400'
+              }`}>No tasks</p>
+              <p className="text-xs text-gray-500 mt-1">Tasks will appear here</p>
             </div>
           ) : (
             filteredTasks.map((task, index) => (
@@ -848,7 +898,7 @@ export default function Tasks() {
       </div>
 
       {/* Mobile View: Single Column */}
-      <div className="page-content bg-gradient-to-b from-gray-800 to-gray-900 backdrop-blur-sm rounded-xl border border-indigo-500/20 shadow-xl p-3">
+      <div className="page-content backdrop-blur-sm px-1 py-2">
         {/* Mobile View: Shows only active tab */}
         <div className="md:hidden">
           <TaskColumn status="todo" title="To Do" isVisible={activeTab === 'todo'} />
@@ -857,7 +907,7 @@ export default function Tasks() {
         </div>
         
         {/* Desktop View: Shows all columns */}
-        <div className="hidden md:flex flex-row gap-4 h-full">
+        <div className="hidden md:flex md:flex-row md:gap-6 h-full">
           <TaskColumn status="todo" title="To Do" />
           <TaskColumn status="inProgress" title="In Progress" />
           <TaskColumn status="done" title="Done" />
