@@ -21,7 +21,7 @@ import {
   where,
   serverTimestamp
 } from 'firebase/firestore';
-import { User } from '../types';
+import { User, UserData } from '../types';
 
 // Tipo estendido para incluir o papel de superadmin
 type ExtendedUserRole = User['role'] | 'superadmin';
@@ -179,32 +179,35 @@ export const registerStaffOnly = async (userData: UserRegistrationData): Promise
     // Verificar se tem um usuário autenticado e salvar referência
     const currentUser = auth.currentUser;
     
-    // 1. Criar usuário no Firebase Auth
-    const userCredential = await createUserWithEmailAndPassword(auth, userData.email, userData.password);
-    const newUser = userCredential.user;
-    
-    console.log(`Usuário staff criado com sucesso no Firebase Auth, ID: ${newUser.uid}`);
-    
-    // 2. Atualizar o displayName se fornecido
-    if (userData.name) {
-      await updateProfile(newUser, { displayName: userData.name });
-      console.log(`Nome do usuário staff atualizado: ${userData.name}`);
+    // Guardar as credenciais para reautenticar depois se necessário
+    let currentCredential = null;
+    if (currentUser) {
+      console.log(`Usuário atual: ${currentUser.email}, preservando autenticação`);
     }
     
+    // 1. Criar usuário no Firebase Admin SDK ou alternativa
+    // Nota: Aqui vamos adotar uma abordagem diferente, salvando diretamente no Firestore
+    // sem criar no Auth e sem afetar a autenticação atual
+    
+    // Gerar um ID único para o usuário
+    const newUserId = crypto.randomUUID();
+    
     // 3. Criar objeto com dados do usuário para salvar no Firestore
-    const userDoc: User = {
-      id: newUser.uid,
+    const userDoc: UserData = {
+      id: newUserId,
       email: userData.email,
       name: userData.name || '',
-      role: 'user', // Sempre criar como usuário normal
-      points: 0,
+      password: userData.password, // UserData pode ter password
       country: userData.country || '',
-      age: parseInt(userData.age) || 0,
-      relationshipStatus: (userData.relationshipStatus as 'single' | 'dating' | 'married') || 'single',
-      gender: (userData.gender as 'male' | 'female' | 'other') || 'other',
+      age: userData.age || '0',
+      relationshipStatus: userData.relationshipStatus || 'single',
+      gender: userData.gender || 'other',
       phone: userData.phone || '',
       arrivalDate: userData.arrivalDate || '',
-      departureDate: userData.departureDate || ''
+      departureDate: userData.departureDate || '',
+      isAuthenticated: true, // Necessário para UserData
+      role: 'user', // Sempre criar como usuário normal
+      points: 0
     };
     
     // 4. Adicionar timestamp de criação para o Firestore
@@ -215,34 +218,23 @@ export const registerStaffOnly = async (userData: UserRegistrationData): Promise
     
     console.log('Salvando dados do usuário staff no Firestore:', userDoc);
     
-    // 5. Salvar no Firestore - garantindo que os dados sejam persistidos corretamente
+    // 5. Salvar no Firestore sem afetar autenticação
     try {
-      await setDoc(doc(firestore, 'users', newUser.uid), firestoreData);
+      await setDoc(doc(firestore, 'users', newUserId), firestoreData);
       console.log('Dados do usuário staff salvos com sucesso no Firestore');
     } catch (firestoreError) {
       console.error('Erro ao salvar dados no Firestore:', firestoreError);
       // Tenta novamente com um atraso
       await new Promise(resolve => setTimeout(resolve, 1000));
-      await setDoc(doc(firestore, 'users', newUser.uid), firestoreData);
+      await setDoc(doc(firestore, 'users', newUserId), firestoreData);
       console.log('Dados do usuário salvos na segunda tentativa');
     }
     
-    // 6. Se havia um usuário logado antes, fazer logout do novo e voltar para o original
-    if (currentUser) {
-      try {
-        // Fazer logout do usuário recém-criado
-        await signOut(auth);
-        
-        // Não precisamos fazer login novamente, o onAuthStateChanged vai cuidar disso
-        console.log('Voltando ao usuário original após criar staff');
-      } catch (signOutError) {
-        console.error('Erro ao fazer logout após criar staff:', signOutError);
-      }
-    }
+    // Não precisamos mais fazer logout ou reautenticar, pois não alteramos o estado de autenticação
     
     // Verifica se os dados foram realmente salvos
     try {
-      const userDocCheck = await getDoc(doc(firestore, 'users', newUser.uid));
+      const userDocCheck = await getDoc(doc(firestore, 'users', newUserId));
       if (userDocCheck.exists()) {
         console.log('Verificação: dados do usuário confirmados no Firestore');
       } else {
@@ -255,12 +247,7 @@ export const registerStaffOnly = async (userData: UserRegistrationData): Promise
     return userDoc;
   } catch (error) {
     console.error('Erro ao registrar usuário staff:', error);
-    // Se ocorreu erro, tentar fazer logout para garantir que não ficou o usuário errado
-    try {
-      await signOut(auth);
-    } catch (logoutError) {
-      console.error('Erro ao fazer logout após falha:', logoutError);
-    }
+    // Não precisamos mais tentar fazer logout em caso de erro
     return null;
   }
 };
