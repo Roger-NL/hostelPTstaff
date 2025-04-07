@@ -8,6 +8,8 @@ import PrivateRoute from './components/PrivateRoute';
 import AdminInitializer from './components/AdminInitializer';
 import { useAuth } from './hooks/useAuth';
 import { initDeviceMonitor, useDeviceInfo } from './utils/deviceDetector';
+import { initTouchOptimizer } from './utils/touchOptimizer';
+import { applyMobileClickFixes } from './utils/mobileInteractionFix';
 
 // Lazy loading de componentes pesados
 const Login = lazy(() => import('./pages/Login'));
@@ -86,40 +88,128 @@ const ScrollToTop = () => {
   return null;
 };
 
-// Componente para lidar com eventos de toque móvel
-const TouchEventHandler = () => {
+// Componente para inicializar otimizações de toque e evitar problemas de trava
+const TouchOptimizer = () => {
+  const deviceInfo = useDeviceInfo();
+  
   useEffect(() => {
-    // Prevenir zoom de pinça em dispositivos touch
-    const preventZoom = (e: TouchEvent) => {
+    // Inicializar o otimizador de toque com configurações específicas
+    const cleanup = initTouchOptimizer({
+      preventDoubleTapZoom: true,
+      disableContextMenu: !deviceInfo.isDesktop,
+      optimizeFastClick: true,
+      preventGhostClicks: true,
+      useActiveStateForButtons: deviceInfo.isTouchDevice,
+      disableCalloutOnLongPress: deviceInfo.isMobile || deviceInfo.isTablet,
+      useFastActive: deviceInfo.isMobile || deviceInfo.isTablet
+    });
+    
+    // Inicializar o corretor de interação móvel
+    const mobileFixCleanup = applyMobileClickFixes();
+    
+    // Configuração adicional de CSS para evitar problemas em scroll e interações
+    const style = document.createElement('style');
+    style.textContent = `
+      * {
+        /* Melhorar desempenho de animações */
+        -webkit-backface-visibility: hidden;
+        backface-visibility: hidden;
+      }
+      
+      input, button, a, select, textarea, [role="button"] {
+        /* Garantir que toques e cliques funcionem corretamente */
+        touch-action: manipulation;
+        cursor: pointer;
+        -webkit-tap-highlight-color: transparent;
+      }
+      
+      #root, .page-container, .content-scrollable {
+        /* Melhorar desempenho de scroll */
+        -webkit-overflow-scrolling: touch;
+        overflow-scrolling: touch;
+        overscroll-behavior: none;
+      }
+      
+      body.ios-device {
+        /* Corrigir problemas de momentum scroll em iOS */
+        overflow: hidden;
+        position: fixed;
+        width: 100%;
+        height: 100%;
+      }
+      
+      /* Aumentar áreas clicáveis em dispositivos móveis */
+      @media (max-width: 768px) {
+        button, a, [role="button"] {
+          min-height: 44px;
+        }
+        
+        .clickable-icon {
+          min-width: 44px;
+          min-height: 44px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+        }
+        
+        /* Espaçamento maior para evitar cliques acidentais */
+        .mobile-spaced-controls > * {
+          margin: 0.5rem 0;
+        }
+        
+        /* Botões de ação mais largos em mobile */
+        .action-button {
+          width: 100%;
+        }
+      }
+    `;
+    document.head.appendChild(style);
+    
+    // Desabilitar os eventos padrão que causam problemas em dispositivos móveis
+    const preventDefaultForTouchEvents = (e: TouchEvent) => {
+      if (
+        e.target instanceof HTMLInputElement ||
+        e.target instanceof HTMLTextAreaElement ||
+        e.target instanceof HTMLSelectElement
+      ) {
+        return;
+      }
+      
+      // Prevenir o comportamento de pinch-zoom
       if (e.touches.length > 1) {
         e.preventDefault();
       }
     };
-
-    // Prevenir atraso de 300ms em dispositivos móveis
-    document.addEventListener('touchstart', () => {}, { passive: false });
-    document.addEventListener('touchmove', preventZoom, { passive: false });
-
-    // Prevenir pull-to-refresh em iOS/Android
-    let startY = 0;
-    document.addEventListener('touchstart', (e) => {
-      startY = e.touches[0].pageY;
-    }, { passive: false });
-
-    document.addEventListener('touchmove', (e) => {
-      const y = e.touches[0].pageY;
-      const scrollTop = window.scrollY || document.documentElement.scrollTop;
-      if (scrollTop === 0 && y > startY) {
-        e.preventDefault();
-      }
-    }, { passive: false });
-
+    
+    // Habilitar apenas para dispositivos móveis
+    if (deviceInfo.isMobile || deviceInfo.isTablet) {
+      document.addEventListener('touchmove', preventDefaultForTouchEvents, { passive: false });
+      
+      // Corrigir altura em dispositivos iOS com barra de navegação
+      const setIOSHeight = () => {
+        if (deviceInfo.isIOS) {
+          const vh = window.innerHeight * 0.01;
+          document.documentElement.style.setProperty('--vh', `${vh}px`);
+        }
+      };
+      
+      window.addEventListener('resize', setIOSHeight);
+      window.addEventListener('orientationchange', setIOSHeight);
+      setIOSHeight();
+    }
+    
     return () => {
-      document.removeEventListener('touchstart', () => {}, { passive: false } as EventListenerOptions);
-      document.removeEventListener('touchmove', preventZoom, { passive: false } as EventListenerOptions);
+      cleanup();
+      mobileFixCleanup();
+      if (style.parentNode) {
+        style.parentNode.removeChild(style);
+      }
+      if (deviceInfo.isMobile || deviceInfo.isTablet) {
+        document.removeEventListener('touchmove', preventDefaultForTouchEvents);
+      }
     };
-  }, []);
-
+  }, [deviceInfo]);
+  
   return null;
 };
 
@@ -282,7 +372,7 @@ const AppContent = () => {
   return (
     <div className={containerClasses}>
       <MobileMetaTags />
-      <TouchEventHandler />
+      <TouchOptimizer />
       <AdminInitializer masterEmail="" />
       <Toaster
         position="top-center"

@@ -28,7 +28,9 @@ import {
   Settings,
   LayoutDashboard,
   HomeIcon,
-  CheckSquare
+  CheckSquare,
+  AlertTriangle,
+  Megaphone
 } from 'lucide-react';
 import { firestore } from '../config/firebase';
 import { doc, updateDoc, getDoc } from 'firebase/firestore';
@@ -54,20 +56,40 @@ function DashboardCard({ title, value, icon, trend, navigateTo }: DashboardCardP
   
   const handleClick = () => {
     if (navigateTo) {
-      navigate(navigateTo);
+      console.log(`Navegando para: ${navigateTo}`);
+      try {
+        navigate(navigateTo);
+      } catch (error) {
+        console.error("Erro ao navegar:", error);
+      }
     }
   };
   
+  // Determinar se o card deve mostrar estado desativado
+  const isDisabled = title.includes('Tasks') || title.includes('Tarefas');
+  
   return (
     <div 
-      className={`group bg-white/90 dark:bg-gray-800/70 backdrop-blur-md rounded-xl p-4 xs:p-5 sm:p-6 transition-all duration-300 hover:shadow-xl border border-gray-200/70 dark:border-gray-700/50 hover:transform hover:scale-[1.02] ${navigateTo ? 'cursor-pointer' : ''}`}
-      onClick={handleClick}
+      className={`group bg-white/90 dark:bg-gray-800/70 backdrop-blur-md rounded-xl p-4 xs:p-5 sm:p-6 transition-all duration-300 hover:shadow-xl border border-gray-200/70 dark:border-gray-700/50 ${
+        navigateTo || isDisabled ? 'cursor-pointer clickable-element' : ''
+      } ${isDisabled ? 'opacity-70' : 'hover:transform hover:scale-[1.02]'}`}
+      onClick={navigateTo || isDisabled ? handleClick : undefined}
+      role="button"
+      tabIndex={0}
+      data-click-fixed="true"
+      style={{
+        pointerEvents: "auto"
+      }}
     >
       <div className="flex items-center justify-between">
-        <div className="w-10 h-10 xs:w-12 xs:h-12 rounded-lg xs:rounded-xl bg-gradient-to-br from-blue-500/20 to-violet-500/20 dark:from-blue-500/30 dark:to-violet-500/30 flex items-center justify-center text-blue-600 transition-all duration-300 group-hover:scale-110 group-hover:bg-gradient-to-br group-hover:from-blue-500 group-hover:to-violet-500 group-hover:text-white">
+        <div className={`w-10 h-10 xs:w-12 xs:h-12 rounded-lg xs:rounded-xl flex items-center justify-center text-blue-600 transition-all duration-300 group-hover:scale-110 ${
+          isDisabled 
+            ? 'bg-gray-200 dark:bg-gray-700 text-gray-500 dark:text-gray-400' 
+            : 'bg-gradient-to-br from-blue-500/20 to-violet-500/20 dark:from-blue-500/30 dark:to-violet-500/30 group-hover:bg-gradient-to-br group-hover:from-blue-500 group-hover:to-violet-500 group-hover:text-white'
+        }`}>
           {icon}
         </div>
-        {trend && (
+        {trend && !isDisabled && (
           <div className={`flex items-center gap-1 text-xs xs:text-sm ${
             trend.isPositive ? 'text-emerald-600 dark:text-emerald-500' : 'text-red-600 dark:text-red-500'
           }`}>
@@ -80,7 +102,11 @@ function DashboardCard({ title, value, icon, trend, navigateTo }: DashboardCardP
       </div>
       <div className="mt-3 xs:mt-4">
         <h3 className="text-gray-600 dark:text-gray-300 text-xs xs:text-sm font-light">{title}</h3>
-        <p className="text-gray-900 dark:text-white text-xl xs:text-2xl font-extralight mt-1 transition-all duration-300 group-hover:text-blue-600 dark:group-hover:text-blue-400">{displayValue}</p>
+        {isDisabled ? (
+          <p className="text-gray-500 dark:text-gray-400 text-sm font-light mt-1">Módulo desativado</p>
+        ) : (
+          <p className="text-gray-900 dark:text-white text-xl xs:text-2xl font-extralight mt-1 transition-all duration-300 group-hover:text-blue-600 dark:group-hover:text-blue-400">{displayValue}</p>
+        )}
       </div>
     </div>
   );
@@ -432,6 +458,11 @@ export default function DashboardContent() {
   const currentVolunteers = getShiftVolunteers(currentShift);
   const hasCurrentVolunteers = currentVolunteers && currentVolunteers.length > 0;
 
+  // Função para tratar cliques no card de tarefas desativado
+  const handleTasksCardClick = () => {
+    alert("O módulo de Tarefas está desativado. Entre em contato com o administrador do sistema para ativar este módulo.");
+  };
+
   return (
     <div className="space-y-6">
       {/* Status do Usuário */}
@@ -472,16 +503,26 @@ export default function DashboardContent() {
 
         {/* Welcome section with stats */}
         <div className="grid grid-cols-2 xs:grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-3 xs:gap-4 sm:gap-6">
-          <DashboardCard 
-            title={t('dashboard.stats.tasks') || "Tasks"} 
-            value={completedTasks} 
-            icon={<>
-              <ClipboardList size={18} className="xs:hidden" />
-              <ClipboardList size={24} className="hidden xs:block" />
-            </>}
-            trend={{ value: completionRate, isPositive: true }}
-            navigateTo="/tasks"
-          />
+          {/* Tasks Card - Disabled with explanation */}
+          <div 
+            onClick={handleTasksCardClick}
+            className="group bg-white/90 dark:bg-gray-800/70 backdrop-blur-md rounded-xl p-4 xs:p-5 sm:p-6 transition-all duration-300 hover:shadow-xl border border-gray-200/70 dark:border-gray-700/50 cursor-pointer clickable-element opacity-70"
+            role="button"
+            tabIndex={0}
+            data-click-fixed="true"
+            style={{ pointerEvents: "auto" }}
+          >
+            <div className="flex items-center justify-between">
+              <div className="w-10 h-10 xs:w-12 xs:h-12 rounded-lg xs:rounded-xl bg-gray-200 dark:bg-gray-700 flex items-center justify-center text-gray-500 dark:text-gray-400 transition-all duration-300 group-hover:scale-110">
+                <ClipboardList size={22} />
+              </div>
+            </div>
+            <div className="mt-3 xs:mt-4">
+              <h3 className="text-gray-600 dark:text-gray-300 text-xs xs:text-sm font-light">{t('tasks')}</h3>
+              <p className="text-gray-500 dark:text-gray-400 text-sm font-light mt-1">Módulo desativado</p>
+            </div>
+          </div>
+          
           <DashboardCard 
             title={t('dashboard.stats.events') || "Events"} 
             value={upcomingEvents} 

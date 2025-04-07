@@ -1,0 +1,236 @@
+/**
+ * Utilitários CSS para escala consistente entre dispositivos
+ * Trabalha em conjunto com o viewportNormalizer.ts
+ */
+
+:root {
+  /* Variáveis de escala (serão definidas dinamicamente pelo JS) */
+  --scale-factor: 1;
+  --scale-factor-height: 1;
+  --dpr: 1;
+  --dpr-adjustment: 1;
+  --base-font-size: 16px;
+  --vh: 1vh;
+  --vw: 1vw;
+  --real-height: 100vh;
+  --screen-width: 100vw;
+  
+  /* Espaçamentos base que serão escalados */
+  --spacing-xs: calc(4px * var(--scale-factor));
+  --spacing-sm: calc(8px * var(--scale-factor));
+  --spacing-md: calc(16px * var(--scale-factor));
+  --spacing-lg: calc(24px * var(--scale-factor));
+  --spacing-xl: calc(32px * var(--scale-factor));
+  --spacing-2xl: calc(48px * var(--scale-factor));
+  
+  /* Tamanhos de texto que serão escalados */
+  --text-xs: calc(12px * var(--scale-factor));
+  --text-sm: calc(14px * var(--scale-factor));
+  --text-base: calc(16px * var(--scale-factor));
+  --text-lg: calc(18px * var(--scale-factor));
+  --text-xl: calc(20px * var(--scale-factor));
+  --text-2xl: calc(24px * var(--scale-factor));
+  --text-3xl: calc(30px * var(--scale-factor));
+  --text-4xl: calc(36px * var(--scale-factor));
+  
+  /* Tamanhos de ícones */
+  --icon-xs: calc(16px * var(--scale-factor));
+  --icon-sm: calc(20px * var(--scale-factor));
+  --icon-md: calc(24px * var(--scale-factor));
+  --icon-lg: calc(32px * var(--scale-factor));
+  --icon-xl: calc(40px * var(--scale-factor));
+  
+  /* Alturas e tamanhos de elementos UI */
+  --input-height: calc(44px * var(--scale-factor));
+  --button-height: calc(44px * var(--scale-factor));
+  --button-width-min: calc(88px * var(--scale-factor));
+  --avatar-size: calc(40px * var(--scale-factor));
+  --header-height: calc(56px * var(--scale-factor));
+  --footer-height: calc(64px * var(--scale-factor));
+  --border-radius: calc(8px * var(--scale-factor));
+}
+
+/* Classes utilitárias para usar os espaçamentos escalados */
+.spacing-xs { margin: var(--spacing-xs); }
+.spacing-sm { margin: var(--spacing-sm); }
+.spacing-md { margin: var(--spacing-md); }
+.spacing-lg { margin: var(--spacing-lg); }
+.spacing-xl { margin: var(--spacing-xl); }
+
+.p-xs { padding: var(--spacing-xs); }
+.p-sm { padding: var(--spacing-sm); }
+.p-md { padding: var(--spacing-md); }
+.p-lg { padding: var(--spacing-lg); }
+.p-xl { padding: var(--spacing-xl); }
+
+.gap-xs { gap: var(--spacing-xs); }
+.gap-sm { gap: var(--spacing-sm); }
+.gap-md { gap: var(--spacing-md); }
+.gap-lg { gap: var(--spacing-lg); }
+.gap-xl { gap: var(--spacing-xl); }
+
+/* Classes para texto escalado */
+.text-xs { font-size: var(--text-xs); }
+.text-sm { font-size: var(--text-sm); }
+.text-base { font-size: var(--text-base); }
+.text-lg { font-size: var(--text-lg); }
+.text-xl { font-size: var(--text-xl); }
+.text-2xl { font-size: var(--text-2xl); }
+.text-3xl { font-size: var(--text-3xl); }
+.text-4xl { font-size: var(--text-4xl); }
+
+/* Classes para altura real da viewport em diferentes plataformas */
+.h-viewport {
+  height: 100vh; /* Fallback */
+  height: calc(var(--vh, 1vh) * 100);
+}
+
+.min-h-viewport {
+  min-height: 100vh; /* Fallback */
+  min-height: calc(var(--vh, 1vh) * 100);
+}
+
+.max-h-viewport {
+  max-height: 100vh; /* Fallback */
+  max-height: calc(var(--vh, 1vh) * 100);
+}
+
+/* Classes para elementos UI com altura consistente */
+.input-height {
+  height: var(--input-height);
+  min-height: var(--input-height);
+}
+
+.button-height {
+  height: var(--button-height);
+  min-height: var(--button-height);
+}
+
+/* Utilidades para dispositivos específicos */
+.ios-device .ios-specific {
+  display: block;
+}
+
+.android-device .android-specific {
+  display: block;
+}
+
+.ios-specific,
+.android-specific {
+  display: none;
+}
+
+/* Correções para dispositivos com entalhes, notchs ou câmeras na tela */
+.safe-area-top {
+  padding-top: env(safe-area-inset-top, 0px);
+}
+
+.safe-area-bottom {
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+.safe-area-left {
+  padding-left: env(safe-area-inset-left, 0px);
+}
+
+.safe-area-right {
+  padding-right: env(safe-area-inset-right, 0px);
+}
+
+/* Para lidar com orientação diferente */
+.landscape-mode .hide-on-landscape {
+  display: none;
+}
+
+.portrait-mode .hide-on-portrait {
+  display: none;
+}
+
+/* Para lidar com telas de maior densidade de pixels */
+@media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi) {
+  .high-dpr-only {
+    display: block;
+  }
+}
+
+.high-dpr-only {
+  display: none;
+}
+
+/* Utilitário para bordas consistentes */
+.border-responsive {
+  border-width: calc(1px / var(--dpr));
+}
+
+/* Classes responsivas para layouts específicos de dispositivo */
+.layout-mobile {
+  display: none;
+}
+
+.layout-tablet {
+  display: none;
+}
+
+.layout-desktop {
+  display: none;
+}
+
+/* Aplicar layouts baseados em classes de dispositivo */
+.mobile-device .layout-mobile {
+  display: block;
+}
+
+.tablet-device .layout-tablet {
+  display: block;
+}
+
+.desktop-device .layout-desktop {
+  display: block;
+}
+
+/* Para ícones de tamanho consistente */
+.icon-xs { width: var(--icon-xs); height: var(--icon-xs); }
+.icon-sm { width: var(--icon-sm); height: var(--icon-sm); }
+.icon-md { width: var(--icon-md); height: var(--icon-md); }
+.icon-lg { width: var(--icon-lg); height: var(--icon-lg); }
+.icon-xl { width: var(--icon-xl); height: var(--icon-xl); }
+
+/* Utilitários para tamanho real consistente em diferentes dispositivos */
+.real-w-full {
+  width: var(--screen-width);
+}
+
+.real-h-full {
+  height: var(--real-height);
+}
+
+/* Classes de ajuste responsivo */
+.adjust-for-small-screen {
+  font-size: calc(var(--text-base) * 0.9);
+  padding: calc(var(--spacing-md) * 0.8);
+}
+
+@media (max-width: 360px) {
+  .adjust-for-small-screen {
+    font-size: calc(var(--text-base) * 0.85);
+    padding: calc(var(--spacing-md) * 0.7);
+  }
+}
+
+/* Ajustes específicos para iOS */
+.ios-device .ios-adjustments {
+  /* Corrigir problemas de rolagem em iOS */
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Ajustes específicos para Android */
+.android-device .android-adjustments {
+  /* Correções específicas para Android */
+  transform: translateZ(0);
+}
+
+/* Classe para elementos que devem ter toque otimizado */
+.touch-optimized {
+  min-height: var(--button-height);
+  touch-action: manipulation;
+} 

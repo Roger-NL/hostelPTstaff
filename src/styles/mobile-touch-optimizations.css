@@ -1,0 +1,237 @@
+/**
+ * Otimizações CSS para melhorar a experiência de toque em dispositivos móveis
+ * Resolve problemas de toque, responsividade e desempenho
+ */
+
+/* Otimizações gerais de toque */
+html, body, #root {
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+/* Permitir seleção apenas em campos de texto */
+input, textarea, [contenteditable="true"] {
+  -webkit-user-select: text;
+  user-select: text;
+  -webkit-touch-callout: default;
+  touch-action: auto;
+}
+
+/* Ajustes para botões e elementos clicáveis */
+button, a, [role="button"],
+input[type="button"], 
+input[type="submit"],
+input[type="reset"],
+.clickable {
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+  cursor: pointer;
+}
+
+/* Ajustes responsivos para dispositivos móveis */
+@media (max-width: 768px) {
+  /* Aumentar tamanho mínimo para áreas clicáveis */
+  button, a, [role="button"],
+  input[type="button"], 
+  input[type="submit"],
+  input[type="reset"],
+  .clickable {
+    min-height: 44px;
+    min-width: 44px;
+    padding: 8px 16px;
+    font-size: 16px; /* Evita zoom em iOS */
+  }
+  
+  /* Aumentar tamanho de ícones clicáveis */
+  .icon-button, 
+  button.icon-only,
+  a.icon-only,
+  [role="button"].icon-only {
+    min-width: 48px;
+    min-height: 48px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 8px;
+  }
+  
+  /* Ajuste de espaçamento para evitar cliques acidentais */
+  .form-group,
+  .input-group,
+  .button-group,
+  .control-group {
+    margin-bottom: 1rem;
+  }
+  
+  /* Aumentar tamanho de inputs */
+  input[type="text"],
+  input[type="email"],
+  input[type="password"],
+  input[type="number"],
+  input[type="tel"],
+  input[type="url"],
+  input[type="search"],
+  input[type="date"],
+  textarea,
+  select {
+    font-size: 16px;
+    min-height: 44px;
+    padding: 8px 12px;
+    border-radius: 8px;
+    width: 100%;
+  }
+  
+  /* Melhorar visibilidade de foco */
+  input:focus,
+  select:focus,
+  textarea:focus,
+  button:focus,
+  a:focus,
+  [role="button"]:focus {
+    outline: none;
+    box-shadow: 0 0 0 2px #FFD700; /* Amarelo mais visível */
+  }
+  
+  /* Feedback visual para toques */
+  button:active,
+  a:active,
+  [role="button"]:active,
+  .clickable:active {
+    opacity: 0.7;
+    transform: scale(0.98);
+    transition: opacity 0.1s ease, transform 0.1s ease;
+  }
+  
+  /* Layout de formulário para mobile */
+  form {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+  }
+  
+  /* Estilo para botões principais */
+  .primary-button,
+  button[type="submit"] {
+    width: 100%;
+    padding: 12px;
+    font-weight: bold;
+    border-radius: 8px;
+  }
+  
+  /* Evitar que modais e dialogs fiquem muito pequenos */
+  .modal-content,
+  .dialog,
+  .popup {
+    min-width: 85vw;
+    padding: 16px;
+  }
+  
+  /* Melhorar leitura em telas pequenas */
+  body, p, input, button, a {
+    font-size: 16px;
+    line-height: 1.5;
+  }
+  
+  h1 { font-size: 1.8rem; }
+  h2 { font-size: 1.5rem; }
+  h3 { font-size: 1.3rem; }
+  
+  /* Melhorar feedback visual para estados de carregamento */
+  .loading-indicator {
+    min-width: 24px;
+    min-height: 24px;
+  }
+  
+  /* Evitar que o conteúdo fique muito próximo às bordas */
+  .container,
+  .content-container,
+  .page-content {
+    padding-left: 16px;
+    padding-right: 16px;
+  }
+  
+  /* Ajustar grid para telas pequenas */
+  .grid, .row {
+    display: flex;
+    flex-direction: column;
+  }
+  
+  .col, .column {
+    width: 100%;
+    margin-bottom: 1rem;
+  }
+}
+
+/* Melhorias para dispositivos com tela muito pequena */
+@media (max-width: 320px) {
+  h1 { font-size: 1.6rem; }
+  h2 { font-size: 1.3rem; }
+  h3 { font-size: 1.1rem; }
+  
+  button, a, input, select {
+    font-size: 14px;
+  }
+  
+  .container,
+  .content-container,
+  .page-content {
+    padding-left: 12px;
+    padding-right: 12px;
+  }
+}
+
+/* Otimizações para dispositivos com notch */
+@supports (padding: max(0px)) {
+  .safe-area-padding {
+    padding-left: max(16px, env(safe-area-inset-left));
+    padding-right: max(16px, env(safe-area-inset-right));
+    padding-top: max(16px, env(safe-area-inset-top));
+    padding-bottom: max(16px, env(safe-area-inset-bottom));
+  }
+  
+  .safe-area-top {
+    padding-top: max(16px, env(safe-area-inset-top));
+  }
+  
+  .safe-area-bottom {
+    padding-bottom: max(16px, env(safe-area-inset-bottom));
+  }
+}
+
+/* Otimizações para dispositivos com baixo desempenho */
+.reduce-animation {
+  animation-duration: 0 !important;
+  transition-duration: 0 !important;
+}
+
+.reduce-animation * {
+  animation-duration: 0 !important;
+  transition-duration: 0 !important;
+}
+
+/* Melhorias para prevenção de atrasos */
+.no-delay {
+  /* Elimina atrasos de clique em mobile */
+  touch-action: manipulation;
+}
+
+/* Previne seleção de texto indesejada */
+.prevent-select {
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+/* Comportamento de deslizamento mais suave */
+.smooth-scroll {
+  -webkit-overflow-scrolling: touch;
+  overflow-scrolling: touch;
+  scroll-behavior: smooth;
+}
+
+/* Previne comportamentos indesejados de bounce */
+.no-bounce {
+  overscroll-behavior: none;
+} 

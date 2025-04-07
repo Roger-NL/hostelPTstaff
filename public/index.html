@@ -41,6 +41,28 @@
         font-weight: 200;
         opacity: 0.7;
       }
+
+      /* Estilos para garantir interatividade em elementos clicáveis */
+      button, a, [role="button"], .clickable-element {
+        cursor: pointer !important;
+        touch-action: manipulation !important;
+        -webkit-tap-highlight-color: transparent !important;
+      }
+
+      /* Garantir que cliques funcionem mesmo em contêineres com transformação */
+      button, a, [role="button"], .clickable-element {
+        position: relative !important;
+        z-index: 1 !important;
+        pointer-events: auto !important;
+      }
+
+      /* Aumentar área de toque em dispositivos móveis */
+      @media (max-width: 768px) {
+        button, a, [role="button"], .clickable-element {
+          min-height: 44px !important;
+          min-width: 44px !important;
+        }
+      }
     </style>
     <script>
       // Script para ajustar altura correta em dispositivos móveis
@@ -52,6 +74,58 @@
         setVH();
         window.addEventListener('resize', setVH);
         window.addEventListener('orientationchange', setVH);
+      })();
+
+      // Script para garantir que todos os elementos clicáveis funcionem corretamente
+      (function() {
+        function fixClickableElements() {
+          var elements = document.querySelectorAll('button, a, [role="button"], .clickable-element, .card, [class*="Card"]');
+          elements.forEach(function(element) {
+            if (!element.hasAttribute('data-click-fixed')) {
+              element.setAttribute('data-click-fixed', 'true');
+              element.style.setProperty('pointer-events', 'auto', 'important');
+              
+              // Adicionar atributos de acessibilidade se necessário
+              if (!element.hasAttribute('role') && 
+                  element.tagName !== 'A' && 
+                  element.tagName !== 'BUTTON') {
+                element.setAttribute('role', 'button');
+              }
+              
+              // Garantir que o elemento é focalizável
+              if (!element.hasAttribute('tabindex')) {
+                element.setAttribute('tabindex', '0');
+              }
+            }
+          });
+        }
+        
+        // Executar ao carregar a página
+        document.addEventListener('DOMContentLoaded', fixClickableElements);
+        
+        // Observar mudanças no DOM
+        if (window.MutationObserver) {
+          var observer = new MutationObserver(function(mutations) {
+            var shouldFix = false;
+            mutations.forEach(function(mutation) {
+              if (mutation.type === 'childList' && mutation.addedNodes.length > 0) {
+                shouldFix = true;
+              }
+            });
+            
+            if (shouldFix) {
+              fixClickableElements();
+            }
+          });
+          
+          // Observar o DOM quando estiver pronto
+          document.addEventListener('DOMContentLoaded', function() {
+            observer.observe(document.body, {
+              childList: true,
+              subtree: true
+            });
+          });
+        }
       })();
     </script>
   </head>

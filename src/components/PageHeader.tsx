@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useStore } from '../store/useStore';
-import { Menu, X, Settings, Home, Calendar, ClipboardList, BellRing, Award, LogOut, PlusCircle } from 'lucide-react';
+import { Menu, X, Settings, Home, Calendar, ClipboardList, BellRing, Award, LogOut, PlusCircle, LayoutDashboard, PartyPopper, MessageSquare, AlertTriangle, Users } from 'lucide-react';
 import { useTranslation } from '../hooks/useTranslation';
 import { useDeviceInfo } from '../utils/deviceDetector';
 import BackButton from './BackButton';
@@ -148,48 +148,61 @@ export default function PageHeader({
           
           <div className="flex-1 overflow-y-auto py-2">
             <nav className="px-2 space-y-1">
-              <button 
-                onClick={() => handleNavigation('/dashboard')}
-                className="w-full flex items-center gap-3 px-3 py-2.5 text-white/80 hover:text-white hover:bg-white/10 rounded-lg text-left"
-              >
-                <Home size={20} />
-                <span>Dashboard</span>
-              </button>
-              <button 
-                onClick={() => handleNavigation('/tasks')}
-                className="w-full flex items-center gap-3 px-3 py-2.5 text-white/80 hover:text-white hover:bg-white/10 rounded-lg text-left"
-              >
-                <ClipboardList size={20} />
-                <span>{t('tasks.title')}</span>
-              </button>
-              <button 
-                onClick={() => handleNavigation('/events')}
-                className="w-full flex items-center gap-3 px-3 py-2.5 text-white/80 hover:text-white hover:bg-white/10 rounded-lg text-left"
-              >
-                <Calendar size={20} />
-                <span>{t('events.title')}</span>
-              </button>
-              <button 
-                onClick={() => handleNavigation('/messages')}
-                className="w-full flex items-center gap-3 px-3 py-2.5 text-white/80 hover:text-white hover:bg-white/10 rounded-lg text-left"
-              >
-                <BellRing size={20} />
-                <span>{t('messages.title')}</span>
-              </button>
-              <button 
-                onClick={() => handleNavigation('/points')}
-                className="w-full flex items-center gap-3 px-3 py-2.5 text-white/80 hover:text-white hover:bg-white/10 rounded-lg text-left"
-              >
-                <Award size={20} />
-                <span>{t('points.title')}</span>
-              </button>
-              <button 
-                onClick={() => handleNavigation('/settings')}
-                className="w-full flex items-center gap-3 px-3 py-2.5 text-white/80 hover:text-white hover:bg-white/10 rounded-lg text-left"
-              >
-                <Settings size={20} />
-                <span>{t('settings.title')}</span>
-              </button>
+              <div className="overflow-auto max-h-[calc(100vh-120px)] mt-3 flex flex-col space-y-1.5">
+                <button
+                  onClick={() => handleNavigation('/dashboard')}
+                  className="w-full flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-white/10 text-sm text-left"
+                >
+                  <LayoutDashboard size={18} />
+                  <span>Dashboard</span>
+                </button>
+                <button
+                  onClick={() => handleNavigation('/schedule')}
+                  className="w-full flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-white/10 text-sm text-left"
+                >
+                  <Calendar size={18} />
+                  <span>Horários</span>
+                </button>
+                <button
+                  onClick={() => handleNavigation('/events')}
+                  className="w-full flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-white/10 text-sm text-left"
+                >
+                  <PartyPopper size={18} />
+                  <span>Eventos</span>
+                </button>
+                <button
+                  onClick={() => handleNavigation('/messages')}
+                  className="w-full flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-white/10 text-sm text-left"
+                >
+                  <MessageSquare size={18} />
+                  <span>Mensagens</span>
+                </button>
+                <button
+                  onClick={() => handleNavigation('/points')}
+                  className="w-full flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-white/10 text-sm text-left"
+                >
+                  <Award size={18} />
+                  <span>Pontos</span>
+                </button>
+                <div className="px-3 py-2 flex items-center gap-2 rounded-lg bg-amber-900/30 border border-amber-500/30 text-amber-300 text-sm text-left">
+                  <AlertTriangle size={18} />
+                  <span>Tarefas (desativado)</span>
+                </div>
+                <button
+                  onClick={() => handleNavigation('/staff')}
+                  className="w-full flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-white/10 text-sm text-left"
+                >
+                  <Users size={18} />
+                  <span>Staff</span>
+                </button>
+                <button
+                  onClick={() => handleNavigation('/settings')}
+                  className="w-full flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-white/10 text-sm text-left"
+                >
+                  <Settings size={18} />
+                  <span>Configurações</span>
+                </button>
+              </div>
             </nav>
           </div>
           

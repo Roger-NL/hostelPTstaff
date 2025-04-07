@@ -1,14 +1,23 @@
-import { create } from 'zustand';
 import type { Schedule, ShiftTime, UserData, Task, TaskComment, TaskChecklistItem, Event, Message, UserSettings, SystemSettings, User } from '../types';
-import * as authService from '../services/auth.service';
-import { doc, updateDoc, setDoc, getDoc } from 'firebase/firestore';
-import { firestore } from '../config/firebase';
-import * as scheduleService from '../services/schedule.service';
-import * as messageService from '../services/message.service';
+import { db, collection, doc, updateDoc, getDoc, setDoc, onSnapshot, query, where, getDocs, deleteDoc, serverTimestamp } from '../firebase/config';
 import * as eventService from '../services/event.service';
+import { create } from 'zustand';
+import { loadScheduleFromFirebase, saveScheduleToFirebase } from '../services/schedule.service';
+import { loadEventsFromFirebase, saveEventToFirebase, deleteEventFromFirebase, updateEventInFirebase } from '../services/event.service';
+import { 
+  loadUserData, 
+  loadUsers, 
+  registerUser, 
+  updateUserRole, 
+  deleteUser, 
+  updateUserPoints as updateFirebaseUserPoints,
+  updateUserSettings as updateFirebaseUserSettings 
+} from '../services/user.service';
+import { add } from 'date-fns';
+import * as authService from '../services/auth.service';
+import * as messageService from '../services/message.service';
+import * as scheduleService from '../services/schedule.service';
 import * as taskService from '../services/task.service';
-import { collection, getDocs } from 'firebase/firestore';
-import { query, where, deleteDoc } from 'firebase/firestore';
 import { 
   loadTasksFromFirebase, 
   saveTaskToFirebase, 
@@ -808,334 +817,63 @@ export const useStore = create<AppState>((set, get) => ({
     return true;
   },
   
-  // Task management functions
+  // Funções para tarefas (desabilitadas)
+  loadTasks: async () => {
+    console.log('Tarefas desabilitadas');
+    set({ tasks: [] });
+    return [];
+  },
   addTask: (taskData) => {
-    const { user } = get();
-    if (!user) return;
-
-    const newTask: Task = {
-      ...taskData,
-      id: crypto.randomUUID(),
-      createdAt: new Date().toISOString(),
-      status: 'todo',
-      comments: [],
-      checklist: [],
-      createdBy: user.id,
-      type: taskData.type
-    };
-
-    // Primeiro atualiza o estado local para feedback imediato
-    set(state => ({
-      tasks: [...state.tasks, newTask]
-    }));
-    
-    // Depois salva no Firebase de forma assíncrona
-    try {
-      void taskService.saveTaskToFirebase(newTask)
-        .catch(error => {
-          console.error('Erro ao salvar tarefa no Firebase:', error);
-        });
-    } catch (error) {
-      console.error('Erro ao chamar saveTaskToFirebase:', error);
-    }
+    console.log('Tarefas desabilitadas');
   },
-  
   updateTask: (taskId, updates) => {
-    console.log('Updating task:', { taskId, updates });
-    
-    // Primeiro atualiza o estado local para feedback imediato
-    set(state => {
-      const updatedTasks = state.tasks.map(task =>
-        task.id === taskId
-          ? { 
-              ...task, 
-              ...updates,
-              assignedTo: updates.assignedTo || task.assignedTo || []
-            }
-          : task
-      );
-      
-      console.log('Updated tasks:', updatedTasks);
-      return { tasks: updatedTasks };
-    });
-    
-    // Depois atualiza no Firebase de forma assíncrona
-    try {
-      void taskService.updateTaskInFirebase(taskId, updates)
-        .catch(error => {
-          console.error('Erro ao atualizar tarefa no Firebase:', error);
-        });
-    } catch (error) {
-      console.error('Erro ao chamar updateTaskInFirebase:', error);
-    }
+    console.log('Tarefas desabilitadas');
   },
-  
   deleteTask: (taskId) => {
-    const { tasks } = get();
-    const taskToDelete = tasks.find(task => task.id === taskId);
-    
-    if (!taskToDelete) {
-      console.log(`Tarefa ${taskId} não encontrada para exclusão`);
-      return;
-    }
-    
-    // Primeiro atualiza o estado local para feedback imediato
-    set(state => ({
-      tasks: state.tasks.filter(task => task.id !== taskId)
-    }));
-    
-    // Depois exclui do Firebase de forma assíncrona
-    try {
-      // Marca a tarefa como excluída antes de excluí-la definitivamente
-      const markedTask = {
-        ...taskToDelete,
-        deleted: true,
-        title: `[DELETED] ${taskToDelete.title}`
-      };
-      
-      // Atualiza a tarefa como excluída e depois a exclui definitivamente
-      void taskService.updateTaskInFirebase(taskId, markedTask)
-        .then(() => {
-          return taskService.deleteTaskFromFirebase(taskId);
-        })
-        .catch(error => {
-          console.error('Erro ao excluir tarefa do Firebase:', error);
-        });
-    } catch (error) {
-      console.error('Erro ao chamar deleteTaskFromFirebase:', error);
-    }
+    console.log('Tarefas desabilitadas');
   },
-  
-  deleteAllTasks: async () => {
-    const { user } = get();
-    if (!user || user.role !== 'admin') {
-      console.error('Apenas administradores podem excluir todas as tarefas');
-      return false;
-    }
-    
-    try {
-      console.log('Iniciando exclusão de todas as tarefas...');
-      
-      // Primeiro atualiza o estado local para feedback imediato
-      set({ tasks: [] });
-      
-      // Depois exclui todas as tarefas do Firebase
-      const success = await taskService.deleteAllTasks();
-      
-      console.log(`Exclusão de todas as tarefas ${success ? 'concluída com sucesso' : 'falhou'}`);
-      return success;
-    } catch (error) {
-      console.error('Erro ao excluir todas as tarefas:', error);
-      
-      // Recarrega as tarefas do Firebase para sincronizar o estado
-      try {
-        const tasks = await taskService.loadTasksFromFirebase();
-        if (Array.isArray(tasks)) {
-          set({ tasks });
-        }
-      } catch (loadError) {
-        console.error('Erro ao recarregar tarefas após falha na exclusão:', loadError);
-      }
-      
-      return false;
-    }
-  },
-  
-  // Adicionar função para excluir todos os eventos
-  deleteAllEvents: async () => {
-    const { user } = get();
-    if (!user || user.role !== 'admin') {
-      console.error('Apenas administradores podem excluir todos os eventos');
-      return false;
-    }
-    
-    try {
-      console.log('Iniciando exclusão de todos os eventos...');
-      
-      // Primeiro atualiza o estado local para feedback imediato
-      set({ events: [] });
-      
-      // Depois exclui todos os eventos do Firebase
-      const success = await eventService.deleteAllEvents();
-      
-      console.log(`Exclusão de todos os eventos ${success ? 'concluída com sucesso' : 'falhou'}`);
-      return success;
-    } catch (error) {
-      console.error('Erro ao excluir todos os eventos:', error);
-      
-      // Recarrega os eventos do Firebase para sincronizar o estado
-      try {
-        const events = await eventService.loadEventsFromFirebase();
-        if (Array.isArray(events)) {
-          set({ events });
-        }
-      } catch (loadError) {
-        console.error('Erro ao recarregar eventos após falha na exclusão:', loadError);
-      }
-      
-      return false;
-    }
-  },
-  
-  cleanupDeletedTasks: async () => {
-    const { user } = get();
-    if (!user || user.role !== 'admin') {
-      console.error('Apenas administradores podem limpar tarefas excluídas');
-      return false;
-    }
-    
-    try {
-      console.log('Iniciando limpeza de tarefas excluídas...');
-      
-      // Executa a limpeza no Firebase
-      const success = await taskService.cleanupDeletedTasks();
-      
-      // Recarrega as tarefas para atualizar o estado
-      if (success) {
-        const tasks = await taskService.loadTasksFromFirebase();
-        if (Array.isArray(tasks)) {
-          set({ tasks });
-          console.log('Estado atualizado após limpeza de tarefas excluídas');
-        }
-      }
-      
-      console.log(`Limpeza de tarefas excluídas ${success ? 'concluída com sucesso' : 'falhou'}`);
-      return success;
-    } catch (error) {
-      console.error('Erro ao limpar tarefas excluídas:', error);
-      return false;
-    }
-  },
-  
   moveTask: (taskId, newStatus) => {
-    const { tasks, user, updateUserPoints } = get();
-    const task = tasks.find(t => t.id === taskId);
-    
-    if (task && newStatus === 'done' && task.status !== 'done' && task.type === 'hostel') {
-      updateUserPoints(task.points);
-    }
-    
-    // Primeiro atualiza o estado local para feedback imediato
-    set(state => ({
-      tasks: state.tasks.map(task =>
-        task.id === taskId
-          ? { ...task, status: newStatus }
-          : task
-      )
-    }));
-    
-    // Depois atualiza no Firebase de forma assíncrona
-    try {
-      void taskService.updateTaskInFirebase(taskId, { status: newStatus })
-        .catch(error => {
-          console.error('Erro ao atualizar status da tarefa no Firebase:', error);
-        });
-    } catch (error) {
-      console.error('Erro ao chamar updateTaskInFirebase:', error);
-    }
+    console.log('Tarefas desabilitadas');
   },
-  
   assignTask: (taskId, userIds) => {
-    set(state => ({
-      tasks: state.tasks.map(task =>
-        task.id === taskId
-          ? { ...task, assignedTo: userIds }
-          : task
-      )
-    }));
+    console.log('Tarefas desabilitadas');
   },
-  
   addTaskComment: (taskId, content) => {
-    const { user } = get();
-    if (!user) return;
-
-    const newComment: TaskComment = {
-      id: crypto.randomUUID(),
-      userId: user.id,
-      content,
-      createdAt: new Date().toISOString()
-    };
-
-    set(state => ({
-      tasks: state.tasks.map(task =>
-        task.id === taskId
-          ? { ...task, comments: [...(task.comments || []), newComment] }
-          : task
-      )
-    }));
+    console.log('Tarefas desabilitadas');
   },
-  
   deleteTaskComment: (taskId, commentId) => {
-    set(state => ({
-      tasks: state.tasks.map(task =>
-        task.id === taskId
-          ? { ...task, comments: task.comments?.filter(c => c.id !== commentId) || [] }
-          : task
-      )
-    }));
+    console.log('Tarefas desabilitadas');
   },
-  
   addTaskChecklistItem: (taskId, content) => {
-    const newItem: TaskChecklistItem = {
-      id: crypto.randomUUID(),
-      content,
-      completed: false
-    };
-
-    set(state => ({
-      tasks: state.tasks.map(task =>
-        task.id === taskId
-          ? { ...task, checklist: [...(task.checklist || []), newItem] }
-          : task
-      )
-    }));
+    console.log('Tarefas desabilitadas');
   },
-  
   toggleTaskChecklistItem: (taskId, itemId) => {
-    set(state => ({
-      tasks: state.tasks.map(task =>
-        task.id === taskId
-          ? {
-              ...task,
-              checklist: task.checklist?.map(item =>
-                item.id === itemId
-                  ? { ...item, completed: !item.completed }
-                  : item
-              ) || []
-            }
-          : task
-      )
-    }));
+    console.log('Tarefas desabilitadas');
   },
-  
   deleteTaskChecklistItem: (taskId, itemId) => {
-    set(state => ({
-      tasks: state.tasks.map(task =>
-        task.id === taskId
-          ? { ...task, checklist: task.checklist?.filter(item => item.id !== itemId) || [] }
-          : task
-      )
-    }));
+    console.log('Tarefas desabilitadas');
   },
-  
   addTaskTag: (taskId, tag) => {
-    set(state => ({
-      tasks: state.tasks.map(task =>
-        task.id === taskId
-          ? { ...task, tags: [...new Set([...(task.tags || []), tag])] }
-          : task
-      )
-    }));
+    console.log('Tarefas desabilitadas');
   },
-  
   removeTaskTag: (taskId, tag) => {
-    set(state => ({
-      tasks: state.tasks.map(task =>
-        task.id === taskId
-          ? { ...task, tags: task.tags?.filter(t => t !== tag) || [] }
-          : task
-      )
-    }));
+    console.log('Tarefas desabilitadas');
+  },
+  deleteAllTasks: async () => {
+    console.log('Tarefas desabilitadas');
+    return true;
+  },
+  cleanupDeletedTasks: async () => {
+    console.log('Tarefas desabilitadas');
+    return true;
+  },
+  approveTaskPhoto: async (taskId, adminId) => {
+    console.log('Tarefas desabilitadas');
+    return true;
+  },
+  rejectPhoto: async (taskId, adminId) => {
+    console.log('Tarefas desabilitadas');
+    return true;
   },
   
   // Event management functions
@@ -1495,59 +1233,6 @@ export const useStore = create<AppState>((set, get) => ({
   setSystemSettings: (systemSettings) => set({ systemSettings }),
   
   // Funções para gerenciamento de fotos
-  approveTaskPhoto: async (taskId: string, adminId: string) => {
-    try {
-      const success = await approveTaskPhoto(taskId, adminId);
-      if (success) {
-        // Atualizar a tarefa no estado com a foto aprovada
-        const tasks = [...get().tasks];
-        const taskIndex = tasks.findIndex(t => t.id === taskId);
-        
-        if (taskIndex !== -1) {
-          const task = tasks[taskIndex];
-          if (task.photo) {
-            tasks[taskIndex] = {
-              ...task,
-              photo: {
-                ...task.photo,
-                approved: true,
-                approvedBy: adminId,
-                approvedAt: new Date().toISOString()
-              }
-            };
-            
-            set({ tasks });
-          }
-        }
-      }
-    } catch (error) {
-      console.error('Erro ao aprovar foto:', error);
-    }
-  },
-  
-  rejectTaskPhoto: async (taskId: string) => {
-    try {
-      const success = await rejectTaskPhoto(taskId);
-      if (success) {
-        // Atualizar a tarefa no estado removendo a foto
-        const tasks = [...get().tasks];
-        const taskIndex = tasks.findIndex(t => t.id === taskId);
-        
-        if (taskIndex !== -1) {
-          tasks[taskIndex] = {
-            ...tasks[taskIndex],
-            photo: undefined
-          };
-          
-          set({ tasks });
-        }
-      }
-    } catch (error) {
-      console.error('Erro ao rejeitar foto:', error);
-    }
-  },
-  
-  // Função para aprovar foto de tarefa
   approvePhoto: (taskId: string, adminId: string) => {
     set((state) => {
       const taskIndex = state.tasks.findIndex(task => task.id === taskId);
@@ -1575,7 +1260,6 @@ export const useStore = create<AppState>((set, get) => ({
     });
   },
   
-  // Função para rejeitar foto de tarefa
   rejectPhoto: (taskId: string, adminId: string) => {
     set((state) => {
       const taskIndex = state.tasks.findIndex(task => task.id === taskId);
