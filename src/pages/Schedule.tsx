@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import { useStore } from '../store/useStore';
 import { format, addDays, startOfWeek, parse, isSameDay } from 'date-fns';
 import { pt } from 'date-fns/locale';
@@ -41,6 +42,8 @@ interface ScheduleSummaryModalProps {
 }
 
 function ConfirmationModal({ isOpen, onClose, onConfirm, volunteerName }: ConfirmationModalProps) {
+  const { t } = useTranslation();
+  
   // Emit event to control sidebar visibility
   useEffect(() => {
     const event = new CustomEvent('modalStateChange', { detail: { isOpen } });
@@ -64,10 +67,10 @@ function ConfirmationModal({ isOpen, onClose, onConfirm, volunteerName }: Confir
             <div className="w-8 h-8 rounded-full bg-amber-500/20 text-amber-400 flex items-center justify-center mr-2.5">
               <AlertCircle size={18} />
             </div>
-            <h3 className="text-sm font-medium text-white/90">Excedeu limite de turnos</h3>
+            <h3 className="text-sm font-medium text-white/90">{t('schedule.exceedLimitTitle')}</h3>
           </div>
           <p className="text-white/70 text-xs">
-            <span className="font-medium text-amber-300">{volunteerName}</span> já foi adicionado 5 vezes esta semana. Deseja continuar?
+            <span className="font-medium text-amber-300">{volunteerName}</span> {t('schedule.exceedLimitMessage', { name: '' })}
           </p>
         </div>
         <div className="flex p-3">
@@ -75,7 +78,7 @@ function ConfirmationModal({ isOpen, onClose, onConfirm, volunteerName }: Confir
             onClick={onClose}
             className="flex-1 px-3 py-1.5 bg-gray-700/50 text-white/80 rounded hover:bg-gray-700 transition text-xs font-medium mr-2"
           >
-            Cancelar
+            {t('schedule.cancel')}
           </button>
           <button
             onClick={() => {
@@ -84,7 +87,7 @@ function ConfirmationModal({ isOpen, onClose, onConfirm, volunteerName }: Confir
             }}
             className="flex-1 px-3 py-1.5 bg-blue-500/80 text-white rounded hover:bg-blue-600 transition text-xs font-medium"
           >
-            Confirmar
+            {t('schedule.confirm')}
           </button>
         </div>
       </div>
@@ -93,6 +96,8 @@ function ConfirmationModal({ isOpen, onClose, onConfirm, volunteerName }: Confir
 }
 
 function VolunteerModal({ isOpen, onClose, onSelect, volunteers }: ModalProps) {
+  const { t } = useTranslation();
+  
   console.log('VolunteerModal render:', { isOpen, volunteersCount: volunteers.length });
   
   // Emit event to control sidebar visibility
@@ -114,7 +119,7 @@ function VolunteerModal({ isOpen, onClose, onSelect, volunteers }: ModalProps) {
       <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" />
       <div className="relative w-[90%] sm:w-[360px] bg-gray-800/95 rounded-lg shadow-xl overflow-hidden max-h-[75vh] border border-gray-700/30">
         <div className="p-3 border-b border-gray-700/30 flex items-center justify-between">
-          <h3 className="text-sm font-medium text-white/90">Selecionar Voluntário</h3>
+          <h3 className="text-sm font-medium text-white/90">{t('schedule.selectVolunteer')}</h3>
           <button onClick={onClose} className="text-gray-400 hover:text-white transition-colors">
             <X size={18} />
           </button>
@@ -126,7 +131,7 @@ function VolunteerModal({ isOpen, onClose, onSelect, volunteers }: ModalProps) {
               <div className="w-12 h-12 rounded-full bg-gray-700/50 flex items-center justify-center mb-2">
                 <Users size={20} className="text-gray-400" />
               </div>
-              <p className="text-gray-400 text-sm">Nenhum voluntário disponível</p>
+              <p className="text-gray-400 text-sm">{t('dashboard.noVolunteersAssigned')}</p>
             </div>
           ) : (
             <div className="p-1">
@@ -141,7 +146,7 @@ function VolunteerModal({ isOpen, onClose, onSelect, volunteers }: ModalProps) {
                 >
                   <span className="text-sm">{volunteer.name}</span>
                   {volunteer.role === 'admin' && (
-                    <span className="text-xs px-1.5 py-0.5 bg-blue-500/20 text-blue-300 rounded">Admin</span>
+                    <span className="text-xs px-1.5 py-0.5 bg-blue-500/20 text-blue-300 rounded">{t('roles.admin')}</span>
                   )}
                 </button>
               ))}
@@ -553,28 +558,28 @@ export default function Schedule() {
             <button
               onClick={() => setSummaryModalOpen(true)}
               className="w-7 h-7 flex items-center justify-center bg-blue-500/30 hover:bg-blue-500/50 text-white rounded-lg transition-colors"
-              title="Summary"
+              title={t('schedule.summary')}
             >
               <FileText size={14} />
             </button>
             <button
               onClick={() => setDatePickerOpen(!datePickerOpen)}
               className="calendar-button w-7 h-7 flex items-center justify-center bg-gray-700/30 hover:bg-gray-700/50 text-white/90 rounded-lg transition-colors"
-              title="Select date"
+              title={t('common.selectDate')}
             >
               <CalendarIcon size={14} />
             </button>
             <button
               onClick={handlePreviousWeek}
               className="w-7 h-7 flex items-center justify-center bg-gray-700/30 hover:bg-gray-700/50 text-white/90 rounded-lg transition-colors"
-              title="Previous week"
+              title={t('common.previousWeek')}
             >
               <ChevronLeft size={14} />
             </button>
             <button
               onClick={handleNextWeek}
               className="w-7 h-7 flex items-center justify-center bg-gray-700/30 hover:bg-gray-700/50 text-white/90 rounded-lg transition-colors"
-              title="Next week"
+              title={t('common.nextWeek')}
             >
               <ChevronRight size={14} />
             </button>
@@ -592,7 +597,7 @@ export default function Schedule() {
                   <thead>
                     <tr>
                       <th className="sticky left-0 bg-gray-800/50 backdrop-blur-sm p-2 text-left text-white/70 text-xs font-medium w-20 border-b border-gray-700/30">
-                        <span className="pl-1">Horário</span>
+                        <span className="pl-1">{t('schedule.timeSlot')}</span>
                       </th>
                       {weekDays.map(day => (
                         <th key={day.toString()} className="p-2 text-center text-white/70 min-w-[110px] max-w-[110px] border-b border-gray-700/30">
@@ -724,7 +729,7 @@ export default function Schedule() {
                     
                     <div className="pt-1">
                       {assignedVolunteers.length === 0 ? (
-                        <p className="text-gray-400 text-xs italic py-0.5">Sem voluntários</p>
+                        <p className="text-gray-400 text-xs italic py-0.5">{t('schedule.noVolunteers')}</p>
                       ) : (
                         <div className="space-y-1">
                           {assignedVolunteers.map(volunteerId => (
@@ -783,6 +788,30 @@ export default function Schedule() {
           users={users}
           shifts={SHIFTS}
         />
+
+        {/* DatePicker */}
+        {datePickerOpen && datePickerRef.current && createPortal(
+          <div 
+            ref={datePickerRef}
+            className="absolute z-50 bg-gray-800 border border-gray-700/50 rounded-lg shadow-lg overflow-hidden"
+            style={{ 
+              top: pickerPosition.top, 
+              left: pickerPosition.left,
+              minWidth: '300px' 
+            }}
+          >
+            <SimpleDatePicker 
+              value={selectedWeek}
+              onChange={(date) => {
+                if (date) {
+                  setSelectedWeek(date);
+                }
+                setDatePickerOpen(false);
+              }}
+            />
+          </div>,
+          document.body
+        )}
       </div>
     </div>
   );

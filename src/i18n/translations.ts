@@ -106,7 +106,15 @@ export const translations = {
       title: 'Schedule Management',
       assign: 'Assign Volunteer',
       remove: 'Remove Assignment',
-      shifts: {
+      timeSlot: 'Time Slot',
+      noVolunteers: 'No volunteers',
+      selectVolunteer: 'Select Volunteer',
+      summary: 'Summary',
+      exceedLimitTitle: 'Exceeded shift limit',
+      exceedLimitMessage: '{name} has already been added 5 times this week. Do you want to continue?',
+      confirm: 'Confirm',
+      cancel: 'Cancel',
+      slots: {
         morning: '08:00-11:00',
         midMorning: '10:00-13:00',
         afternoon: '13:00-16:00',
@@ -347,6 +355,10 @@ export const translations = {
     ok: 'OK',
     close: 'Close',
     refresh: 'Refresh',
+    today: 'Today',
+    selectDate: 'Select date',
+    previousWeek: 'Previous week',
+    nextWeek: 'Next week',
     
     // Approval system
     approvals: {
@@ -480,6 +492,14 @@ export const translations = {
       title: 'Gerenciamento de Escala',
       assign: 'Atribuir Voluntário',
       remove: 'Remover Atribuição',
+      timeSlot: 'Horário',
+      noVolunteers: 'Sem voluntários',
+      selectVolunteer: 'Selecionar Voluntário',
+      summary: 'Resumo',
+      exceedLimitTitle: 'Excedeu limite de turnos',
+      exceedLimitMessage: '{name} já foi adicionado 5 vezes esta semana. Deseja continuar?',
+      confirm: 'Confirmar',
+      cancel: 'Cancelar',
       shifts: {
         morning: '08:00-11:00',
         midMorning: '10:00-13:00',
@@ -721,6 +741,10 @@ export const translations = {
     ok: 'OK',
     close: 'Fechar',
     refresh: 'Atualizar',
+    today: 'Hoje',
+    selectDate: 'Selecionar data',
+    previousWeek: 'Semana anterior',
+    nextWeek: 'Próxima semana',
     
     // Sistema de aprovação
     approvals: {
