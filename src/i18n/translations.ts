@@ -102,7 +102,7 @@ export const translations = {
       assign: 'Assign Volunteer',
       remove: 'Remove Assignment',
       shifts: {
-        morning: '08:00-10:00',
+        morning: '08:00-11:00',
         midMorning: '10:00-13:00',
         afternoon: '13:00-16:00',
         evening: '16:00-19:00',
@@ -451,7 +451,7 @@ export const translations = {
       assign: 'Atribuir Voluntário',
       remove: 'Remover Atribuição',
       shifts: {
-        morning: '08:00-10:00',
+        morning: '08:00-11:00',
         midMorning: '10:00-13:00',
         afternoon: '13:00-16:00',
         evening: '16:00-19:00',
