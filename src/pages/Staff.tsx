@@ -2,11 +2,11 @@ import React, { useState, useEffect } from 'react';
 import { useStore } from '../store/useStore';
 import { useTranslation } from '../hooks/useTranslation';
 import { useAuth } from '../hooks/useAuth';
-import { Plus, Trash2, Edit, Mail, Phone, MapPin, Calendar, Shield, ShieldOff, Users, RefreshCw } from 'lucide-react';
+import { Plus, Trash2, Edit, Mail, Phone, MapPin, Calendar, Shield, ShieldOff, Users, RefreshCw, X, User as UserIcon, Award, Clock } from 'lucide-react';
 import type { UserData, User } from '../types';
 import * as authService from '../services/auth.service';
 import SimpleDatePicker from '../components/SimpleDatePicker';
-import PageHeader from '../components/PageHeader';
+import BackButton from '../components/BackButton';
 
 interface StaffFormData {
   name: string;
@@ -171,13 +171,13 @@ export default function Staff() {
     setFormData({
       name: staff.name,
       email: staff.email,
-      password: staff.password,
-      country: staff.country,
-      age: staff.age,
-      phone: staff.phone,
+      password: staff.password || '',
+      country: staff.country || '',
+      age: staff.age?.toString() || '',
+      phone: staff.phone || '',
       arrivalDate,
       departureDate,
-      gender: staff.gender,
+      gender: staff.gender || 'other',
     });
     setEditingId(staff.id);
     setShowForm(true);
@@ -212,418 +212,9 @@ export default function Staff() {
 
   const isAdmin = currentUser?.role === 'admin';
 
-  return (
-    <div className="w-full h-full">
-      <PageHeader 
-        title={t('staff.title')} 
-        onAddItem={isAdmin ? () => {
-          setShowForm(true);
-          setEditingId(null);
-          setFormData(initialFormData);
-        } : undefined}
-        addItemLabel={t('addUser')}
-      />
-      
-      <div className="h-[calc(100vh-6rem)] flex flex-col overflow-auto pb-6 p-4">
-        <div className="bg-gray-800/50 backdrop-blur-sm rounded-lg p-4 xs:p-5 sm:p-6 space-y-4">
-          <div className="flex flex-wrap items-center justify-between gap-2 mb-4 sticky top-0 bg-gray-900/80 backdrop-blur-sm py-2 z-10">
-            <h2 className="text-lg xs:text-xl font-extralight text-white">{t('staff.title')}</h2>
-            
-            <div className="flex items-center gap-1.5 xs:gap-2">
-              <button 
-                onClick={loadUsers} 
-                className="h-9 px-2.5 xs:px-3 bg-blue-500 text-white rounded-lg xs:rounded-xl shadow-md hover:bg-blue-600 transition-colors flex items-center gap-1.5 text-xs xs:text-sm font-light"
-                disabled={isLoading}
-              >
-                <RefreshCw size={16} className={`transition-transform duration-300 ${isLoading ? 'animate-spin' : ''}`} />
-                <span className="hidden xs:inline">{t('refresh')}</span>
-              </button>
-            </div>
-          </div>
-          
-          {isLoading && (
-            <div className="flex justify-center my-4">
-              <div className="bg-gray-800/80 px-4 py-2 rounded-full text-white/80 text-sm font-light flex items-center gap-2">
-                <RefreshCw size={14} className="animate-spin" />
-                <span>Carregando...</span>
-              </div>
-            </div>
-          )}
-          
-          <p className="text-xs text-center text-white/80 mb-3">
-            Total de usuários: {users.length}
-          </p>
-          
-          {/* Staff List */}
-          <div className="bg-gray-800/50 backdrop-blur-sm rounded-lg p-3 xs:p-4 sm:p-6 flex-1 overflow-auto">
-            {/* Admins Section */}
-            <div className="mb-6">
-              <h3 className="text-base xs:text-lg font-medium text-white mb-3 flex items-center gap-2 sticky top-0">
-                <Shield className="text-purple-400" size={18} />
-                {t('staff.roles.admin')}
-              </h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 xs:gap-4">
-                {admins.map(admin => (
-                  <div
-                    key={admin.id}
-                    className="bg-gray-700/50 rounded-lg p-3 xs:p-4 border border-purple-500/20 hover:border-purple-500/30 transition-colors"
-                  >
-                    <div className="flex justify-between items-start mb-3">
-                      <h3 className="text-base font-medium text-white truncate pr-2">{admin.name}</h3>
-                      {isAdmin && (
-                        <div className="flex gap-1 xs:gap-1.5 shrink-0">
-                          {admin.id !== currentUser?.id && admins.length > 1 && (
-                            <button
-                              onClick={() => handleRoleChange(admin.id, 'remove')}
-                              className="h-7 w-7 flex items-center justify-center bg-gray-600/50 hover:bg-purple-500/20 text-purple-400 hover:text-purple-300 rounded-full transition-colors"
-                              title={t('staff.alerts.onlyAdminEdit')}
-                            >
-                              <ShieldOff size={16} />
-                            </button>
-                          )}
-                          <button
-                            onClick={() => handleEdit(admin)}
-                            className="h-7 w-7 flex items-center justify-center bg-gray-600/50 hover:bg-blue-500/20 text-blue-400 hover:text-blue-300 rounded-full transition-colors"
-                            title={t('edit')}
-                          >
-                            <Edit size={16} />
-                          </button>
-                          {admin.id !== currentUser?.id && (
-                            <button
-                              onClick={() => handleDelete(admin.id)}
-                              className="h-7 w-7 flex items-center justify-center bg-gray-600/50 hover:bg-red-500/20 text-red-400 hover:text-red-300 rounded-full transition-colors"
-                              title={t('staff.delete')}
-                            >
-                              <Trash2 size={16} />
-                            </button>
-                          )}
-                        </div>
-                      )}
-                    </div>
-                    <StaffInfo staff={admin} />
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            {/* Staff Section */}
-            <div>
-              <h3 className="text-base xs:text-lg font-medium text-white mb-3 flex items-center gap-2 sticky top-0">
-                <Users className="text-blue-400" size={18} />
-                {t('staff.roles.volunteer')}
-              </h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 xs:gap-4">
-                {volunteers.map(staff => (
-                  <div
-                    key={staff.id}
-                    className="bg-gray-700/50 rounded-lg p-3 xs:p-4 border border-white/10 hover:border-white/20 transition-colors"
-                  >
-                    <div className="flex justify-between items-start mb-3">
-                      <h3 className="text-base font-medium text-white truncate pr-2">{staff.name}</h3>
-                      {isAdmin && (
-                        <div className="flex gap-1 xs:gap-1.5 shrink-0">
-                          <button
-                            onClick={() => handleRoleChange(staff.id, 'make')}
-                            className="h-7 w-7 flex items-center justify-center bg-gray-600/50 hover:bg-purple-500/20 text-purple-400 hover:text-purple-300 rounded-full transition-colors"
-                            title={t('staff.makeAdmin')}
-                          >
-                            <Shield size={16} />
-                          </button>
-                          <button
-                            onClick={() => handleEdit(staff)}
-                            className="h-7 w-7 flex items-center justify-center bg-gray-600/50 hover:bg-blue-500/20 text-blue-400 hover:text-blue-300 rounded-full transition-colors"
-                            title={t('edit')}
-                          >
-                            <Edit size={16} />
-                          </button>
-                          <button
-                            onClick={() => handleDelete(staff.id)}
-                            className="h-7 w-7 flex items-center justify-center bg-gray-600/50 hover:bg-red-500/20 text-red-400 hover:text-red-300 rounded-full transition-colors"
-                            title={t('staff.delete')}
-                          >
-                            <Trash2 size={16} />
-                          </button>
-                        </div>
-                      )}
-                    </div>
-                    <StaffInfo staff={staff} />
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Delete Confirmation Modal */}
-      {showConfirmDelete && (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-          <div className="bg-gray-800 rounded-lg p-4 xs:p-6 w-full max-w-md">
-            <h2 className="text-lg xs:text-xl font-semibold text-white mb-4">
-              {t('staff.delete')}
-            </h2>
-            <p className="text-white/80 mb-6 text-sm xs:text-base">
-              {t('staff.alerts.confirmDelete')}
-            </p>
-            <div className="flex justify-end gap-3">
-              <button
-                onClick={() => setShowConfirmDelete(null)}
-                className="px-3 xs:px-4 py-2 text-white/60 hover:text-white transition-colors text-sm xs:text-base"
-              >
-                {t('cancel')}
-              </button>
-              <button
-                onClick={confirmDelete}
-                className="px-3 xs:px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition text-sm xs:text-base"
-              >
-                {t('confirm')}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Role Change Confirmation Modal */}
-      {showConfirmRole && (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-          <div className="bg-gray-800 rounded-lg p-4 xs:p-6 w-full max-w-md">
-            <h2 className="text-lg xs:text-xl font-semibold text-white mb-4">
-              {showConfirmRole.action === 'make' ? t('staff.makeAdmin') : t('staff.removeAdmin')}
-            </h2>
-            <p className="text-white/80 mb-6 text-sm xs:text-base">
-              {showConfirmRole.action === 'make'
-                ? t('staff.alerts.confirmMakeAdmin')
-                : t('staff.alerts.confirmRemoveAdmin')}
-            </p>
-            <div className="flex justify-end gap-3">
-              <button
-                onClick={() => setShowConfirmRole(null)}
-                className="px-3 xs:px-4 py-2 text-white/60 hover:text-white transition-colors text-sm xs:text-base"
-              >
-                {t('cancel')}
-              </button>
-              <button
-                onClick={confirmRoleChange}
-                className={`px-3 xs:px-4 py-2 text-white rounded-lg transition text-sm xs:text-base ${
-                  showConfirmRole.action === 'make'
-                    ? 'bg-purple-500 hover:bg-purple-600'
-                    : 'bg-red-500 hover:bg-red-600'
-                }`}
-              >
-                {t('confirm')}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Add/Edit Staff Form */}
-      {showForm && (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4 overflow-y-auto">
-          <div className="bg-gray-800 rounded-lg p-4 xs:p-6 w-full max-w-2xl my-4">
-            <h2 className="text-lg xs:text-xl font-semibold text-white mb-4 xs:mb-6">
-              {editingId ? t('staff.editUser') : t('staff.addUser')}
-            </h2>
-
-            {error && (
-              <div className="mb-4 p-3 bg-red-500/20 border border-red-500/50 rounded-lg text-red-400 text-sm">
-                {error}
-              </div>
-            )}
-
-            <form onSubmit={handleSubmit} className="space-y-4 xs:space-y-6">
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 xs:gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-300 mb-1">
-                    {t('name')}
-                  </label>
-                  <input
-                    type="text"
-                    value={formData.name}
-                    onChange={e => setFormData({ ...formData, name: e.target.value })}
-                    className="w-full bg-gray-700/50 border border-white/10 rounded-lg px-3 py-2 text-white text-sm"
-                    required
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-300 mb-1">
-                    {t('email')}
-                  </label>
-                  <input
-                    type="email"
-                    value={formData.email}
-                    onChange={e => setFormData({ ...formData, email: e.target.value })}
-                    className="w-full bg-gray-700/50 border border-white/10 rounded-lg px-3 py-2 text-white text-sm"
-                    required
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-300 mb-1">
-                    {t('password')}
-                  </label>
-                  <input
-                    type="password"
-                    value={formData.password}
-                    onChange={e => setFormData({ ...formData, password: e.target.value })}
-                    className="w-full bg-gray-700/50 border border-white/10 rounded-lg px-3 py-2 text-white text-sm"
-                    required={!editingId}
-                    placeholder={editingId ? "••••••••" : ""}
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-300 mb-1">
-                    {t('phone')}
-                  </label>
-                  <input
-                    type="tel"
-                    value={formData.phone}
-                    onChange={e => setFormData({ ...formData, phone: e.target.value })}
-                    className="w-full bg-gray-700/50 border border-white/10 rounded-lg px-3 py-2 text-white text-sm"
-                    required
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-300 mb-1">
-                    {t('country')}
-                  </label>
-                  <input
-                    type="text"
-                    value={formData.country}
-                    onChange={e => setFormData({ ...formData, country: e.target.value })}
-                    className="w-full bg-gray-700/50 border border-white/10 rounded-lg px-3 py-2 text-white text-sm"
-                    required
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-300 mb-1">
-                    {t('age')}
-                  </label>
-                  <input
-                    type="number"
-                    value={formData.age}
-                    onChange={e => setFormData({ ...formData, age: e.target.value })}
-                    className="w-full bg-gray-700/50 border border-white/10 rounded-lg px-3 py-2 text-white text-sm"
-                    min="18"
-                    max="100"
-                    required
-                  />
-                </div>
-
-                <div className="sm:col-span-2">
-                  <label className="block text-sm font-medium text-gray-300 mb-1">
-                    {t('gender')}
-                  </label>
-                  <div className="flex flex-wrap space-x-4 text-sm">
-                    <label className="flex items-center cursor-pointer mb-2">
-                      <input
-                        type="radio"
-                        name="gender"
-                        value="male"
-                        checked={formData.gender === 'male'}
-                        onChange={() => setFormData({ ...formData, gender: 'male' })}
-                        className="hidden"
-                      />
-                      <div className={`w-5 h-5 rounded-full border ${formData.gender === 'male' ? 'bg-blue-500 border-blue-500' : 'bg-transparent border-gray-500'} flex items-center justify-center mr-2`}>
-                        {formData.gender === 'male' && <div className="w-2 h-2 rounded-full bg-white"></div>}
-                      </div>
-                      <span className="text-white">{t('male')}</span>
-                    </label>
-                    
-                    <label className="flex items-center cursor-pointer mb-2">
-                      <input
-                        type="radio"
-                        name="gender"
-                        value="female"
-                        checked={formData.gender === 'female'}
-                        onChange={() => setFormData({ ...formData, gender: 'female' })}
-                        className="hidden"
-                      />
-                      <div className={`w-5 h-5 rounded-full border ${formData.gender === 'female' ? 'bg-pink-500 border-pink-500' : 'bg-transparent border-gray-500'} flex items-center justify-center mr-2`}>
-                        {formData.gender === 'female' && <div className="w-2 h-2 rounded-full bg-white"></div>}
-                      </div>
-                      <span className="text-white">{t('female')}</span>
-                    </label>
-                    
-                    <label className="flex items-center cursor-pointer mb-2">
-                      <input
-                        type="radio"
-                        name="gender"
-                        value="other"
-                        checked={formData.gender === 'other'}
-                        onChange={() => setFormData({ ...formData, gender: 'other' })}
-                        className="hidden"
-                      />
-                      <div className={`w-5 h-5 rounded-full border ${formData.gender === 'other' ? 'bg-purple-500 border-purple-500' : 'bg-transparent border-gray-500'} flex items-center justify-center mr-2`}>
-                        {formData.gender === 'other' && <div className="w-2 h-2 rounded-full bg-white"></div>}
-                      </div>
-                      <span className="text-white">{t('other')}</span>
-                    </label>
-                  </div>
-                </div>
-
-                <div>
-                  <SimpleDatePicker
-                    label={t('arrivalDate')}
-                    value={formData.arrivalDate}
-                    onChange={(value) => setFormData({ 
-                      ...formData, 
-                      arrivalDate: value || new Date() 
-                    })}
-                    required
-                  />
-                </div>
-
-                <div>
-                  <SimpleDatePicker
-                    label={t('departureDate')}
-                    value={formData.departureDate}
-                    onChange={(value) => setFormData({ 
-                      ...formData, 
-                      departureDate: value || new Date() 
-                    })}
-                    required
-                  />
-                </div>
-              </div>
-
-              <div className="flex justify-end gap-3 pt-2">
-                <button
-                  type="button"
-                  onClick={() => {
-                    setShowForm(false);
-                    setFormData(initialFormData);
-                    setEditingId(null);
-                  }}
-                  className="px-3 xs:px-4 py-2 text-white/60 hover:text-white transition-colors text-sm"
-                >
-                  {t('cancel')}
-                </button>
-                <button
-                  type="submit"
-                  disabled={isLoading}
-                  className="px-3 xs:px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition text-sm flex items-center gap-1.5"
-                >
-                  {isLoading && <RefreshCw size={14} className="animate-spin" />}
-                  {editingId ? t('save') : t('staff.add')}
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
-    </div>
-  );
-}
-
-function StaffInfo({ staff }: { staff: UserData }) {
   // Formatação das datas para exibição
   const formatDate = (dateString: string) => {
-    if (!dateString) return '';
+    if (!dateString) return '-';
     try {
       const date = new Date(dateString);
       return date.toLocaleDateString();
@@ -633,23 +224,455 @@ function StaffInfo({ staff }: { staff: UserData }) {
   };
 
   return (
-    <div className="space-y-1.5 text-xs xs:text-sm">
-      <div className="flex items-center gap-1.5 text-gray-300">
-        <Mail size={14} className="shrink-0" />
-        <span className="truncate">{staff.email}</span>
+    <div className="w-full h-full flex flex-col bg-gray-900/80">
+      {/* Header */}
+      <div className="px-5 py-4 flex items-center justify-between border-b border-gray-800/90 backdrop-blur-sm bg-gray-900/60 sticky top-0 z-10">
+        <div className="flex items-center gap-3">
+          <BackButton variant="icon-only" />
+          <h1 className="text-xl font-medium text-white tracking-tight">{t('staff.title')}</h1>
+        </div>
+        
+        <div className="flex items-center gap-3">
+          {isAdmin && (
+            <button 
+              onClick={() => {
+                setShowForm(true);
+                setEditingId(null);
+                setFormData(initialFormData);
+              }}
+              className="bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg px-3 py-2 flex items-center gap-2 text-sm font-medium transition-colors shadow-lg shadow-indigo-600/20"
+              aria-label="Add user"
+            >
+              <Plus size={18} />
+              <span className="hidden sm:inline">{t('addUser')}</span>
+            </button>
+          )}
+          
+          <button 
+            onClick={loadUsers} 
+            className="p-2 bg-gray-800 text-gray-300 rounded-lg shadow-md hover:bg-gray-700 hover:text-white transition-all flex items-center justify-center"
+            disabled={isLoading}
+            aria-label="Refresh"
+          >
+            <RefreshCw size={18} className={`transition-transform duration-300 ${isLoading ? 'animate-spin' : ''}`} />
+          </button>
+        </div>
       </div>
-      <div className="flex items-center gap-1.5 text-gray-300">
-        <Phone size={14} className="shrink-0" />
-        <span className="truncate">{staff.phone}</span>
+      
+      {/* Main content */}
+      <div className="flex-1 overflow-auto px-5 py-5 pb-24">
+        {/* User stats summary */}
+        <div className="flex gap-3 mb-6 flex-wrap">
+          <div className="px-4 py-3 bg-gray-800/60 rounded-xl border border-gray-700/40 flex items-center gap-3 flex-1 min-w-[240px]">
+            <div className="p-2.5 rounded-lg bg-blue-500/20 text-blue-400">
+              <Users size={20} />
+            </div>
+            <div>
+              <h3 className="text-sm font-medium text-gray-400">Total Users</h3>
+              <p className="text-xl font-semibold text-white">{users.length}</p>
+            </div>
+          </div>
+          <div className="px-4 py-3 bg-gray-800/60 rounded-xl border border-gray-700/40 flex items-center gap-3 flex-1 min-w-[240px]">
+            <div className="p-2.5 rounded-lg bg-purple-500/20 text-purple-400">
+              <Shield size={20} />
+            </div>
+            <div>
+              <h3 className="text-sm font-medium text-gray-400">Admins</h3>
+              <p className="text-xl font-semibold text-white">{admins.length}</p>
+            </div>
+          </div>
+          <div className="px-4 py-3 bg-gray-800/60 rounded-xl border border-gray-700/40 flex items-center gap-3 flex-1 min-w-[240px]">
+            <div className="p-2.5 rounded-lg bg-teal-500/20 text-teal-400">
+              <Award size={20} />
+            </div>
+            <div>
+              <h3 className="text-sm font-medium text-gray-400">Total Points</h3>
+              <p className="text-xl font-semibold text-white">
+                {users.reduce((sum, user) => sum + (user.points || 0), 0)}
+              </p>
+            </div>
+          </div>
+        </div>
+        
+        {/* Loading indicator */}
+        {isLoading && (
+          <div className="flex justify-center my-6">
+            <div className="bg-indigo-500/20 border border-indigo-500/30 px-5 py-2.5 rounded-full text-indigo-300 text-sm font-medium flex items-center gap-2.5 shadow-lg">
+              <RefreshCw size={16} className="animate-spin" />
+              <span>Loading user data...</span>
+            </div>
+          </div>
+        )}
+        
+        {/* Staff members list */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 mb-6">
+          {users.map((staffMember) => (
+            <div
+              key={staffMember.id}
+              className="group bg-gray-800/80 backdrop-blur-sm rounded-xl overflow-hidden border border-gray-700/50 hover:border-indigo-500/30 transition-all duration-300 shadow-lg"
+            >
+              {/* Card Header with Avatar and Role */}
+              <div className="flex items-center gap-3 p-4 border-b border-gray-700/50">
+                <div className="h-12 w-12 rounded-full bg-gradient-to-br from-indigo-500/20 to-purple-500/20 flex items-center justify-center flex-shrink-0">
+                  <UserIcon size={22} className="text-indigo-400" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <h3 className="text-white font-medium text-base truncate">{staffMember.name}</h3>
+                  <p className="text-gray-400 text-xs truncate">{staffMember.email}</p>
+                </div>
+                <div>
+                  <span 
+                    className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium ${
+                      staffMember.role === 'admin' 
+                        ? 'bg-indigo-500/20 text-indigo-300' 
+                        : 'bg-gray-700/70 text-gray-300'
+                    }`}
+                  >
+                    {staffMember.role === 'admin' ? 'Admin' : 'User'}
+                  </span>
+                </div>
+              </div>
+              
+              {/* Card Body with User Info */}
+              <div className="p-4 pb-3">
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="flex items-center gap-2">
+                    <Phone size={16} className="text-green-400 flex-shrink-0" />
+                    <span className="text-gray-300 text-sm truncate">{staffMember.phone || '—'}</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <MapPin size={16} className="text-red-400 flex-shrink-0" />
+                    <span className="text-gray-300 text-sm truncate">{staffMember.country || '—'}</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Calendar size={16} className="text-blue-400 flex-shrink-0" />
+                    <span className="text-gray-300 text-sm truncate">{formatDate(staffMember.arrivalDate || '')}</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Award size={16} className="text-yellow-400 flex-shrink-0" />
+                    <span className="text-gray-300 text-sm">{staffMember.points || 0} pts</span>
+                  </div>
+                </div>
+              </div>
+              
+              {/* Card Footer with Actions */}
+              <div className="flex items-center justify-end gap-1 p-2 border-t border-gray-700/50 bg-gray-800/90">
+                {isAdmin && (
+                  <>
+                    {currentUser?.id !== staffMember.id && (
+                      <button
+                        onClick={() => handleDelete(staffMember.id)}
+                        className="p-2 text-gray-400 hover:text-red-400 hover:bg-red-400/10 rounded-lg transition-colors"
+                        title={t('delete')}
+                      >
+                        <Trash2 size={18} />
+                      </button>
+                    )}
+                    
+                    <button
+                      onClick={() => handleEdit(staffMember)}
+                      className="p-2 text-gray-400 hover:text-blue-400 hover:bg-blue-400/10 rounded-lg transition-colors"
+                      title={t('edit')}
+                    >
+                      <Edit size={18} />
+                    </button>
+                    
+                    {staffMember.role === 'admin' ? (
+                      <button
+                        onClick={() => handleRoleChange(staffMember.id, 'remove')}
+                        className="p-2 text-gray-400 hover:text-indigo-400 hover:bg-indigo-400/10 rounded-lg transition-colors"
+                        title={t('staff.removeAdmin')}
+                      >
+                        <Shield size={18} />
+                      </button>
+                    ) : (
+                      <button
+                        onClick={() => handleRoleChange(staffMember.id, 'make')}
+                        className="p-2 text-gray-400 hover:text-indigo-400 hover:bg-indigo-400/10 rounded-lg transition-colors"
+                        title={t('staff.makeAdmin')}
+                      >
+                        <ShieldOff size={18} />
+                      </button>
+                    )}
+                  </>
+                )}
+              </div>
+            </div>
+          ))}
+        </div>
+        
+        {users.length === 0 && !isLoading && (
+          <div className="flex flex-col items-center justify-center py-16 text-center bg-gray-800/40 rounded-2xl border border-gray-700/40">
+            <Users size={48} className="text-gray-500 mb-4" />
+            <p className="text-gray-300 mb-2 text-lg font-medium">{t('staff.noUsers')}</p>
+            <p className="text-gray-500 text-sm max-w-md">{t('staff.addUserPrompt')}</p>
+            {isAdmin && (
+              <button 
+                onClick={() => {
+                  setShowForm(true);
+                  setEditingId(null);
+                  setFormData(initialFormData);
+                }}
+                className="mt-6 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg px-4 py-2 flex items-center gap-2 text-sm font-medium transition-colors"
+              >
+                <Plus size={18} />
+                <span>{t('addUser')}</span>
+              </button>
+            )}
+          </div>
+        )}
       </div>
-      <div className="flex items-center gap-1.5 text-gray-300">
-        <MapPin size={14} className="shrink-0" />
-        <span className="truncate">{staff.country}</span>
-      </div>
-      <div className="flex items-center gap-1.5 text-gray-300">
-        <Calendar size={14} className="shrink-0" />
-        <span className="truncate">{formatDate(staff.arrivalDate)} - {formatDate(staff.departureDate)}</span>
-      </div>
+
+      {/* Delete confirmation dialog */}
+      {showConfirmDelete && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-gray-800 rounded-xl overflow-hidden w-full max-w-md border border-gray-700/60 shadow-2xl animate-fade-up">
+            <div className="bg-red-500/10 p-6 border-b border-gray-700/60">
+              <div className="flex items-center gap-3">
+                <div className="p-3 bg-red-500/20 rounded-full text-red-400">
+                  <Trash2 size={20} />
+                </div>
+                <h3 className="text-xl font-medium text-white">
+                  {t('staff.confirmDelete')}
+                </h3>
+              </div>
+            </div>
+            
+            <div className="p-6">
+              <p className="text-gray-300 mb-6">
+                {t('staff.confirmDeleteMessage')}
+              </p>
+              
+              <div className="flex justify-end gap-3">
+                <button
+                  onClick={() => setShowConfirmDelete(null)}
+                  className="px-4 py-2.5 text-gray-300 hover:text-white transition-colors font-medium"
+                >
+                  {t('cancel')}
+                </button>
+                <button
+                  onClick={confirmDelete}
+                  className="px-4 py-2.5 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors font-medium shadow-lg shadow-red-900/30"
+                >
+                  {t('confirm')}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Role change confirmation */}
+      {showConfirmRole && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-gray-800 rounded-xl overflow-hidden w-full max-w-md border border-gray-700/60 shadow-2xl animate-fade-up">
+            <div className={`p-6 border-b border-gray-700/60 ${
+              showConfirmRole.action === 'make' ? 'bg-indigo-500/10' : 'bg-gray-700/50'
+            }`}>
+              <div className="flex items-center gap-3">
+                <div className={`p-3 rounded-full ${
+                  showConfirmRole.action === 'make' 
+                    ? 'bg-indigo-500/20 text-indigo-400' 
+                    : 'bg-gray-600/50 text-gray-300'
+                }`}>
+                  {showConfirmRole.action === 'make' ? <Shield size={20} /> : <ShieldOff size={20} />}
+                </div>
+                <h3 className="text-xl font-medium text-white">
+                  {showConfirmRole.action === 'make' ? t('staff.confirmMakeAdmin') : t('staff.confirmRemoveAdmin')}
+                </h3>
+              </div>
+            </div>
+            
+            <div className="p-6">
+              <p className="text-gray-300 mb-6">
+                {showConfirmRole.action === 'make' 
+                  ? t('staff.confirmMakeAdminMessage') 
+                  : t('staff.confirmRemoveAdminMessage')}
+              </p>
+              
+              <div className="flex justify-end gap-3">
+                <button
+                  onClick={() => setShowConfirmRole(null)}
+                  className="px-4 py-2.5 text-gray-300 hover:text-white transition-colors font-medium"
+                >
+                  {t('cancel')}
+                </button>
+                <button
+                  onClick={confirmRoleChange}
+                  className={`px-4 py-2.5 rounded-lg font-medium shadow-lg ${
+                    showConfirmRole.action === 'make' 
+                      ? 'bg-indigo-600 hover:bg-indigo-700 text-white shadow-indigo-900/30' 
+                      : 'bg-gray-600 hover:bg-gray-700 text-white shadow-gray-900/20'
+                  }`}
+                >
+                  {t('confirm')}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Add/Edit user form */}
+      {showForm && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-2 overflow-y-auto">
+          <div className="bg-gray-800 rounded-xl overflow-hidden w-full max-w-md my-2 border border-gray-700/60 shadow-2xl animate-fade-up">
+            {/* Form Header */}
+            <div className="bg-gray-700/30 p-4 border-b border-gray-700/60 flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <div className="p-2 bg-indigo-500/20 rounded-full text-indigo-400">
+                  {editingId ? <Edit size={18} /> : <Plus size={18} />}
+                </div>
+                <h2 className="text-lg font-medium text-white">
+                  {editingId ? t('staff.editUser') : t('staff.addUser')}
+                </h2>
+              </div>
+              <button
+                onClick={() => setShowForm(false)}
+                className="text-gray-400 hover:text-white p-1.5 hover:bg-gray-700/70 rounded-lg transition-colors"
+              >
+                <X size={18} />
+              </button>
+            </div>
+
+            {/* Form Content */}
+            <div className="px-4 py-3 max-h-[70vh] overflow-y-auto">
+              {error && (
+                <div className="mb-4 p-3 bg-red-500/10 border border-red-500/30 rounded-lg text-red-400 text-xs flex items-start gap-2">
+                  <div className="p-1 bg-red-500/20 rounded-full text-red-400 mt-0.5 flex-shrink-0">
+                    <X size={10} />
+                  </div>
+                  <div>{error}</div>
+                </div>
+              )}
+
+              <form onSubmit={handleSubmit} className="space-y-4">
+                <div className="space-y-3">
+                  <div className="space-y-1.5">
+                    <label className="block text-xs font-medium text-gray-300">
+                      {t('name')}
+                    </label>
+                    <input
+                      type="text"
+                      value={formData.name}
+                      onChange={e => setFormData({ ...formData, name: e.target.value })}
+                      className="w-full bg-gray-700/50 border border-gray-600/50 focus:border-indigo-500/50 focus:ring-1 focus:ring-indigo-500/30 rounded-lg px-3 py-2 text-white text-sm outline-none transition-colors"
+                      required
+                    />
+                  </div>
+
+                  <div className="space-y-1.5">
+                    <label className="block text-xs font-medium text-gray-300">
+                      {t('email')}
+                    </label>
+                    <input
+                      type="email"
+                      value={formData.email}
+                      onChange={e => setFormData({ ...formData, email: e.target.value })}
+                      className="w-full bg-gray-700/50 border border-gray-600/50 focus:border-indigo-500/50 focus:ring-1 focus:ring-indigo-500/30 rounded-lg px-3 py-2 text-white text-sm outline-none transition-colors"
+                      required
+                    />
+                  </div>
+
+                  <div className="space-y-1.5">
+                    <label className="block text-xs font-medium text-gray-300">
+                      {t('password')}
+                    </label>
+                    <input
+                      type="password"
+                      value={formData.password}
+                      onChange={e => setFormData({ ...formData, password: e.target.value })}
+                      className="w-full bg-gray-700/50 border border-gray-600/50 focus:border-indigo-500/50 focus:ring-1 focus:ring-indigo-500/30 rounded-lg px-3 py-2 text-white text-sm outline-none transition-colors"
+                      required={!editingId}
+                      placeholder={editingId ? "••••••••••" : ""}
+                    />
+                  </div>
+
+                  <div className="space-y-1.5">
+                    <label className="block text-xs font-medium text-gray-300">
+                      {t('phone')}
+                    </label>
+                    <input
+                      type="tel"
+                      value={formData.phone}
+                      onChange={e => setFormData({ ...formData, phone: e.target.value })}
+                      className="w-full bg-gray-700/50 border border-gray-600/50 focus:border-indigo-500/50 focus:ring-1 focus:ring-indigo-500/30 rounded-lg px-3 py-2 text-white text-sm outline-none transition-colors"
+                    />
+                  </div>
+
+                  <div className="space-y-1.5">
+                    <label className="block text-xs font-medium text-gray-300">
+                      {t('country')}
+                    </label>
+                    <input
+                      type="text"
+                      value={formData.country}
+                      onChange={e => setFormData({ ...formData, country: e.target.value })}
+                      className="w-full bg-gray-700/50 border border-gray-600/50 focus:border-indigo-500/50 focus:ring-1 focus:ring-indigo-500/30 rounded-lg px-3 py-2 text-white text-sm outline-none transition-colors"
+                    />
+                  </div>
+
+                  <div className="space-y-1.5">
+                    <label className="block text-xs font-medium text-gray-300">
+                      {t('age')}
+                    </label>
+                    <input
+                      type="number"
+                      value={formData.age}
+                      onChange={e => setFormData({ ...formData, age: e.target.value })}
+                      className="w-full bg-gray-700/50 border border-gray-600/50 focus:border-indigo-500/50 focus:ring-1 focus:ring-indigo-500/30 rounded-lg px-3 py-2 text-white text-sm outline-none transition-colors"
+                    />
+                  </div>
+
+                  <div className="space-y-1.5">
+                    <label className="block text-xs font-medium text-gray-300">
+                      {t('arrivalDate')}
+                    </label>
+                    <div className="bg-gray-700/50 border border-gray-600/50 rounded-lg">
+                      <SimpleDatePicker
+                        value={formData.arrivalDate}
+                        onChange={(date) => setFormData({ ...formData, arrivalDate: date || new Date() })}
+                        className="border-none bg-transparent"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="space-y-1.5">
+                    <label className="block text-xs font-medium text-gray-300">
+                      {t('departureDate')}
+                    </label>
+                    <div className="bg-gray-700/50 border border-gray-600/50 rounded-lg">
+                      <SimpleDatePicker
+                        value={formData.departureDate}
+                        onChange={(date) => setFormData({ ...formData, departureDate: date || new Date() })}
+                        className="border-none bg-transparent"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Form Footer */}
+                <div className="pt-3 border-t border-gray-700/60 flex justify-end gap-2 mt-4">
+                  <button
+                    type="button"
+                    onClick={() => setShowForm(false)}
+                    className="px-3 py-2 text-gray-300 hover:text-white transition-colors font-medium text-sm"
+                  >
+                    {t('cancel')}
+                  </button>
+                  <button
+                    type="submit"
+                    className="px-3 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors font-medium shadow-lg shadow-indigo-900/30 flex items-center gap-2 text-sm"
+                  >
+                    {isLoading && <RefreshCw size={14} className="animate-spin" />}
+                    {editingId ? t('update') : t('add')}
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
