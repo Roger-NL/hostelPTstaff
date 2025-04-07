@@ -310,12 +310,12 @@ export default function Tasks() {
 
     return (
       <div
-        className="bg-gray-800/70 backdrop-blur-sm rounded-lg border border-white/10 hover:border-white/20 transition-all shadow-sm hover:shadow-md cursor-pointer"
+        className="bg-gray-800/90 backdrop-blur-sm rounded-xl border border-white/10 hover:border-white/20 hover:bg-gray-800 transition-all shadow-md hover:shadow-lg cursor-pointer transform hover:-translate-y-1 duration-200"
         onClick={() => setSelectedTask(task)}
       >
-        <div className="p-3 border-b border-white/5">
-          <div className="flex items-start justify-between gap-2 mb-2">
-            <h4 className="font-medium text-white text-sm truncate flex-1">
+        <div className="p-3 sm:p-4 border-b border-white/10">
+          <div className="flex items-start justify-between gap-3 mb-3">
+            <h4 className="font-medium text-white text-sm sm:text-base flex-1">
               {task.title}
               {task.requirePhoto && (
                 <span className="ml-2 inline-flex items-center" title={t('approvals.photoRequired')}>
@@ -324,7 +324,7 @@ export default function Tasks() {
               )}
             </h4>
             <div className="flex items-center gap-1.5 shrink-0">
-              <div className={`text-xs px-2 py-0.5 rounded-full ${getPriorityColor(task.priority)} font-normal`}>
+              <div className={`text-xs px-2 py-0.5 rounded-full ${getPriorityColor(task.priority)} font-medium`}>
                 {task.priority}
               </div>
             </div>
@@ -337,7 +337,7 @@ export default function Tasks() {
                   e.stopPropagation();
                   setShowStatusDropdown(showStatusDropdown === task.id ? null : task.id);
                 }}
-                className="flex items-center gap-1 text-xs px-2 py-1 rounded-md bg-gray-700/50 hover:bg-gray-700"
+                className="flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg bg-gray-700/70 hover:bg-gray-700 border border-white/5 shadow-sm transition-colors"
               >
                 {getStatusIcon(task.status)}
                 <span className="text-white">{task.status === 'todo' ? t('todo') : task.status === 'inProgress' ? t('inProgress') : t('done')}</span>
@@ -350,7 +350,7 @@ export default function Tasks() {
                     onClick={() => setShowStatusDropdown(null)}
                   />
                   <div 
-                    className="absolute left-0 mt-1 w-40 bg-gray-800 rounded-lg shadow-xl z-50 border border-white/10 overflow-hidden"
+                    className="absolute left-0 mt-1 w-44 bg-gray-800 rounded-lg shadow-xl z-50 border border-white/10 overflow-hidden"
                     onClick={(e) => e.stopPropagation()}
                   >
                     <button
@@ -359,9 +359,9 @@ export default function Tasks() {
                         handleStatusChange(task.id, 'todo');
                         setShowStatusDropdown(null);
                       }}
-                      className="w-full px-3 py-2 text-left text-xs hover:bg-gray-700 text-white flex items-center gap-2"
+                      className="w-full px-3 py-2.5 text-left text-xs hover:bg-gray-700 text-white flex items-center gap-2"
                     >
-                      <ClipboardList size={14} className="text-gray-400" />
+                      <ClipboardList size={14} className="text-blue-400" />
                       <span>{t('todo')}</span>
                     </button>
                     <button
@@ -370,7 +370,7 @@ export default function Tasks() {
                         handleStatusChange(task.id, 'inProgress');
                         setShowStatusDropdown(null);
                       }}
-                      className="w-full px-3 py-2 text-left text-xs hover:bg-gray-700 text-white flex items-center gap-2"
+                      className="w-full px-3 py-2.5 text-left text-xs hover:bg-gray-700 text-white flex items-center gap-2"
                     >
                       <Loader size={14} className="text-amber-400" />
                       <span>{t('inProgress')}</span>
@@ -386,7 +386,7 @@ export default function Tasks() {
                           setShowStatusDropdown(null);
                         }
                       }}
-                      className="w-full px-3 py-2 text-left text-xs hover:bg-gray-700 text-white flex items-center gap-2"
+                      className="w-full px-3 py-2.5 text-left text-xs hover:bg-gray-700 text-white flex items-center gap-2"
                     >
                       <CheckSquare size={14} className="text-emerald-400" />
                       <span>{t('done')}</span>
@@ -396,8 +396,8 @@ export default function Tasks() {
               )}
             </div>
             
-            <div className="flex items-center text-amber-400 text-xs font-medium">
-              <Award size={12} className="mr-1" />
+            <div className="flex items-center text-amber-400 text-xs font-medium px-2 py-1 bg-amber-400/10 rounded-lg">
+              <Award size={13} className="mr-1" />
               <span>{task.points}</span>
             </div>
             
@@ -408,35 +408,35 @@ export default function Tasks() {
                     e.stopPropagation();
                     handleEdit(task);
                   }}
-                  className="p-1 bg-gray-700/50 hover:bg-blue-500/20 text-blue-400 hover:text-blue-300 rounded transition-colors"
+                  className="p-1.5 bg-blue-500/20 hover:bg-blue-500/30 text-blue-400 hover:text-blue-300 rounded-lg transition-colors"
                 >
-                  <Edit size={12} />
+                  <Edit size={14} />
                 </button>
                 <button
                   onClick={(e) => {
                     e.stopPropagation();
                     setShowConfirmDelete(task.id);
                   }}
-                  className="p-1 bg-gray-700/50 hover:bg-red-500/20 text-red-400 hover:text-red-300 rounded transition-colors"
+                  className="p-1.5 bg-red-500/20 hover:bg-red-500/30 text-red-400 hover:text-red-300 rounded-lg transition-colors"
                 >
-                  <Trash2 size={12} />
+                  <Trash2 size={14} />
                 </button>
               </div>
             )}
           </div>
         </div>
         
-        <div className="p-3">
-          <p className="text-xs text-gray-300 mb-2.5 line-clamp-2">
-            {task.description}
+        <div className="p-3 sm:p-4">
+          <p className="text-xs sm:text-sm text-gray-300 mb-3 line-clamp-2">
+            {task.description || <span className="text-gray-500 italic">No description</span>}
           </p>
           
           {Array.isArray(task.tags) && task.tags.length > 0 && (
-            <div className="flex flex-wrap gap-1 mb-2.5">
+            <div className="flex flex-wrap gap-1.5 mb-3">
               {task.tags.map(tag => (
                 <span
                   key={tag}
-                  className="text-[10px] px-2 py-0.5 rounded-full bg-gray-700/50 text-gray-300"
+                  className="text-[10px] sm:text-xs px-2 py-0.5 rounded-full bg-gray-700/70 text-gray-300 border border-white/5"
                 >
                   {tag}
                 </span>
@@ -444,17 +444,21 @@ export default function Tasks() {
             </div>
           )}
           
-          <div className="flex flex-wrap items-center gap-2 text-[10px] text-gray-400">
-            <div className="flex items-center gap-1">
-              <Clock size={10} className="text-gray-300" />
+          <div className="flex flex-wrap items-center gap-2.5 text-[10px] sm:text-xs text-gray-400 pt-1 border-t border-white/5">
+            <div className="flex items-center gap-1.5 mt-2">
+              <div className="p-1 rounded-full bg-gray-700/30">
+                <Clock size={10} className="text-gray-300" />
+              </div>
               <span className="text-gray-300 truncate">
                 {format(new Date(task.dueDate || new Date()), 'MMM d, yyyy')}
               </span>
             </div>
             
             {Array.isArray(task.assignedTo) && task.assignedTo.length > 0 && (
-              <div className="flex items-center gap-1">
-                <User size={10} className="text-gray-300" />
+              <div className="flex items-center gap-1.5 mt-2">
+                <div className="p-1 rounded-full bg-gray-700/30">
+                  <User size={10} className="text-gray-300" />
+                </div>
                 <span className="text-gray-300 truncate max-w-[100px]">
                   {task.assignedTo.map(id => 
                     users.find(u => u.id === id)?.name.split(' ')[0]
@@ -464,21 +468,23 @@ export default function Tasks() {
             )}
             
             {task.status === 'todo' && new Date(task.dueDate || new Date()) < new Date() && (
-              <div className="flex items-center gap-1 text-red-400 ml-auto">
-                <AlertCircle size={10} />
+              <div className="flex items-center gap-1.5 text-red-400 ml-auto mt-2">
+                <div className="p-1 rounded-full bg-red-400/10">
+                  <AlertCircle size={10} className="text-red-400" />
+                </div>
                 <span>Overdue</span>
               </div>
             )}
             
-            <div className="flex items-center gap-2 ml-auto">
+            <div className="flex items-center gap-2 ml-auto mt-2">
               {Array.isArray(task.comments) && task.comments.length > 0 && (
-                <div className="flex items-center gap-1 text-gray-400">
+                <div className="flex items-center gap-1.5 text-gray-400 p-1 bg-gray-700/30 rounded-lg">
                   <MessageSquare size={10} />
                   <span>{task.comments.length}</span>
                 </div>
               )}
               {Array.isArray(task.checklist) && task.checklist.length > 0 && (
-                <div className="flex items-center gap-1 text-emerald-400">
+                <div className="flex items-center gap-1.5 text-emerald-400 p-1 bg-emerald-400/10 rounded-lg">
                   <CheckSquare size={10} />
                   <span>
                     {task.checklist.filter(item => item.completed).length}/{task.checklist.length}
@@ -490,24 +496,21 @@ export default function Tasks() {
         </div>
 
         {task.requirePhoto && task.photo && (
-          <div className="mt-2 text-xs px-3 pb-3">
+          <div className="px-3 pb-3">
             {task.photo.approved === true ? (
-              <span className="flex items-center text-green-400">
-                <CheckCircle size={12} className="mr-1" />
+              <span className="flex items-center text-green-400 text-xs bg-green-400/10 py-1 px-2 rounded-lg">
+                <CheckCircle size={12} className="mr-1.5" />
                 {t('approvals.photoApproved')}
               </span>
             ) : task.photo.approved === false ? (
-              <span className="flex items-center text-red-400">
-                <XCircle size={12} className="mr-1" />
-                {t('approvals.rejected')}
+              <span className="flex items-center text-red-400 text-xs bg-red-400/10 py-1 px-2 rounded-lg">
+                <XCircle size={12} className="mr-1.5" />
+                {t('approvals.photoRejected')}
               </span>
             ) : (
-              <span className="flex items-center text-amber-400">
-                <span className="relative flex h-2 w-2 mr-2">
-                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75"></span>
-                  <span className="relative inline-flex rounded-full h-2 w-2 bg-amber-500"></span>
-                </span>
-                {t('approvals.waitingApproval')}
+              <span className="flex items-center text-amber-400 text-xs bg-amber-400/10 py-1 px-2 rounded-lg">
+                <Loader size={12} className="mr-1.5 animate-spin" />
+                {t('approvals.photoAwaitingApproval')}
               </span>
             )}
           </div>
@@ -519,9 +522,9 @@ export default function Tasks() {
               e.stopPropagation();
               setShowPhotoModal(true);
             }}
-            className="mt-2 mx-3 mb-3 w-auto py-1 px-2 text-xs bg-amber-500/20 text-amber-300 rounded-lg hover:bg-amber-500/30 transition-colors flex items-center justify-center"
+            className="mx-3 mb-3 w-auto py-1.5 px-3 text-xs bg-amber-500/20 text-amber-300 rounded-lg hover:bg-amber-500/30 transition-colors flex items-center justify-center border border-amber-500/30"
           >
-            <Camera size={12} className="mr-1" />
+            <Camera size={12} className="mr-1.5" />
             {t('approvals.takePhoto')}
           </button>
         )}
@@ -602,49 +605,47 @@ export default function Tasks() {
     );
   };
 
-  const TaskColumn = ({ status, title }: { status: Task['status'], title: string }) => {
-    const tasksInColumn = tasks.filter(t => t.status === status);
+  const TaskColumn = ({ status, title }: { status: Task['status']; title: string }) => {
+    const filteredTasks = tasks.filter(task => task.status === status);
     
     return (
-      <div className="flex-1 min-w-0 lg:min-w-[280px] bg-gray-700/50 backdrop-blur-sm rounded-lg border border-white/10 flex flex-col overflow-hidden">
-        <div className="flex items-center gap-2 p-3 border-b border-white/10 bg-gray-800/50">
-          <h3 className="text-base font-medium text-white tracking-wide flex items-center gap-2">
+      <div className="flex-1 min-w-0 flex flex-col bg-gray-900/70 backdrop-blur-sm rounded-xl border border-white/10 shadow-lg overflow-hidden">
+        <div className="p-3 border-b border-white/10 flex items-center justify-between sticky top-0 backdrop-blur-sm bg-gray-800/80 z-10 rounded-t-xl">
+          <h3 className="text-sm font-medium text-white flex items-center gap-2">
             {status === 'todo' ? (
-              <AlertCircle size={16} className="text-gray-400" />
+              <ClipboardList size={16} className="text-blue-400" />
             ) : status === 'inProgress' ? (
-              <AlertTriangle size={16} className="text-amber-400" />
+              <Loader size={16} className="text-amber-400" />
             ) : (
               <CheckCircle size={16} className="text-emerald-400" />
             )}
             {title}
+            <span className="text-xs font-normal text-gray-300 bg-gray-700/70 rounded-full h-5 min-w-5 px-1.5 inline-flex items-center justify-center">
+              {filteredTasks.length}
+            </span>
           </h3>
-          <span className="text-xs text-white/60 font-normal px-2 py-0.5 rounded-full bg-white/10">
-            {tasksInColumn.length}
-          </span>
         </div>
-        
-        <div className="flex-1 overflow-y-auto content-scrollable p-3 space-y-3">
-          {tasksInColumn.length > 0 ? (
-            tasksInColumn.map((task, index) => (
-              <TaskCard key={task.id} task={task} index={index} />
-            ))
-          ) : (
-            <div className="flex items-center justify-center h-full p-4">
-              <div className="text-center">
-                <div className="w-10 h-10 mx-auto bg-gray-700/50 rounded-full flex items-center justify-center mb-2">
-                  {status === 'todo' ? (
-                    <AlertCircle size={16} className="text-gray-400" />
-                  ) : status === 'inProgress' ? (
-                    <AlertTriangle size={16} className="text-amber-400" />
-                  ) : (
-                    <CheckCircle size={16} className="text-emerald-400" />
-                  )}
-                </div>
-                <p className="text-xs text-gray-400">
-                  No {title.toLowerCase()} tasks
-                </p>
+        <div className="p-3 flex-1 overflow-y-auto space-y-3 min-h-[200px] md:min-h-[300px] max-h-[calc(100vh-280px)] md:max-h-[calc(100vh-240px)]">
+          {filteredTasks.length === 0 ? (
+            <div className="h-full flex flex-col items-center justify-center text-gray-500 p-4">
+              <div className="w-12 h-12 rounded-full bg-gray-800/50 flex items-center justify-center mb-3">
+                {status === 'todo' ? (
+                  <ClipboardList size={20} className="text-gray-400" />
+                ) : status === 'inProgress' ? (
+                  <Loader size={20} className="text-gray-400" />
+                ) : (
+                  <CheckCircle size={20} className="text-gray-400" />
+                )}
+              </div>
+              <div className="text-sm font-light text-center">
+                <p className="text-gray-400">No tasks</p>
+                <p className="text-xs text-gray-500 mt-1">Tasks will appear here</p>
               </div>
             </div>
+          ) : (
+            filteredTasks.map((task, index) => (
+              <TaskCard key={task.id} task={task} index={index} />
+            ))
           )}
         </div>
       </div>
@@ -895,7 +896,7 @@ export default function Tasks() {
             <div className="flex-shrink-0 flex items-center gap-2">
               <button
                 onClick={() => setShowConfirmCleanup(true)}
-                className="h-9 px-2.5 xs:px-3 bg-amber-500 text-white rounded-lg shadow-md hover:bg-amber-600 transition-colors flex items-center gap-1.5 text-xs xs:text-sm font-light"
+                className="h-9 px-2.5 xs:px-3 bg-amber-500/90 hover:bg-amber-500 text-white rounded-xl shadow-md hover:shadow-amber-500/20 transition-all flex items-center gap-1.5 text-xs xs:text-sm"
                 disabled={isLoadingAction}
               >
                 <Trash2 size={16} />
@@ -904,7 +905,7 @@ export default function Tasks() {
               </button>
               <button
                 onClick={() => setShowConfirmAllDelete(true)}
-                className="h-9 px-2.5 xs:px-3 bg-red-500 text-white rounded-lg shadow-md hover:bg-red-600 transition-colors flex items-center gap-1.5 text-xs xs:text-sm font-light"
+                className="h-9 px-2.5 xs:px-3 bg-red-500/90 hover:bg-red-500 text-white rounded-xl shadow-md hover:shadow-red-500/20 transition-all flex items-center gap-1.5 text-xs xs:text-sm"
                 disabled={isLoadingAction}
               >
                 <AlertTriangle size={16} />
@@ -916,8 +917,8 @@ export default function Tasks() {
         }
       />
 
-      <div className="page-content bg-gray-800/50 backdrop-blur-sm rounded-lg p-3 xs:p-4 sm:p-6">
-        <div className="flex flex-col lg:flex-row gap-4 h-full">
+      <div className="page-content bg-gray-800/70 backdrop-blur-sm rounded-xl border border-white/10 shadow-xl p-3 xs:p-4 sm:p-5">
+        <div className="flex flex-col md:flex-row gap-4 md:gap-5 h-full">
           <TaskColumn status="todo" title="To Do" />
           <TaskColumn status="inProgress" title="In Progress" />
           <TaskColumn status="done" title="Done" />
