@@ -1,7 +1,7 @@
 import React, { useState, useCallback, useEffect } from 'react';
 import { useStore } from '../store/useStore';
 import { useTranslation } from '../hooks/useTranslation';
-import { format, isToday, isYesterday, addDays, subDays, startOfWeek } from 'date-fns';
+import { format, isToday, isYesterday, addDays, subDays, startOfWeek, parseISO } from 'date-fns';
 import type { Schedule, ShiftTime } from '../types';
 import {
   Award,
@@ -115,115 +115,6 @@ export default function DashboardContent() {
     format(new Date(t.createdAt), 'yyyy-MM-dd') === today
   );
 
-  // Get current shift
-  const getCurrentShift = (): ShiftTime => {
-    const hour = new Date().getHours();
-    const minute = new Date().getMinutes();
-    
-    if (hour >= 8 && hour < 11) return '08:00-11:00';
-    if (hour >= 11 && hour < 13) return '10:00-13:00';
-    if (hour >= 13 && hour < 16) return '13:00-16:00';
-    if (hour >= 16 && hour < 19) return '16:00-19:00';
-    if (hour >= 19 && hour < 22) return '19:00-22:00';
-    
-    // Default to morning shift during the night
-    return '08:00-11:00';
-  };
-
-  // Get previous, current and next shifts
-  const currentShift = getCurrentShift();
-  
-  // Função para encontrar o último turno com voluntários
-  const getLastActiveShift = (): { shift: ShiftTime, date: string, volunteers: any[] } => {
-    const today = new Date();
-    const allShifts: ShiftTime[] = ['08:00-11:00', '10:00-13:00', '13:00-16:00', '16:00-19:00', '19:00-22:00'];
-    
-    // Primeiro tenta encontrar um turno anterior hoje que teve voluntários
-    const todayStr = format(today, 'yyyy-MM-dd');
-    const todayShifts = schedule[todayStr] || {};
-    const currentShiftIndex = allShifts.findIndex(s => s === currentShift);
-    
-    // Verifica os turnos anteriores ao atual de hoje
-    for (let i = currentShiftIndex - 1; i >= 0; i--) {
-      const shift = allShifts[i];
-      const volunteerIds = todayShifts[shift] || [];
-      if (volunteerIds.length > 0) {
-        const volunteers = volunteerIds
-          .map(id => users.find(u => u.id === id))
-          .filter(Boolean);
-        
-        if (volunteers.length > 0) {
-          return { shift, date: todayStr, volunteers };
-        }
-      }
-    }
-    
-    // Se não encontrou hoje, verifica os dias anteriores (até 7 dias atrás)
-    for (let day = 1; day <= 7; day++) {
-      const date = subDays(today, day);
-      const dateStr = format(date, 'yyyy-MM-dd');
-      const dayShifts = schedule[dateStr] || {};
-      
-      // Verifica os turnos do dia, do último para o primeiro
-      for (let i = allShifts.length - 1; i >= 0; i--) {
-        const shift = allShifts[i];
-        const volunteerIds = dayShifts[shift] || [];
-        if (volunteerIds.length > 0) {
-          const volunteers = volunteerIds
-            .map(id => users.find(u => u.id === id))
-            .filter(Boolean);
-          
-          if (volunteers.length > 0) {
-            return { shift, date: dateStr, volunteers };
-          }
-        }
-      }
-    }
-    
-    // Se não encontrou nenhum, retorna o shift cronologicamente anterior (comportamento padrão)
-    const previousShift = currentShift === '08:00-11:00' ? '19:00-22:00' : 
-                        currentShift === '10:00-13:00' ? '08:00-11:00' :
-                        currentShift === '13:00-16:00' ? '10:00-13:00' :
-                        currentShift === '16:00-19:00' ? '13:00-16:00' : '16:00-19:00';
-                        
-    return { 
-      shift: previousShift, 
-      date: todayStr, 
-      volunteers: [] 
-    };
-  };
-  
-  const lastActiveShiftInfo = getLastActiveShift();
-  const previousShift = lastActiveShiftInfo.shift;
-  const previousShiftDate = lastActiveShiftInfo.date;
-  const previousVolunteers = lastActiveShiftInfo.volunteers;
-  
-  const nextShift = currentShift === '08:00-11:00' ? '10:00-13:00' : 
-                    currentShift === '10:00-13:00' ? '13:00-16:00' :
-                    currentShift === '13:00-16:00' ? '16:00-19:00' :
-                    currentShift === '16:00-19:00' ? '19:00-22:00' : '08:00-11:00';
-
-  const getShiftVolunteers = (shift: ShiftTime) => {
-    const today = format(new Date(), 'yyyy-MM-dd');
-    const shifts = schedule[today] || {};
-    const volunteerIds = shifts[shift] || [];
-    
-    // Filtrar voluntários para evitar valores undefined
-    const volunteers = volunteerIds
-      .map(id => users.find(u => u.id === id))
-      .filter(Boolean); // Remove undefined/null values
-    
-    // Adiciona logs para debug
-    console.log(`Shift ${shift} volunteers:`, volunteers);
-    
-    // Se não houver voluntários, retorna um array vazio (não tentamos mais criar um admin default)
-    return volunteers;
-  };
-
-  // Não precisamos mais buscar os previousVolunteers aqui, pois já temos da função getLastActiveShift
-  const currentVolunteers = getShiftVolunteers(currentShift);
-  const nextVolunteers = getShiftVolunteers(nextShift);
-
   // Encontra o próximo turno do usuário
   const getUserNextShift = () => {
     if (!user?.id) return null;
@@ -254,7 +145,9 @@ export default function DashboardContent() {
         if (volunteerIds.includes(user.id)) {
           return {
             shift,
-            date: format(date, 'EEEE, d MMMM')
+            date: format(date, 'EEEE, d MMMM'),
+            formattedDate: format(date, 'dd/MM'),
+            rawDate: dateStr
           };
         }
       }
@@ -264,6 +157,157 @@ export default function DashboardContent() {
   };
 
   const userNextShift = getUserNextShift();
+  
+  // Get current shift
+  const getCurrentShift = (): ShiftTime => {
+    const hour = new Date().getHours();
+    const minute = new Date().getMinutes();
+    
+    if (hour >= 8 && hour < 11) return '08:00-11:00';
+    if (hour >= 11 && hour < 13) return '10:00-13:00';
+    if (hour >= 13 && hour < 16) return '13:00-16:00';
+    if (hour >= 16 && hour < 19) return '16:00-19:00';
+    if (hour >= 19 && hour < 22) return '19:00-22:00';
+    
+    // Default to morning shift during the night
+    return '08:00-11:00';
+  };
+
+  const currentShift = getCurrentShift();
+  
+  // Função para encontrar o último turno com voluntários independente de quando ocorreu
+  const getLastActiveShift = (): { shift: ShiftTime, date: string, volunteers: any[] } => {
+    const today = new Date();
+    const allShifts: ShiftTime[] = ['08:00-11:00', '10:00-13:00', '13:00-16:00', '16:00-19:00', '19:00-22:00'];
+    
+    // Procura pelos últimos 30 dias para encontrar turnos com voluntários
+    for (let day = 0; day <= 30; day++) {
+      const date = subDays(today, day);
+      const dateStr = format(date, 'yyyy-MM-dd');
+      const dayShifts = schedule[dateStr] || {};
+      
+      // Se é hoje, verifica apenas turnos que já acabaram
+      if (day === 0) {
+        const currentHour = today.getHours();
+        for (let i = allShifts.length - 1; i >= 0; i--) {
+          const shift = allShifts[i];
+          const shiftEndHour = parseInt(shift.split('-')[1].split(':')[0]);
+          
+          if (shiftEndHour <= currentHour) {
+            const volunteerIds = dayShifts[shift] || [];
+            if (volunteerIds.length > 0) {
+              const volunteers = volunteerIds
+                .map(id => users.find(u => u.id === id))
+                .filter(Boolean);
+              
+              if (volunteers.length > 0) {
+                return { shift, date: dateStr, volunteers };
+              }
+            }
+          }
+        }
+      } else {
+        // Para dias anteriores, verifica todos os turnos
+        for (let i = allShifts.length - 1; i >= 0; i--) {
+          const shift = allShifts[i];
+          const volunteerIds = dayShifts[shift] || [];
+          if (volunteerIds.length > 0) {
+            const volunteers = volunteerIds
+              .map(id => users.find(u => u.id === id))
+              .filter(Boolean);
+            
+            if (volunteers.length > 0) {
+              return { shift, date: dateStr, volunteers };
+            }
+          }
+        }
+      }
+    }
+    
+    // Se não encontrou nenhum, retorna um valor padrão
+    return { 
+      shift: '08:00-11:00', 
+      date: format(today, 'yyyy-MM-dd'), 
+      volunteers: [] 
+    };
+  };
+
+  // Função para encontrar o próximo turno com voluntários
+  const getNextShiftWithVolunteers = (): { shift: ShiftTime, date: string, volunteers: any[] } => {
+    const today = new Date();
+    const allShifts: ShiftTime[] = ['08:00-11:00', '10:00-13:00', '13:00-16:00', '16:00-19:00', '19:00-22:00'];
+    
+    // Procura pelos próximos 30 dias para encontrar turnos com voluntários
+    for (let day = 0; day < 30; day++) {
+      const date = addDays(today, day);
+      const dateStr = format(date, 'yyyy-MM-dd');
+      const dayShifts = schedule[dateStr] || {};
+      
+      // Se é hoje, verifica apenas turnos que ainda não começaram
+      if (day === 0) {
+        const currentHour = today.getHours();
+        for (let i = 0; i < allShifts.length; i++) {
+          const shift = allShifts[i];
+          const shiftStartHour = parseInt(shift.split('-')[0].split(':')[0]);
+          
+          if (shiftStartHour > currentHour) {
+            const volunteerIds = dayShifts[shift] || [];
+            if (volunteerIds.length > 0) {
+              const volunteers = volunteerIds
+                .map(id => users.find(u => u.id === id))
+                .filter(Boolean);
+              
+              if (volunteers.length > 0) {
+                return { shift, date: dateStr, volunteers };
+              }
+            }
+          }
+        }
+      } else {
+        // Para dias futuros, verifica todos os turnos
+        for (let i = 0; i < allShifts.length; i++) {
+          const shift = allShifts[i];
+          const volunteerIds = dayShifts[shift] || [];
+          if (volunteerIds.length > 0) {
+            const volunteers = volunteerIds
+              .map(id => users.find(u => u.id === id))
+              .filter(Boolean);
+            
+            if (volunteers.length > 0) {
+              return { shift, date: dateStr, volunteers };
+            }
+          }
+        }
+      }
+    }
+    
+    // Se não encontrou nenhum, retorna um valor padrão
+    return { 
+      shift: '08:00-11:00', 
+      date: format(addDays(today, 1), 'yyyy-MM-dd'), 
+      volunteers: [] 
+    };
+  };
+  
+  const lastActiveShiftInfo = getLastActiveShift();
+  const nextShiftWithVolunteersInfo = getNextShiftWithVolunteers();
+  
+  const getShiftVolunteers = (shift: ShiftTime) => {
+    const today = format(new Date(), 'yyyy-MM-dd');
+    const shifts = schedule[today] || {};
+    const volunteerIds = shifts[shift] || [];
+    
+    // Filtrar voluntários para evitar valores undefined
+    const volunteers = volunteerIds
+      .map(id => users.find(u => u.id === id))
+      .filter(Boolean); // Remove undefined/null values
+    
+    // Adiciona logs para debug
+    console.log(`Shift ${shift} volunteers:`, volunteers);
+    
+    // Se não houver voluntários, retorna um array vazio (não tentamos mais criar um admin default)
+    return volunteers;
+  };
 
   // Verifica se o usuário está realmente no turno atual
   const checkUserInCurrentShift = () => {
@@ -315,6 +359,18 @@ export default function DashboardContent() {
     }
   };
 
+  // Função para formatar a data de exibição
+  const formatDisplayDate = (dateStr: string): string => {
+    const date = parseISO(dateStr);
+    if (isToday(date)) {
+      return "Hoje";
+    } else if (isYesterday(date)) {
+      return "Ontem";
+    } else {
+      return format(date, 'dd/MM');
+    }
+  };
+
   // Função para promover usuário a administrador
   const handleMakeAdmin = async () => {
     if (!user) return;
@@ -343,8 +399,46 @@ export default function DashboardContent() {
     }
   };
 
+  // Definimos o currentVolunteers antes de usar na renderização
+  const currentVolunteers = getShiftVolunteers(currentShift);
+  const hasCurrentVolunteers = currentVolunteers && currentVolunteers.length > 0;
+
   return (
     <div className="space-y-6 xs:space-y-8">
+      {/* User next shift - MOVED TO TOP */}
+      <div className="bg-white/90 dark:bg-gray-800/70 backdrop-blur-md rounded-xl p-4 xs:p-5 sm:p-6 border border-gray-200/70 dark:border-gray-700/50">
+        <h2 className="text-lg xs:text-xl font-extralight text-gray-800 dark:text-white mb-3 xs:mb-4 flex items-center gap-2">
+          <Clock size={18} className="text-teal-500 xs:hidden" />
+          <Clock size={20} className="text-teal-500 hidden xs:block" />
+          {t('dashboard.yourNextShift') || "Your Next Shift"}
+        </h2>
+        
+        {userNextShift ? (
+          <div className="flex flex-col items-center justify-center py-6 text-center">
+            <div className="w-20 h-20 xs:w-24 xs:h-24 rounded-full bg-gradient-to-br from-teal-500 to-emerald-500 flex items-center justify-center text-white mb-4">
+              <Calendar size={32} className="xs:hidden" />
+              <Calendar size={40} className="hidden xs:block" />
+            </div>
+            <h3 className="text-md xs:text-lg font-light text-gray-800 dark:text-white">{userNextShift.date}</h3>
+            <p className="text-xl xs:text-2xl font-extralight text-gray-700 dark:text-gray-300 mt-2">{userNextShift.shift}</p>
+            <div className="mt-6 px-4 py-2 bg-teal-100 dark:bg-teal-900/30 text-teal-800 dark:text-teal-300 rounded-lg text-xs xs:text-sm font-light flex items-center gap-2">
+              <Shield size={14} className="xs:hidden" />
+              <Shield size={16} className="hidden xs:block" />
+              <span>{t('dashboard.dutyConfirmed')}</span>
+            </div>
+          </div>
+        ) : (
+          <div className="flex flex-col items-center justify-center py-10 text-center">
+            <div className="w-16 h-16 rounded-full bg-gray-100 dark:bg-gray-700 flex items-center justify-center text-gray-400 dark:text-gray-500 mb-4">
+              <Calendar size={24} />
+            </div>
+            <p className="text-gray-500 dark:text-gray-400 font-light">
+              {t('dashboard.noUpcomingShifts')}
+            </p>
+          </div>
+        )}
+      </div>
+
       {/* Welcome section with stats */}
       <div className="grid grid-cols-2 xs:grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-3 xs:gap-4 sm:gap-6">
         <DashboardCard 
@@ -382,7 +476,7 @@ export default function DashboardContent() {
         />
       </div>
 
-      {/* Today's shifts - MOVED TO TOP */}
+      {/* Today's team section - UPDATED */}
       <div className="bg-white/90 dark:bg-gray-800/70 backdrop-blur-md rounded-xl p-4 xs:p-5 sm:p-6 border border-gray-200/70 dark:border-gray-700/50">
         <h2 className="text-lg xs:text-xl font-extralight text-gray-800 dark:text-white mb-3 xs:mb-4 flex items-center gap-2">
           <Users size={18} className="text-blue-500 xs:hidden" />
@@ -391,6 +485,7 @@ export default function DashboardContent() {
         </h2>
         
         <div className="space-y-3 xs:space-y-4">
+          {/* Last active shift with volunteers */}
           <div className="space-y-2 xs:space-y-3">
             <div className="flex items-center justify-between">
               <h3 className="text-xs xs:text-sm font-medium text-gray-600 dark:text-gray-300 flex items-center gap-1.5">
@@ -399,13 +494,13 @@ export default function DashboardContent() {
                 {t('dashboard.lastActiveShift')}
               </h3>
               <span className="text-xxs xs:text-xs font-light text-gray-500">
-                {previousShiftDate === format(new Date(), 'yyyy-MM-dd') ? previousShift : `${format(new Date(previousShiftDate), 'dd/MM')} - ${previousShift}`}
+                {formatDisplayDate(lastActiveShiftInfo.date)} - {lastActiveShiftInfo.shift}
               </span>
             </div>
             
             <div className="flex flex-wrap gap-2">
-              {previousVolunteers && previousVolunteers.length > 0 ? (
-                previousVolunteers.map(volunteer => volunteer && (
+              {lastActiveShiftInfo.volunteers && lastActiveShiftInfo.volunteers.length > 0 ? (
+                lastActiveShiftInfo.volunteers.map(volunteer => volunteer && (
                   <div key={volunteer.id} className="flex items-center px-2 py-1 rounded-lg bg-gray-100 dark:bg-gray-700/50 gap-1.5">
                     <div className="w-5 h-5 xs:w-6 xs:h-6 rounded-full bg-gradient-to-br from-blue-500/20 to-violet-500/20 flex items-center justify-center text-blue-600 text-xs">
                       {volunteer.name[0]}
@@ -422,19 +517,20 @@ export default function DashboardContent() {
             </div>
           </div>
 
-          <div className="space-y-2 xs:space-y-3">
-            <div className="flex items-center justify-between">
-              <h3 className="text-xs xs:text-sm font-medium text-blue-600 dark:text-blue-400 flex items-center gap-1.5">
-                <ClockIcon size={14} className="text-blue-500 xs:hidden" />
-                <ClockIcon size={16} className="text-blue-500 hidden xs:block" />
-                {getShiftName(currentShift)} {/* Current */}
-              </h3>
-              <span className="text-xxs xs:text-xs font-medium text-blue-600 dark:text-blue-400">{currentShift}</span>
-            </div>
-            
-            <div className="flex flex-wrap gap-2">
-              {currentVolunteers && currentVolunteers.length > 0 ? (
-                currentVolunteers.map(volunteer => volunteer && (
+          {/* Current shift - only show if there are volunteers */}
+          {hasCurrentVolunteers && (
+            <div className="space-y-2 xs:space-y-3">
+              <div className="flex items-center justify-between">
+                <h3 className="text-xs xs:text-sm font-medium text-blue-600 dark:text-blue-400 flex items-center gap-1.5">
+                  <ClockIcon size={14} className="text-blue-500 xs:hidden" />
+                  <ClockIcon size={16} className="text-blue-500 hidden xs:block" />
+                  {getShiftName(currentShift)} {/* Current */}
+                </h3>
+                <span className="text-xxs xs:text-xs font-medium text-blue-600 dark:text-blue-400">{currentShift}</span>
+              </div>
+              
+              <div className="flex flex-wrap gap-2">
+                {currentVolunteers.map(volunteer => volunteer && (
                   <div key={volunteer.id} className="flex items-center px-2 py-1 rounded-lg bg-blue-100 dark:bg-blue-900/30 gap-1.5">
                     <div className="w-5 h-5 xs:w-6 xs:h-6 rounded-full bg-blue-500 flex items-center justify-center text-white text-xs">
                       {volunteer.name[0]}
@@ -444,26 +540,27 @@ export default function DashboardContent() {
                       {volunteer.id === user?.id && ` (${t('dashboard.you')})`}
                     </span>
                   </div>
-                ))
-              ) : (
-                <span className="text-xs text-blue-500 dark:text-blue-400">{t('dashboard.noVolunteersAssigned')}</span>
-              )}
+                ))}
+              </div>
             </div>
-          </div>
+          )}
 
+          {/* Next shift with volunteers */}
           <div className="space-y-2 xs:space-y-3">
             <div className="flex items-center justify-between">
               <h3 className="text-xs xs:text-sm font-medium text-gray-600 dark:text-gray-300 flex items-center gap-1.5">
                 <ClockIcon size={14} className="text-gray-500 xs:hidden" />
                 <ClockIcon size={16} className="text-gray-500 hidden xs:block" />
-                {getShiftName(nextShift)} {/* Next */}
+                {t('dashboard.nextShiftWithVolunteers')}
               </h3>
-              <span className="text-xxs xs:text-xs font-light text-gray-500">{nextShift}</span>
+              <span className="text-xxs xs:text-xs font-light text-gray-500">
+                {formatDisplayDate(nextShiftWithVolunteersInfo.date)} - {nextShiftWithVolunteersInfo.shift}
+              </span>
             </div>
             
             <div className="flex flex-wrap gap-2">
-              {nextVolunteers && nextVolunteers.length > 0 ? (
-                nextVolunteers.map(volunteer => volunteer && (
+              {nextShiftWithVolunteersInfo.volunteers && nextShiftWithVolunteersInfo.volunteers.length > 0 ? (
+                nextShiftWithVolunteersInfo.volunteers.map(volunteer => volunteer && (
                   <div key={volunteer.id} className="flex items-center px-2 py-1 rounded-lg bg-gray-100 dark:bg-gray-700/50 gap-1.5">
                     <div className="w-5 h-5 xs:w-6 xs:h-6 rounded-full bg-gradient-to-br from-blue-500/20 to-violet-500/20 flex items-center justify-center text-blue-600 text-xs">
                       {volunteer.name[0]}
@@ -595,42 +692,8 @@ export default function DashboardContent() {
           </div>
         </div>
 
-        {/* User next shift */}
-        <div className="bg-white/90 dark:bg-gray-800/70 backdrop-blur-md rounded-xl p-4 xs:p-5 sm:p-6 border border-gray-200/70 dark:border-gray-700/50 md:col-span-1">
-          <h2 className="text-lg xs:text-xl font-extralight text-gray-800 dark:text-white mb-3 xs:mb-4 flex items-center gap-2">
-            <Clock size={18} className="text-teal-500 xs:hidden" />
-            <Clock size={20} className="text-teal-500 hidden xs:block" />
-            {t('dashboard.yourNextShift') || "Your Next Shift"}
-          </h2>
-          
-          {userNextShift ? (
-            <div className="flex flex-col items-center justify-center py-6 text-center">
-              <div className="w-20 h-20 xs:w-24 xs:h-24 rounded-full bg-gradient-to-br from-teal-500 to-emerald-500 flex items-center justify-center text-white mb-4">
-                <Calendar size={32} className="xs:hidden" />
-                <Calendar size={40} className="hidden xs:block" />
-              </div>
-              <h3 className="text-md xs:text-lg font-light text-gray-800 dark:text-white">{userNextShift.date}</h3>
-              <p className="text-xl xs:text-2xl font-extralight text-gray-700 dark:text-gray-300 mt-2">{userNextShift.shift}</p>
-              <div className="mt-6 px-4 py-2 bg-teal-100 dark:bg-teal-900/30 text-teal-800 dark:text-teal-300 rounded-lg text-xs xs:text-sm font-light flex items-center gap-2">
-                <Shield size={14} className="xs:hidden" />
-                <Shield size={16} className="hidden xs:block" />
-                <span>{t('dashboard.dutyConfirmed')}</span>
-              </div>
-            </div>
-          ) : (
-            <div className="flex flex-col items-center justify-center py-10 text-center">
-              <div className="w-16 h-16 rounded-full bg-gray-100 dark:bg-gray-700 flex items-center justify-center text-gray-400 dark:text-gray-500 mb-4">
-                <Calendar size={24} />
-              </div>
-              <p className="text-gray-500 dark:text-gray-400 font-light">
-                {t('dashboard.noUpcomingShifts')}
-              </p>
-            </div>
-          )}
-        </div>
-        
         {/* User Schedule */}
-        <div className="bg-white/90 dark:bg-gray-800/70 backdrop-blur-md rounded-xl p-4 xs:p-5 sm:p-6 border border-gray-200/70 dark:border-gray-700/50 md:col-span-2">
+        <div className="bg-white/90 dark:bg-gray-800/70 backdrop-blur-md rounded-xl p-4 xs:p-5 sm:p-6 border border-gray-200/70 dark:border-gray-700/50 md:col-span-3">
           <h2 className="text-lg xs:text-xl font-extralight text-gray-800 dark:text-white mb-3 xs:mb-4 flex items-center gap-2">
             <Calendar size={18} className="text-blue-500 xs:hidden" />
             <Calendar size={20} className="text-blue-500 hidden xs:block" />
