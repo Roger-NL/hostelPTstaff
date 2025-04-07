@@ -500,17 +500,22 @@ export default function DashboardContent() {
             
             <div className="flex flex-wrap gap-2">
               {lastActiveShiftInfo.volunteers && lastActiveShiftInfo.volunteers.length > 0 ? (
-                lastActiveShiftInfo.volunteers.map(volunteer => volunteer && (
-                  <div key={volunteer.id} className="flex items-center px-2 py-1 rounded-lg bg-gray-100 dark:bg-gray-700/50 gap-1.5">
-                    <div className="w-5 h-5 xs:w-6 xs:h-6 rounded-full bg-gradient-to-br from-blue-500/20 to-violet-500/20 flex items-center justify-center text-blue-600 text-xs">
-                      {volunteer.name[0]}
-                    </div>
-                    <span className="text-xs font-light text-gray-800 dark:text-gray-200">
-                      {volunteer.name.split(' ')[0]}
-                      {volunteer.id === user?.id && ` (${t('dashboard.you')})`}
-                    </span>
+                <div className="w-full">
+                  <div className="text-xs font-medium text-gray-700 dark:text-gray-300 mb-1.5">{lastActiveShiftInfo.shift}</div>
+                  <div className="flex flex-wrap gap-2">
+                    {lastActiveShiftInfo.volunteers.map(volunteer => volunteer && (
+                      <div key={volunteer.id} className="flex items-center px-2 py-1 rounded-lg bg-gray-100 dark:bg-gray-700/50 gap-1.5">
+                        <div className="w-5 h-5 xs:w-6 xs:h-6 rounded-full bg-gradient-to-br from-blue-500/20 to-violet-500/20 flex items-center justify-center text-blue-600 text-xs">
+                          {volunteer.name[0]}
+                        </div>
+                        <span className="text-xs font-light text-gray-800 dark:text-gray-200">
+                          {volunteer.name.split(' ')[0]}
+                          {volunteer.id === user?.id && ` (${t('dashboard.you')})`}
+                        </span>
+                      </div>
+                    ))}
                   </div>
-                ))
+                </div>
               ) : (
                 <span className="text-xs text-gray-500 dark:text-gray-400">{t('dashboard.noVolunteersAssigned')}</span>
               )}
@@ -530,17 +535,22 @@ export default function DashboardContent() {
               </div>
               
               <div className="flex flex-wrap gap-2">
-                {currentVolunteers.map(volunteer => volunteer && (
-                  <div key={volunteer.id} className="flex items-center px-2 py-1 rounded-lg bg-blue-100 dark:bg-blue-900/30 gap-1.5">
-                    <div className="w-5 h-5 xs:w-6 xs:h-6 rounded-full bg-blue-500 flex items-center justify-center text-white text-xs">
-                      {volunteer.name[0]}
-                    </div>
-                    <span className="text-xs font-medium text-blue-800 dark:text-blue-300">
-                      {volunteer.name.split(' ')[0]}
-                      {volunteer.id === user?.id && ` (${t('dashboard.you')})`}
-                    </span>
+                <div className="w-full">
+                  <div className="text-xs font-medium text-blue-600 dark:text-blue-300 mb-1.5">{currentShift}</div>
+                  <div className="flex flex-wrap gap-2">
+                    {currentVolunteers.map(volunteer => volunteer && (
+                      <div key={volunteer.id} className="flex items-center px-2 py-1 rounded-lg bg-blue-100 dark:bg-blue-900/30 gap-1.5">
+                        <div className="w-5 h-5 xs:w-6 xs:h-6 rounded-full bg-blue-500 flex items-center justify-center text-white text-xs">
+                          {volunteer.name[0]}
+                        </div>
+                        <span className="text-xs font-medium text-blue-800 dark:text-blue-300">
+                          {volunteer.name.split(' ')[0]}
+                          {volunteer.id === user?.id && ` (${t('dashboard.you')})`}
+                        </span>
+                      </div>
+                    ))}
                   </div>
-                ))}
+                </div>
               </div>
             </div>
           )}
@@ -560,17 +570,22 @@ export default function DashboardContent() {
             
             <div className="flex flex-wrap gap-2">
               {nextShiftWithVolunteersInfo.volunteers && nextShiftWithVolunteersInfo.volunteers.length > 0 ? (
-                nextShiftWithVolunteersInfo.volunteers.map(volunteer => volunteer && (
-                  <div key={volunteer.id} className="flex items-center px-2 py-1 rounded-lg bg-gray-100 dark:bg-gray-700/50 gap-1.5">
-                    <div className="w-5 h-5 xs:w-6 xs:h-6 rounded-full bg-gradient-to-br from-blue-500/20 to-violet-500/20 flex items-center justify-center text-blue-600 text-xs">
-                      {volunteer.name[0]}
-                    </div>
-                    <span className="text-xs font-light text-gray-800 dark:text-gray-200">
-                      {volunteer.name.split(' ')[0]}
-                      {volunteer.id === user?.id && ` (${t('dashboard.you')})`}
-                    </span>
+                <div className="w-full">
+                  <div className="text-xs font-medium text-gray-700 dark:text-gray-300 mb-1.5">{nextShiftWithVolunteersInfo.shift}</div>
+                  <div className="flex flex-wrap gap-2">
+                    {nextShiftWithVolunteersInfo.volunteers.map(volunteer => volunteer && (
+                      <div key={volunteer.id} className="flex items-center px-2 py-1 rounded-lg bg-gray-100 dark:bg-gray-700/50 gap-1.5">
+                        <div className="w-5 h-5 xs:w-6 xs:h-6 rounded-full bg-gradient-to-br from-blue-500/20 to-violet-500/20 flex items-center justify-center text-blue-600 text-xs">
+                          {volunteer.name[0]}
+                        </div>
+                        <span className="text-xs font-light text-gray-800 dark:text-gray-200">
+                          {volunteer.name.split(' ')[0]}
+                          {volunteer.id === user?.id && ` (${t('dashboard.you')})`}
+                        </span>
+                      </div>
+                    ))}
                   </div>
-                ))
+                </div>
               ) : (
                 <span className="text-xs text-gray-500 dark:text-gray-400">{t('dashboard.noVolunteersAssigned')}</span>
               )}
