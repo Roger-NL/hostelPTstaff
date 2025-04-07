@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useStore } from '../store/useStore';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from '../hooks/useTranslation';
@@ -53,6 +53,29 @@ export default function MainDashboard() {
     logout();
     navigate('/');
   };
+
+  // Função para lidar com a navegação vinda do DashboardContent
+  useEffect(() => {
+    // Esta função será usada para ouvir eventos de navegação
+    const handleNavigation = (event: CustomEvent) => {
+      const path = event.detail?.path;
+      if (path) {
+        // Converter o caminho (por exemplo, '/tasks') para a view correta (por exemplo, 'tasks')
+        const targetView = path.replace('/', '');
+        if (targetView && menuItems.some(item => item.view === targetView)) {
+          setView(targetView);
+        }
+      }
+    };
+
+    // Adicionar o listener ao window
+    window.addEventListener('navigate', handleNavigation as EventListener);
+    
+    return () => {
+      // Limpar o listener ao desmontar
+      window.removeEventListener('navigate', handleNavigation as EventListener);
+    };
+  }, []);
 
   // Função para obter o texto de role do usuário
   const getUserRoleText = (role?: string) => {

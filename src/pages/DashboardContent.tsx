@@ -25,7 +25,10 @@ import {
   AlertCircle,
   Clock as ClockIcon,
   Shield,
-  Settings
+  Settings,
+  LayoutDashboard,
+  HomeIcon,
+  CheckSquare
 } from 'lucide-react';
 import { firestore } from '../config/firebase';
 import { doc, updateDoc, getDoc } from 'firebase/firestore';
@@ -92,7 +95,14 @@ export default function DashboardContent() {
 
   // Função para navegar para outras páginas
   const navigateTo = (path: string) => {
-    navigate(path);
+    // Emitir um evento customizado para o Dashboard.tsx poder capturá-lo
+    const navigationEvent = new CustomEvent('navigate', {
+      detail: { path }
+    });
+    window.dispatchEvent(navigationEvent);
+    
+    // Não precisamos mais chamar navigate diretamente
+    // navigate(path);
   };
 
   // Carrega todos os usuários quando o componente é montado
@@ -429,6 +439,14 @@ export default function DashboardContent() {
         <h2 className="text-lg font-light mb-3">{t('navigation.quickMenu')}</h2>
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
           <button
+            onClick={() => navigateTo('/dashboard')}
+            className="flex flex-col items-center justify-center p-4 bg-gray-800/50 rounded-xl hover:bg-indigo-600/20 transition-all duration-300 border border-gray-700/30 hover:border-indigo-500/30 group"
+          >
+            <LayoutDashboard className="w-6 h-6 text-gray-300 group-hover:text-indigo-400 transition-colors duration-300" />
+            <span className="mt-2 text-sm text-gray-300 group-hover:text-white">{t('dashboard.title')}</span>
+          </button>
+          
+          <button
             onClick={() => navigateTo('/schedule')}
             className="flex flex-col items-center justify-center p-4 bg-gray-800/50 rounded-xl hover:bg-blue-600/20 transition-all duration-300 border border-gray-700/30 hover:border-blue-500/30 group"
           >
@@ -482,6 +500,14 @@ export default function DashboardContent() {
           </button>
           
           <button
+            onClick={() => navigateTo('/laundry')}
+            className="flex flex-col items-center justify-center p-4 bg-gray-800/50 rounded-xl hover:bg-cyan-600/20 transition-all duration-300 border border-gray-700/30 hover:border-cyan-500/30 group"
+          >
+            <HomeIcon className="w-6 h-6 text-gray-300 group-hover:text-cyan-400 transition-colors duration-300" />
+            <span className="mt-2 text-sm text-gray-300 group-hover:text-white">{t('laundry.title')}</span>
+          </button>
+          
+          <button
             onClick={() => navigateTo('/settings')}
             className="flex flex-col items-center justify-center p-4 bg-gray-800/50 rounded-xl hover:bg-gray-600/50 transition-all duration-300 border border-gray-700/30 hover:border-gray-500/50 group"
           >
@@ -491,11 +517,11 @@ export default function DashboardContent() {
           
           {user?.role === 'admin' && (
             <button
-              onClick={() => navigate('/staff')}
+              onClick={() => navigateTo('/approvals')}
               className="flex flex-col items-center justify-center p-4 bg-gray-800/50 rounded-xl hover:bg-pink-600/20 transition-all duration-300 border border-gray-700/30 hover:border-pink-500/30 group"
             >
-              <Shield className="w-6 h-6 text-gray-300 group-hover:text-pink-400 transition-colors duration-300" />
-              <span className="mt-2 text-sm text-gray-300 group-hover:text-white">{t('admin.title')}</span>
+              <CheckSquare className="w-6 h-6 text-gray-300 group-hover:text-pink-400 transition-colors duration-300" />
+              <span className="mt-2 text-sm text-gray-300 group-hover:text-white">{t('approvals.title')}</span>
             </button>
           )}
         </div>
