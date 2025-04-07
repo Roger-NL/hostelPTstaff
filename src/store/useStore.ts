@@ -167,7 +167,7 @@ const defaultSystemSettings: SystemSettings = {
 // Default initial state
 const initialState = {
   theme: 'dark' as const,
-  language: 'en' as const,
+  language: localStorage.getItem('language') as 'en' | 'pt' || 'en',
   user: null,
   users: defaultUsers,
   tasks: defaultTasks,
@@ -374,7 +374,10 @@ export const useStore = create<AppState>((set, get) => ({
     set({ theme });
   },
   
-  setLanguage: (language) => set({ language }),
+  setLanguage: (language) => {
+    localStorage.setItem('language', language);
+    set({ language });
+  },
   
   // Apenas para compatibilidade - será removido depois que a autenticação do Firebase estiver completa
   login: (email, password) => {

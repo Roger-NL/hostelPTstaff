@@ -526,34 +526,34 @@ export default function Schedule() {
       <PageHeader 
         title={format(selectedWeek, 'MMMM yyyy')}
         actions={
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1.5">
             <button
               onClick={() => setSummaryModalOpen(true)}
-              className="w-9 h-9 flex items-center justify-center bg-blue-500/50 hover:bg-blue-600/50 text-white rounded-full transition-colors"
+              className="w-8 h-8 flex items-center justify-center bg-blue-500/50 hover:bg-blue-600/50 text-white rounded-full transition-colors"
               title="Summary"
             >
-              <FileText size={18} />
+              <FileText size={16} />
             </button>
             <button
               onClick={() => setDatePickerOpen(!datePickerOpen)}
-              className="calendar-button w-9 h-9 flex items-center justify-center bg-gray-700/50 hover:bg-gray-600 text-white rounded-full transition-colors"
+              className="calendar-button w-8 h-8 flex items-center justify-center bg-gray-700/50 hover:bg-gray-600 text-white rounded-full transition-colors"
               title="Select date"
             >
-              <CalendarIcon size={18} />
+              <CalendarIcon size={16} />
             </button>
             <button
               onClick={handlePreviousWeek}
-              className="w-9 h-9 flex items-center justify-center bg-gray-700/50 hover:bg-gray-600 text-white rounded-full transition-colors"
+              className="w-8 h-8 flex items-center justify-center bg-gray-700/50 hover:bg-gray-600 text-white rounded-full transition-colors"
               title="Previous week"
             >
-              <ChevronLeft size={18} />
+              <ChevronLeft size={16} />
             </button>
             <button
               onClick={handleNextWeek}
-              className="w-9 h-9 flex items-center justify-center bg-gray-700/50 hover:bg-gray-600 text-white rounded-full transition-colors"
+              className="w-8 h-8 flex items-center justify-center bg-gray-700/50 hover:bg-gray-600 text-white rounded-full transition-colors"
               title="Next week"
             >
-              <ChevronRight size={18} />
+              <ChevronRight size={16} />
             </button>
           </div>
         }
@@ -645,17 +645,17 @@ export default function Schedule() {
         {isMobileView && (
           <div className="flex-1 flex flex-col">
             {/* Seletor de dias mobile */}
-            <div className="flex overflow-x-auto gap-1 mb-2 pb-2">
+            <div className="flex overflow-x-auto gap-0.5 mb-2 pb-1.5">
               {weekDays.map((day, index) => (
                 <button
                   key={day.toString()}
                   onClick={() => setActiveMobileDay(index)}
-                  className={`flex-shrink-0 p-2 rounded-lg text-center min-w-[80px] ${
+                  className={`flex-shrink-0 py-1.5 px-2 rounded-lg text-center min-w-[68px] ${
                     activeMobileDay === index ? 'bg-blue-500/30 text-white' : 'bg-gray-800/40 text-white/70'
                   }`}
                 >
                   <div className="text-xs font-medium">{format(day, 'EEE')}</div>
-                  <div className="text-tiny mt-0.5">{format(day, 'MMM d')}</div>
+                  <div className="text-xs opacity-80">{format(day, 'MMM d')}</div>
                 </button>
               ))}
             </div>

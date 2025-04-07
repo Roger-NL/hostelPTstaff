@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { useStore } from '../store/useStore';
 import { useTranslation } from '../hooks/useTranslation';
-import { PlusCircle, X, AlertCircle, Trash2, Loader2, Check, Save } from 'lucide-react';
+import { PlusCircle, X, AlertCircle, Trash2, Loader2, Check, Save, CalendarIcon, ChevronLeft, ChevronRight } from 'lucide-react';
 import { toast } from 'react-hot-toast';
-import { format, parse, addDays } from 'date-fns';
+import { format, parse, addDays, addMonths, subMonths } from 'date-fns';
 import { ptBR, enUS } from 'date-fns/locale';
 import PageHeader from '../components/PageHeader';
 import { 
@@ -23,6 +23,7 @@ export default function LaundrySchedule() {
   const [saving, setSaving] = useState(false);
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   const [showModal, setShowModal] = useState(false);
+  const [datePickerOpen, setDatePickerOpen] = useState(false);
   const [modalState, setModalState] = useState<{
     date: string;
     slot: 'morning' | 'afternoon' | 'evening';
@@ -167,10 +168,33 @@ export default function LaundrySchedule() {
   return (
     <div className="w-full h-full relative overflow-auto">
       <PageHeader 
-        title={t('laundry.title')}
+        title={format(selectedDate, 'MMMM yyyy')}
         showBackButton={true}
-        onAddItem={() => setShowModal(true)}
-        addItemLabel={t('laundry.addReservation')}
+        actions={
+          <div className="flex items-center gap-1.5">
+            <button
+              onClick={() => setDatePickerOpen(!datePickerOpen)}
+              className="calendar-button w-8 h-8 flex items-center justify-center bg-gray-700/50 hover:bg-gray-600 text-white rounded-full transition-colors"
+              title="Select date"
+            >
+              <CalendarIcon size={16} />
+            </button>
+            <button
+              onClick={() => setSelectedDate(subMonths(selectedDate, 1))}
+              className="w-8 h-8 flex items-center justify-center bg-gray-700/50 hover:bg-gray-600 text-white rounded-full transition-colors"
+              title="Previous month"
+            >
+              <ChevronLeft size={16} />
+            </button>
+            <button
+              onClick={() => setSelectedDate(addMonths(selectedDate, 1))}
+              className="w-8 h-8 flex items-center justify-center bg-gray-700/50 hover:bg-gray-600 text-white rounded-full transition-colors"
+              title="Next month"
+            >
+              <ChevronRight size={16} />
+            </button>
+          </div>
+        }
       />
       
       {loading ? (
@@ -185,19 +209,19 @@ export default function LaundrySchedule() {
             <div className="flex space-x-2">
               <button
                 onClick={() => setSelectedDate(new Date())}
-                className="px-3 py-1.5 bg-white/90 dark:bg-gray-700/90 rounded-lg text-sm shadow hover:bg-white dark:hover:bg-gray-700 transition-colors"
+                className="px-2.5 py-1 bg-white/90 dark:bg-gray-700/90 rounded-lg text-xs shadow hover:bg-white dark:hover:bg-gray-700 transition-colors"
               >
                 {t('common.today')}
               </button>
               <button
                 onClick={() => setSelectedDate(addDays(selectedDate, -7))}
-                className="px-3 py-1.5 bg-white/90 dark:bg-gray-700/90 rounded-lg text-sm shadow hover:bg-white dark:hover:bg-gray-700 transition-colors"
+                className="px-2.5 py-1 bg-white/90 dark:bg-gray-700/90 rounded-lg text-xs shadow hover:bg-white dark:hover:bg-gray-700 transition-colors"
               >
                 {t('common.previousWeek')}
               </button>
               <button
                 onClick={() => setSelectedDate(addDays(selectedDate, 7))}
-                className="px-3 py-1.5 bg-white/90 dark:bg-gray-700/90 rounded-lg text-sm shadow hover:bg-white dark:hover:bg-gray-700 transition-colors"
+                className="px-2.5 py-1 bg-white/90 dark:bg-gray-700/90 rounded-lg text-xs shadow hover:bg-white dark:hover:bg-gray-700 transition-colors"
               >
                 {t('common.nextWeek')}
               </button>
