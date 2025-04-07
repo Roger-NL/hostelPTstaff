@@ -21,6 +21,8 @@ export interface DeviceInfo {
   screenHeight: number;
   safeAreaTop: number;
   safeAreaBottom: number;
+  isTouchDevice: boolean;
+  isSmallScreen: boolean;
 }
 
 // Detecta o dispositivo e navegador atual
@@ -44,6 +46,12 @@ export function detectDevice(): DeviceInfo {
   const isSafari = /Safari/.test(userAgent) && !/Chrome/.test(userAgent);
   const isChrome = /Chrome/.test(userAgent) && !/Edge/.test(userAgent);
   const isFirefox = /Firefox/.test(userAgent);
+  
+  // Novas detecções aprimoradas
+  const isTouchDevice = ('ontouchstart' in window) || 
+                        (navigator.maxTouchPoints > 0);
+  
+  const isSmallScreen = window.innerWidth < 640;
   
   // Detecção de PWA
   const isPWA = window.matchMedia('(display-mode: standalone)').matches || 
@@ -86,7 +94,9 @@ export function detectDevice(): DeviceInfo {
     browserHeight: window.innerHeight,
     screenHeight: window.screen.height,
     safeAreaTop,
-    safeAreaBottom
+    safeAreaBottom,
+    isTouchDevice,
+    isSmallScreen
   };
 }
 

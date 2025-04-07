@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useStore } from '../store/useStore';
 import { format, isAfter, isBefore, parseISO } from 'date-fns';
+import { ptBR, enUS } from 'date-fns/locale';
 import {
   Calendar,
   MapPin,
@@ -18,13 +19,19 @@ import {
   Trash,
   RefreshCw,
   ChevronDown,
-  Filter
+  Filter,
+  PlusCircle,
+  Eye,
+  Download,
+  Share
 } from 'lucide-react';
 import type { Event } from '../types';
 import SimpleDateTimePicker from '../components/SimpleDateTimePicker';
 import { toast } from 'react-hot-toast';
 import * as eventService from '../services/event.service';
 import usePerformanceOptimizer from '../hooks/usePerformanceOptimizer';
+import { useTranslation } from '../hooks/useTranslation';
+import PageHeader from '../components/PageHeader';
 
 interface EventFormData {
   title: string;
@@ -64,6 +71,7 @@ export default function Events() {
     leaveEvent,
     cancelEvent
   } = useStore();
+  const { t, language } = useTranslation();
 
   // Aplicar otimização de performance
   const { shouldSimplifyUI } = usePerformanceOptimizer();
@@ -76,8 +84,23 @@ export default function Events() {
   const [isCleaningUp, setIsCleaningUp] = useState(false);
   const [isDeletingAll, setIsDeletingAll] = useState(false);
   const [showConfirmDeleteAll, setShowConfirmDeleteAll] = useState(false);
+  const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
 
   const isAdmin = user?.role === 'admin';
+
+  const locales = {
+    'pt-BR': ptBR,
+    'en-US': enUS
+  };
+  
+  const formatEventDate = (date: string) => {
+    return format(new Date(date), 'PPP', { locale: locales[language as keyof typeof locales] });
+  };
+  
+  const formatEventTime = (time: string) => {
+    return format(new Date(`2000-01-01T${time}`), 'p', { locale: locales[language as keyof typeof locales] });
+  };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -261,209 +284,226 @@ export default function Events() {
     }
   };
 
+  const handleDeleteEvent = (event: Event) => {
+    setSelectedEvent(event);
+    setShowConfirmDelete(event.id);
+  };
+
+  const confirmDelete = async () => {
+    if (selectedEvent) {
+      setIsLoading(true);
+      try {
+        await deleteEvent(selectedEvent.id);
+        toast.success(t('events.deleteSuccess'));
+      } catch (error) {
+        toast.error(t('events.deleteError'));
+      } finally {
+        setIsLoading(false);
+        setShowConfirmDelete(null);
+      }
+    }
+  };
+
+  const handleEditEvent = (event: Event) => {
+    setFormData({
+      title: event.title,
+      description: event.description,
+      startDate: event.startDate,
+      endDate: event.endDate,
+      location: event.location,
+      type: event.type,
+      capacity: event.capacity,
+      tags: Array.isArray(event.tags) ? event.tags : [],
+      attendees: event.attendees,
+      organizer: event.organizer,
+    });
+    setEditingEventId(event.id);
+    setShowForm(true);
+  };
+
   return (
     <div className="page-container flex flex-col">
-      {/* Header */}
-      <div className="page-header flex flex-wrap items-center justify-between gap-2 p-3 z-10 bg-gray-900/80 backdrop-blur-sm">
-        <h2 className="text-lg xs:text-xl font-extralight text-white">Events</h2>
-        <div className="flex flex-wrap items-center gap-2">
-          {isAdmin && (
-            <>
-              <button
-                onClick={() => setShowConfirmDeleteAll(true)}
-                disabled={isDeletingAll}
-                className="h-9 px-2 xs:px-3 bg-pink-700/50 text-white rounded-lg text-xs flex items-center gap-1.5 hover:bg-pink-700/70 transition-all disabled:opacity-50"
-              >
-                {isDeletingAll ? (
-                  <RefreshCw size={16} className="animate-spin" />
-                ) : (
-                  <Trash2 size={16} />
-                )}
-                <span className="hidden xs:inline">Reset</span>
-              </button>
-              <button
-                onClick={handleCleanupEvents}
-                disabled={isCleaningUp}
-                className="h-9 px-2 xs:px-3 bg-red-500/50 text-white rounded-lg text-xs flex items-center gap-1.5 hover:bg-red-500/70 transition-all disabled:opacity-50"
-              >
-                {isCleaningUp ? (
-                  <RefreshCw size={16} className="animate-spin" />
-                ) : (
-                  <Trash size={16} />
-                )}
-                <span className="hidden xs:inline">Limpar</span>
-              </button>
-            </>
-          )}
-          {isAdmin && (
+      <PageHeader 
+        title={t('events.title')} 
+        actions={
+          isAdmin && (
             <button
               onClick={() => {
                 setFormData(initialFormData);
                 setEditingEventId(null);
                 setShowForm(true);
               }}
-              className="h-9 px-2 xs:px-3 bg-green-500 text-white rounded-lg text-xs flex items-center gap-1.5 hover:bg-green-600 transition-all"
+              className="h-9 px-3 bg-green-500 text-white rounded-xl shadow-md hover:bg-green-600 transition-colors flex items-center gap-1.5 text-sm font-light"
             >
               <Plus size={16} />
-              <span className="hidden xs:inline">Add Event</span>
-              <span className="xs:hidden">Add</span>
+              <span>{t('events.addEvent')}</span>
             </button>
-          )}
-        </div>
-      </div>
+          )
+        }
+      />
 
-      {/* Events Content */}
-      <div className="page-content bg-gray-800/50 backdrop-blur-sm rounded-lg p-3">
-        {/* Events Grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 xs:gap-4">
-          {sortedEvents.map(event => (
-            <div
-              key={event.id}
-              className="bg-gray-700/50 backdrop-blur-sm rounded-lg border border-white/10 hover:border-white/20 transition-all shadow-sm hover:shadow-md overflow-hidden"
-            >
-              {/* Event Header - improved touch targets and spacing */}
-              <div className="p-3 border-b border-white/10 bg-gray-800/50">
-                <div className="flex items-start justify-between gap-2">
-                  <div className="flex-1 min-w-0">
-                    <h3 className="text-base font-medium text-white mb-2 truncate">{event.title}</h3>
-                    <div className="flex flex-wrap items-center gap-2">
-                      <span className={`text-xs px-2 py-1 rounded-full ${getEventStatusColor(event)} font-normal flex items-center gap-1`}>
-                        {getEventStatusIcon(event.status)}
-                        <span>{event.status}</span>
-                      </span>
-                      <span className="text-xs px-2 py-1 rounded-full bg-gray-600/50 text-gray-300 font-normal">
-                        {event.type}
-                      </span>
+      <div className="page-content bg-gray-800/50 backdrop-blur-sm rounded-lg p-3 xs:p-4 sm:p-6">
+        {events.length === 0 ? (
+          <div className="flex flex-col items-center justify-center py-10 text-center">
+            <Calendar size={48} className="text-gray-500 mb-4" />
+            <h3 className="text-xl font-light text-white mb-2">{t('events.noEvents')}</h3>
+            <p className="text-white/60 max-w-sm">{t('events.noEventsDesc')}</p>
+            
+            {isAdmin && (
+              <button
+                onClick={() => {
+                  setFormData(initialFormData);
+                  setEditingEventId(null);
+                  setShowForm(true);
+                }}
+                className="mt-6 px-4 py-2 bg-green-500 text-white rounded-lg flex items-center gap-2"
+              >
+                <PlusCircle size={18} />
+                {t('events.addFirstEvent')}
+              </button>
+            )}
+          </div>
+        ) : (
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {sortedEvents.map(event => (
+              <div
+                key={event.id}
+                className="bg-gray-700/50 backdrop-blur-sm rounded-lg border border-white/10 hover:border-white/20 transition-all shadow-sm hover:shadow-md overflow-hidden"
+              >
+                {/* Event Header - improved touch targets and spacing */}
+                <div className="p-3 border-b border-white/10 bg-gray-800/50">
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="flex-1 min-w-0">
+                      <h3 className="text-base font-medium text-white mb-2 truncate">{event.title}</h3>
+                      <div className="flex flex-wrap items-center gap-2">
+                        <span className={`text-xs px-2 py-1 rounded-full ${getEventStatusColor(event)} font-normal flex items-center gap-1`}>
+                          {getEventStatusIcon(event.status)}
+                          <span>{event.status}</span>
+                        </span>
+                        <span className="text-xs px-2 py-1 rounded-full bg-gray-600/50 text-gray-300 font-normal">
+                          {event.type}
+                        </span>
+                      </div>
                     </div>
-                  </div>
-                  {isAdmin && (
-                    <div className="flex items-center gap-1.5 shrink-0">
-                      <button
-                        onClick={() => handleEdit(event)}
-                        className="p-2 bg-gray-700/50 hover:bg-blue-500/20 text-blue-400 hover:text-blue-300 rounded-lg transition-colors"
-                      >
-                        <Edit size={16} />
-                      </button>
-                      <button
-                        onClick={() => setShowConfirmDelete(event.id)}
-                        className="p-2 bg-gray-700/50 hover:bg-red-500/20 text-red-400 hover:text-red-300 rounded-lg transition-colors"
-                      >
-                        <Trash2 size={16} />
-                      </button>
-                    </div>
-                  )}
-                </div>
-              </div>
-
-              {/* Event Content - better spacing and readability */}
-              <div className="p-3 space-y-3">
-                <p className="text-sm text-gray-300 leading-relaxed line-clamp-3">{event.description}</p>
-
-                <div className="space-y-2.5 text-xs">
-                  <div className="flex items-center gap-2 text-gray-300">
-                    <Calendar size={14} className="text-gray-300 shrink-0" />
-                    <div className="truncate">
-                      <div>{format(parseISO(event.startDate), 'MMM d, yyyy')}</div>
-                      <div className="text-gray-400">{format(parseISO(event.startDate), 'HH:mm')} - {format(parseISO(event.endDate), 'HH:mm')}</div>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-2 text-gray-300">
-                    <MapPin size={14} className="text-gray-300 shrink-0" />
-                    <span className="truncate">{event.location}</span>
-                  </div>
-                  <div className="flex items-center gap-2 text-gray-300">
-                    <Users size={14} className="text-gray-300 shrink-0" />
-                    <span>
-                      {event.attendees.length}{event.capacity ? `/${event.capacity}` : ''} attending
-                    </span>
-                  </div>
-                </div>
-
-                {/* Tags */}
-                {Array.isArray(event.tags) && event.tags.length > 0 && (
-                  <div className="flex flex-wrap gap-1.5">
-                    {event.tags.map(tag => (
-                      <span
-                        key={tag}
-                        className="text-xs px-2 py-1 rounded-full bg-gray-600/50 text-gray-300"
-                      >
-                        {tag}
-                      </span>
-                    ))}
-                  </div>
-                )}
-
-                {/* Attendees - collapsed by default on mobile */}
-                <div className="space-y-1.5">
-                  <div className="flex items-center justify-between">
-                    <h4 className="text-xs font-medium text-white/90">Attendees</h4>
-                  </div>
-                  
-                  <div className="flex items-center flex-wrap gap-1.5">
-                    {event.attendees.length > 0 ? (
-                      event.attendees.slice(0, 3).map(attendeeId => {
-                        const attendee = users.find(u => u.id === attendeeId);
-                        return attendee ? (
-                          <div
-                            key={attendeeId}
-                            className="flex items-center gap-1 text-xs bg-gray-600/50 rounded-full px-2 py-1"
-                          >
-                            <User size={12} className="text-gray-300" />
-                            <span className="text-gray-300">{attendee.name}</span>
-                          </div>
-                        ) : null;
-                      })
-                    ) : (
-                      <span className="text-xs text-gray-400">No attendees yet</span>
-                    )}
-                    
-                    {event.attendees.length > 3 && (
-                      <div className="text-xs bg-gray-600/50 rounded-full px-2 py-1 text-gray-300">
-                        +{event.attendees.length - 3} more
+                    {isAdmin && (
+                      <div className="flex items-center gap-1.5 shrink-0">
+                        <button
+                          onClick={() => handleEditEvent(event)}
+                          className="p-2 bg-gray-700/50 hover:bg-blue-500/20 text-blue-400 hover:text-blue-300 rounded-lg transition-colors"
+                        >
+                          <Edit size={16} />
+                        </button>
+                        <button
+                          onClick={() => handleDeleteEvent(event)}
+                          className="p-2 bg-gray-700/50 hover:bg-red-500/20 text-red-400 hover:text-red-300 rounded-lg transition-colors"
+                        >
+                          <Trash2 size={16} />
+                        </button>
                       </div>
                     )}
                   </div>
                 </div>
 
-                {/* Actions - larger touch targets */}
-                <div className="flex justify-end gap-2 pt-2">
-                  {event.status === 'upcoming' && (
-                    <>
-                      {isAdmin && (
-                        <button
-                          onClick={() => cancelEvent(event.id)}
-                          className="px-3 py-1.5 text-xs bg-red-500/20 border border-red-500/10 text-red-300 rounded-lg hover:bg-red-500/30 transition-colors"
+                {/* Event Content - better spacing and readability */}
+                <div className="p-3 space-y-3">
+                  <p className="text-sm text-gray-300 leading-relaxed line-clamp-3">{event.description}</p>
+
+                  <div className="space-y-2.5 text-xs">
+                    <div className="flex items-center gap-2 text-gray-300">
+                      <Calendar size={14} className="text-gray-300 shrink-0" />
+                      <div className="truncate">
+                        <div>{format(parseISO(event.startDate), 'MMM d, yyyy')}</div>
+                        <div className="text-gray-400">{format(parseISO(event.startDate), 'HH:mm')} - {format(parseISO(event.endDate), 'HH:mm')}</div>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2 text-gray-300">
+                      <MapPin size={14} className="text-gray-300 shrink-0" />
+                      <span className="truncate">{event.location}</span>
+                    </div>
+                    <div className="flex items-center gap-2 text-gray-300">
+                      <Users size={14} className="text-gray-300 shrink-0" />
+                      <span>
+                        {event.attendees.length}{event.capacity ? `/${event.capacity}` : ''} attending
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Tags */}
+                  {Array.isArray(event.tags) && event.tags.length > 0 && (
+                    <div className="flex flex-wrap gap-1.5">
+                      {event.tags.map(tag => (
+                        <span
+                          key={tag}
+                          className="text-xs px-2 py-1 rounded-full bg-gray-600/50 text-gray-300"
                         >
-                          Cancel
-                        </button>
-                      )}
-                      {user && (
-                        <button
-                          onClick={() => handleJoinLeave(event)}
-                          disabled={event.capacity !== undefined && event.attendees.length >= event.capacity && !event.attendees.includes(user.id)}
-                          className={`px-3 py-1.5 text-xs rounded-lg transition-colors
-                            ${event.attendees.includes(user.id)
-                              ? 'bg-red-500/20 border border-red-500/10 text-red-300 hover:bg-red-500/30'
-                              : 'bg-green-500 text-white hover:bg-green-600'}`}
-                        >
-                          {event.attendees.includes(user.id) ? 'Leave' : 'Join'}
-                        </button>
-                      )}
-                    </>
+                          {tag}
+                        </span>
+                      ))}
+                    </div>
                   )}
+
+                  {/* Attendees - collapsed by default on mobile */}
+                  <div className="space-y-1.5">
+                    <div className="flex items-center justify-between">
+                      <h4 className="text-xs font-medium text-white/90">Attendees</h4>
+                    </div>
+                    
+                    <div className="flex items-center flex-wrap gap-1.5">
+                      {event.attendees.length > 0 ? (
+                        event.attendees.slice(0, 3).map(attendeeId => {
+                          const attendee = users.find(u => u.id === attendeeId);
+                          return attendee ? (
+                            <div
+                              key={attendeeId}
+                              className="flex items-center gap-1 text-xs bg-gray-600/50 rounded-full px-2 py-1"
+                            >
+                              <User size={12} className="text-gray-300" />
+                              <span className="text-gray-300">{attendee.name}</span>
+                            </div>
+                          ) : null;
+                        })
+                      ) : (
+                        <span className="text-xs text-gray-400">No attendees yet</span>
+                      )}
+                      
+                      {event.attendees.length > 3 && (
+                        <div className="text-xs bg-gray-600/50 rounded-full px-2 py-1 text-gray-300">
+                          +{event.attendees.length - 3} more
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Actions - larger touch targets */}
+                  <div className="flex justify-end gap-2 pt-2">
+                    {event.status === 'upcoming' && (
+                      <>
+                        {isAdmin && (
+                          <button
+                            onClick={() => cancelEvent(event.id)}
+                            className="px-3 py-1.5 text-xs bg-red-500/20 border border-red-500/10 text-red-300 rounded-lg hover:bg-red-500/30 transition-colors"
+                          >
+                            Cancel
+                          </button>
+                        )}
+                        {user && (
+                          <button
+                            onClick={() => handleJoinLeave(event)}
+                            disabled={event.capacity !== undefined && event.attendees.length >= event.capacity && !event.attendees.includes(user.id)}
+                            className={`px-3 py-1.5 text-xs rounded-lg transition-colors
+                              ${event.attendees.includes(user.id)
+                                ? 'bg-red-500/20 border border-red-500/10 text-red-300 hover:bg-red-500/30'
+                                : 'bg-green-500 text-white hover:bg-green-600'}`}
+                          >
+                            {event.attendees.includes(user.id) ? 'Leave' : 'Join'}
+                          </button>
+                        )}
+                      </>
+                    )}
+                  </div>
                 </div>
               </div>
-            </div>
-          ))}
-        </div>
-        
-        {/* Empty state */}
-        {sortedEvents.length === 0 && (
-          <div className="flex flex-col items-center justify-center py-12">
-            <div className="w-12 h-12 rounded-full bg-gray-700/50 flex items-center justify-center mb-3">
-              <Calendar size={24} className="text-gray-400" />
-            </div>
-            <p className="text-gray-400 text-sm">No events scheduled yet</p>
+            ))}
           </div>
         )}
       </div>
@@ -695,7 +735,7 @@ export default function Events() {
                 Cancel
               </button>
               <button
-                onClick={() => handleDelete(showConfirmDelete)}
+                onClick={confirmDelete}
                 className="px-4 py-2.5 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors text-sm font-medium"
               >
                 Delete

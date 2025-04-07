@@ -111,17 +111,34 @@ export async function saveTaskToFirebase(task: Task): Promise<boolean> {
   try {
     console.log(`Salvando tarefa ${task.id}: ${task.title}`);
     
-    // Validação dos dados da tarefa
+    // Validação mais completa dos dados da tarefa
     if (!task.id || !task.title) {
       console.error('Dados da tarefa incompletos:', task);
       return false;
     }
     
+    // Garantir que os campos obrigatórios existam com valores padrão
+    const taskToSave: Task = {
+      ...task,
+      title: task.title.trim(),
+      description: task.description || '',
+      points: typeof task.points === 'number' ? task.points : 0,
+      status: task.status || 'todo',
+      priority: task.priority || 'medium',
+      createdAt: task.createdAt || new Date().toISOString(),
+      createdBy: task.createdBy || '',
+      type: task.type || 'hostel',
+      assignedTo: Array.isArray(task.assignedTo) ? task.assignedTo : [],
+      tags: Array.isArray(task.tags) ? task.tags : [],
+      checklist: Array.isArray(task.checklist) ? task.checklist : [],
+      comments: Array.isArray(task.comments) ? task.comments : []
+    };
+    
     // Referência ao documento
     const taskRef = doc(firestore, 'tasks', task.id);
     
-    // Usa set com merge: false para sobrescrever completamente
-    await setDoc(taskRef, task, { merge: false });
+    // Usa set com merge: true para garantir que os campos existentes não são removidos
+    await setDoc(taskRef, taskToSave, { merge: true });
     
     // Verifica se a tarefa foi salva corretamente
     const savedTask = await getDoc(taskRef);

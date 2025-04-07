@@ -3,6 +3,7 @@ import { useStore } from '../store/useStore';
 import { useTranslation } from '../hooks/useTranslation';
 import { format, isToday, isYesterday, addDays, subDays, startOfWeek, parseISO } from 'date-fns';
 import type { Schedule, ShiftTime } from '../types';
+import { useNavigate } from 'react-router-dom';
 import {
   Award,
   TrendingUp,
@@ -38,15 +39,26 @@ interface DashboardCardProps {
     value: number;
     isPositive: boolean;
   };
+  navigateTo?: string;
 }
 
-function DashboardCard({ title, value, icon, trend }: DashboardCardProps) {
+function DashboardCard({ title, value, icon, trend, navigateTo }: DashboardCardProps) {
+  const navigate = useNavigate();
   // Garantir que o valor seja um número válido
   const displayValue = isNaN(value) ? 0 : value;
   const trendValue = trend?.value && !isNaN(trend.value) ? trend.value : 0;
   
+  const handleClick = () => {
+    if (navigateTo) {
+      navigate(navigateTo);
+    }
+  };
+  
   return (
-    <div className="group bg-white/90 dark:bg-gray-800/70 backdrop-blur-md rounded-xl p-4 xs:p-5 sm:p-6 transition-all duration-300 hover:shadow-xl border border-gray-200/70 dark:border-gray-700/50 hover:transform hover:scale-[1.02]">
+    <div 
+      className={`group bg-white/90 dark:bg-gray-800/70 backdrop-blur-md rounded-xl p-4 xs:p-5 sm:p-6 transition-all duration-300 hover:shadow-xl border border-gray-200/70 dark:border-gray-700/50 hover:transform hover:scale-[1.02] ${navigateTo ? 'cursor-pointer' : ''}`}
+      onClick={handleClick}
+    >
       <div className="flex items-center justify-between">
         <div className="w-10 h-10 xs:w-12 xs:h-12 rounded-lg xs:rounded-xl bg-gradient-to-br from-blue-500/20 to-violet-500/20 dark:from-blue-500/30 dark:to-violet-500/30 flex items-center justify-center text-blue-600 transition-all duration-300 group-hover:scale-110 group-hover:bg-gradient-to-br group-hover:from-blue-500 group-hover:to-violet-500 group-hover:text-white">
           {icon}
@@ -75,6 +87,7 @@ export default function DashboardContent() {
   const { t } = useTranslation();
   const [isPromoting, setIsPromoting] = useState(false);
   const { loadAllUsers } = useAuth();
+  const navigate = useNavigate();
 
   // Carrega todos os usuários quando o componente é montado
   useEffect(() => {
@@ -449,6 +462,7 @@ export default function DashboardContent() {
             <ClipboardList size={24} className="hidden xs:block" />
           </>}
           trend={{ value: completionRate, isPositive: true }}
+          navigateTo="/tasks"
         />
         <DashboardCard 
           title={t('dashboard.stats.events') || "Events"} 
@@ -457,6 +471,7 @@ export default function DashboardContent() {
             <PartyPopper size={18} className="xs:hidden" />
             <PartyPopper size={24} className="hidden xs:block" />
           </>}
+          navigateTo="/events"
         />
         <DashboardCard 
           title={t('dashboard.stats.messages') || "Messages"} 
@@ -465,6 +480,7 @@ export default function DashboardContent() {
             <MessageCircle size={18} className="xs:hidden" />
             <MessageCircle size={24} className="hidden xs:block" />
           </>}
+          navigateTo="/messages"
         />
         <DashboardCard 
           title={t('dashboard.stats.points') || "Your Points"} 
@@ -473,6 +489,7 @@ export default function DashboardContent() {
             <Award size={18} className="xs:hidden" />
             <Award size={24} className="hidden xs:block" />
           </>}
+          navigateTo="/points"
         />
       </div>
 

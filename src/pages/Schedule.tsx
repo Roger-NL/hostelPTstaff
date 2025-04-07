@@ -7,6 +7,7 @@ import type { ShiftTime } from '../types';
 import SimpleDatePicker from '../components/SimpleDatePicker';
 import { useTranslation } from '../hooks/useTranslation';
 import toast from 'react-hot-toast';
+import PageHeader from '../components/PageHeader';
 
 const SHIFTS: ShiftTime[] = [
   '08:00-11:00',
@@ -521,12 +522,10 @@ export default function Schedule() {
   }, []);
 
   return (
-    <div className="h-[calc(100vh-6rem)] flex flex-col">
-      {/* Header - Mais compacto e moderno */}
-      <div className="flex flex-col gap-1.5 mb-3 px-2">
-        <div className="flex items-center justify-between">
-          <h1 className="text-lg xs:text-xl font-extralight text-white">{format(selectedWeek, 'MMMM yyyy')}</h1>
-          
+    <div className="page-container flex flex-col">
+      <PageHeader 
+        title={format(selectedWeek, 'MMMM yyyy')}
+        actions={
           <div className="flex items-center gap-1.5 xs:gap-2">
             <button
               onClick={() => setSummaryModalOpen(true)}
@@ -557,220 +556,204 @@ export default function Schedule() {
               <ChevronRight size={18} className="hidden xs:block" />
             </button>
           </div>
-        </div>
-
-        {/* Seletor de semana mais compacto */}
-        <div className="rounded-xl bg-gray-800/50 backdrop-blur-sm p-2 text-center text-xs text-white/70 font-light">
-          {format(weekDays[0], 'MMM d')} - {format(weekDays[6], 'MMM d, yyyy')}
-        </div>
-
-        {/* DatePicker mais bem posicionado */}
-        {datePickerOpen && (
-          <div
-            ref={datePickerRef}
-            className="absolute right-5 top-20 z-50 bg-gray-800 rounded-xl border border-white/10 shadow-xl"
-            style={{ width: 'min(280px, 90vw)' }}
-          >
-            <SimpleDatePicker
-              value={selectedDate}
-              onChange={handleDateChange}
-            />
+        }
+      />
+      
+      {/* Calendar view */}
+      <div className="page-content flex-1 overflow-hidden">
+        {!isMobileView && (
+          <div className="bg-gray-800/50 backdrop-blur-sm rounded-lg flex-1 flex flex-col min-h-0">
+            <div className="overflow-x-auto overflow-y-hidden h-full">
+              <div className="min-w-[800px] h-full">
+                <table className="w-full h-full border-collapse">
+                  <thead>
+                    <tr>
+                      <th className="sticky left-0 bg-gray-800/50 backdrop-blur-sm p-2 text-left text-white/60 text-xs font-medium w-20">Shift</th>
+                      {weekDays.map(day => (
+                        <th key={day.toString()} className="p-2 text-center text-white/60 min-w-[120px] max-w-[120px]">
+                          <div className="text-tiny font-medium">{format(day, 'EEE')}</div>
+                          <div className="text-tiny">{format(day, 'MMM d')}</div>
+                        </th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {SHIFTS.map(shift => (
+                      <tr key={shift} className="border-t border-white/5">
+                        <td className="sticky left-0 bg-gray-800/70 backdrop-blur-sm p-2 text-white/80 text-xs font-light">
+                          <div className="flex flex-col">
+                            <span className="whitespace-nowrap">{shift}</span>
+                          </div>
+                        </td>
+                        {weekDays.map(day => {
+                          const assignedVolunteers = getShiftAssignment(day, shift);
+                          
+                          return (
+                            <td 
+                              key={day.toString()}
+                              className="border-l border-white/5 p-2 align-top"
+                            >
+                              <div className="space-y-1.5">
+                                {assignedVolunteers.map((volunteerId: string) => (
+                                  <div 
+                                    key={volunteerId}
+                                    className="flex items-center justify-between bg-blue-500/15 hover:bg-blue-500/25 px-2 py-1 rounded-md text-xs group"
+                                  >
+                                    <span className="text-blue-100 text-xs truncate max-w-[80px]">
+                                      {getVolunteerName(volunteerId).split(' ')[0]}
+                                    </span>
+                                    {(user?.role === 'admin' || volunteerId === user?.id) && (
+                                      <button
+                                        onClick={() => handleRemoveShift(day, shift, volunteerId)}
+                                        className="text-red-300 opacity-0 group-hover:opacity-100 transition-opacity"
+                                      >
+                                        <X size={14} />
+                                      </button>
+                                    )}
+                                  </div>
+                                ))}
+                                {user?.role === 'admin' && (
+                                  <button
+                                    onClick={() => {
+                                      console.log('Opening volunteer modal for:', { date: day, shift });
+                                      setModalState({
+                                        isOpen: true,
+                                        date: day,
+                                        shift,
+                                        volunteerName: ''
+                                      });
+                                    }}
+                                    className="w-full flex items-center justify-center bg-white/5 hover:bg-white/10 p-1 rounded-md text-white/60 hover:text-white transition-colors"
+                                  >
+                                    <Plus size={14} />
+                                  </button>
+                                )}
+                              </div>
+                            </td>
+                          );
+                        })}
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
           </div>
         )}
-      </div>
 
-      {!isMobileView && (
-        <div className="bg-gray-800/50 backdrop-blur-sm rounded-lg flex-1 flex flex-col min-h-0">
-          <div className="overflow-x-auto overflow-y-hidden h-full">
-            <div className="min-w-[800px] h-full">
-              <table className="w-full h-full border-collapse">
-                <thead>
-                  <tr>
-                    <th className="sticky left-0 bg-gray-800/50 backdrop-blur-sm p-2 text-left text-white/60 text-xs font-medium w-20">Shift</th>
-                    {weekDays.map(day => (
-                      <th key={day.toString()} className="p-2 text-center text-white/60 min-w-[120px] max-w-[120px]">
-                        <div className="text-tiny font-medium">{format(day, 'EEE')}</div>
-                        <div className="text-tiny">{format(day, 'MMM d')}</div>
-                      </th>
-                    ))}
-                  </tr>
-                </thead>
-                <tbody>
-                  {SHIFTS.map(shift => (
-                    <tr key={shift} className="border-t border-white/5">
-                      <td className="sticky left-0 bg-gray-800/70 backdrop-blur-sm p-2 text-white/80 text-xs font-light">
-                        <div className="flex flex-col">
-                          <span className="whitespace-nowrap">{shift}</span>
-                        </div>
-                      </td>
-                      {weekDays.map(day => {
-                        const assignedVolunteers = getShiftAssignment(day, shift);
-                        
-                        return (
-                          <td 
-                            key={day.toString()}
-                            className="border-l border-white/5 p-2 align-top"
+        {/* Visão mobile otimizada */}
+        {isMobileView && (
+          <div className="flex-1 flex flex-col">
+            {/* Seletor de dias mobile */}
+            <div className="flex overflow-x-auto gap-1 mb-2 pb-2">
+              {weekDays.map((day, index) => (
+                <button
+                  key={day.toString()}
+                  onClick={() => setActiveMobileDay(index)}
+                  className={`flex-shrink-0 p-2 rounded-lg text-center min-w-[80px] ${
+                    activeMobileDay === index ? 'bg-blue-500/30 text-white' : 'bg-gray-800/40 text-white/70'
+                  }`}
+                >
+                  <div className="text-xs font-medium">{format(day, 'EEE')}</div>
+                  <div className="text-tiny mt-0.5">{format(day, 'MMM d')}</div>
+                </button>
+              ))}
+            </div>
+
+            {/* Dia ativo */}
+            <div className="bg-gray-800/50 backdrop-blur-sm rounded-lg flex-1 p-3">
+              <h3 className="text-sm font-medium text-white mb-3">
+                {format(weekDays[activeMobileDay], 'EEEE, MMMM d')}
+              </h3>
+              
+              <div className="space-y-2.5">
+                {SHIFTS.map(shift => {
+                  const assignedVolunteers = getShiftAssignment(weekDays[activeMobileDay], shift);
+                  
+                  return (
+                    <div key={shift} className="bg-white/5 rounded-lg p-2">
+                      <div className="flex justify-between items-center mb-1.5">
+                        <span className="text-xs font-medium text-white/80">{shift}</span>
+                        {user?.role === 'admin' && (
+                          <button
+                            onClick={() => {
+                              setModalState({
+                                isOpen: true,
+                                date: weekDays[activeMobileDay],
+                                shift,
+                                volunteerName: ''
+                              });
+                            }}
+                            className="w-6 h-6 flex items-center justify-center bg-white/10 rounded-full text-white/70"
                           >
-                            <div className="space-y-1.5">
-                              {assignedVolunteers.map((volunteerId: string) => (
-                                <div 
-                                  key={volunteerId}
-                                  className="flex items-center justify-between bg-blue-500/15 hover:bg-blue-500/25 px-2 py-1 rounded-md text-xs group"
-                                >
-                                  <span className="text-blue-100 text-xs truncate max-w-[80px]">
-                                    {getVolunteerName(volunteerId).split(' ')[0]}
-                                  </span>
-                                  {(user?.role === 'admin' || volunteerId === user?.id) && (
-                                    <button
-                                      onClick={() => handleRemoveShift(day, shift, volunteerId)}
-                                      className="text-red-300 opacity-0 group-hover:opacity-100 transition-opacity"
-                                    >
-                                      <X size={14} />
-                                    </button>
-                                  )}
-                                </div>
-                              ))}
-                              {user?.role === 'admin' && (
+                            <Plus size={14} />
+                          </button>
+                        )}
+                      </div>
+                      
+                      {assignedVolunteers.length > 0 ? (
+                        <div className="space-y-1">
+                          {assignedVolunteers.map((volunteerId: string) => (
+                            <div 
+                              key={volunteerId}
+                              className="flex items-center justify-between bg-blue-500/15 px-2.5 py-1.5 rounded-md"
+                            >
+                              <span className="text-blue-100 text-xs">
+                                {getVolunteerName(volunteerId)}
+                              </span>
+                              {(user?.role === 'admin' || volunteerId === user?.id) && (
                                 <button
-                                  onClick={() => {
-                                    console.log('Opening volunteer modal for:', { date: day, shift });
-                                    setModalState({
-                                      isOpen: true,
-                                      date: day,
-                                      shift,
-                                      volunteerName: ''
-                                    });
-                                  }}
-                                  className="w-full flex items-center justify-center bg-white/5 hover:bg-white/10 p-1 rounded-md text-white/60 hover:text-white transition-colors"
+                                  onClick={() => handleRemoveShift(weekDays[activeMobileDay], shift, volunteerId)}
+                                  className="text-red-300"
                                 >
-                                  <Plus size={14} />
+                                  <X size={14} />
                                 </button>
                               )}
                             </div>
-                          </td>
-                        );
-                      })}
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Visão mobile otimizada */}
-      {isMobileView && (
-        <div className="flex-1 flex flex-col">
-          {/* Seletor de dias mobile */}
-          <div className="flex overflow-x-auto gap-1 mb-2 pb-2">
-            {weekDays.map((day, index) => (
-              <button
-                key={day.toString()}
-                onClick={() => setActiveMobileDay(index)}
-                className={`flex-shrink-0 p-2 rounded-lg text-center min-w-[80px] ${
-                  activeMobileDay === index ? 'bg-blue-500/30 text-white' : 'bg-gray-800/40 text-white/70'
-                }`}
-              >
-                <div className="text-xs font-medium">{format(day, 'EEE')}</div>
-                <div className="text-tiny mt-0.5">{format(day, 'MMM d')}</div>
-              </button>
-            ))}
-          </div>
-
-          {/* Dia ativo */}
-          <div className="bg-gray-800/50 backdrop-blur-sm rounded-lg flex-1 p-3">
-            <h3 className="text-sm font-medium text-white mb-3">
-              {format(weekDays[activeMobileDay], 'EEEE, MMMM d')}
-            </h3>
-            
-            <div className="space-y-2.5">
-              {SHIFTS.map(shift => {
-                const assignedVolunteers = getShiftAssignment(weekDays[activeMobileDay], shift);
-                
-                return (
-                  <div key={shift} className="bg-white/5 rounded-lg p-2">
-                    <div className="flex justify-between items-center mb-1.5">
-                      <span className="text-xs font-medium text-white/80">{shift}</span>
-                      {user?.role === 'admin' && (
-                        <button
-                          onClick={() => {
-                            setModalState({
-                              isOpen: true,
-                              date: weekDays[activeMobileDay],
-                              shift,
-                              volunteerName: ''
-                            });
-                          }}
-                          className="w-6 h-6 flex items-center justify-center bg-white/10 rounded-full text-white/70"
-                        >
-                          <Plus size={14} />
-                        </button>
+                          ))}
+                        </div>
+                      ) : (
+                        <div className="text-center py-2">
+                          <p className="text-white/40 text-xs">Sem voluntários</p>
+                        </div>
                       )}
                     </div>
-                    
-                    {assignedVolunteers.length > 0 ? (
-                      <div className="space-y-1">
-                        {assignedVolunteers.map((volunteerId: string) => (
-                          <div 
-                            key={volunteerId}
-                            className="flex items-center justify-between bg-blue-500/15 px-2.5 py-1.5 rounded-md"
-                          >
-                            <span className="text-blue-100 text-xs">
-                              {getVolunteerName(volunteerId)}
-                            </span>
-                            {(user?.role === 'admin' || volunteerId === user?.id) && (
-                              <button
-                                onClick={() => handleRemoveShift(weekDays[activeMobileDay], shift, volunteerId)}
-                                className="text-red-300"
-                              >
-                                <X size={14} />
-                              </button>
-                            )}
-                          </div>
-                        ))}
-                      </div>
-                    ) : (
-                      <div className="text-center py-2">
-                        <p className="text-white/40 text-xs">Sem voluntários</p>
-                      </div>
-                    )}
-                  </div>
-                );
-              })}
+                  );
+                })}
+              </div>
             </div>
           </div>
-        </div>
-      )}
+        )}
 
-      {/* Debug logs */}
-      {(() => {
-        console.log('Rendering modals:', { modalState, confirmationModal });
-        return null;
-      })()}
+        {/* Debug logs */}
+        {(() => {
+          console.log('Rendering modals:', { modalState, confirmationModal });
+          return null;
+        })()}
 
-      <VolunteerModal
-        isOpen={modalState.isOpen}
-        onClose={handleCloseModal}
-        onSelect={handleAssignShift}
-        volunteers={volunteers}
-      />
+        <VolunteerModal
+          isOpen={modalState.isOpen}
+          onClose={handleCloseModal}
+          onSelect={handleAssignShift}
+          volunteers={volunteers}
+        />
 
-      <ConfirmationModal
-        isOpen={confirmationModal.isOpen}
-        onClose={handleConfirmationClose}
-        onConfirm={handleConfirmAssignment}
-        volunteerName={confirmationModal.volunteerName}
-      />
+        <ConfirmationModal
+          isOpen={confirmationModal.isOpen}
+          onClose={handleConfirmationClose}
+          onConfirm={handleConfirmAssignment}
+          volunteerName={confirmationModal.volunteerName}
+        />
 
-      <ScheduleSummaryModal
-        isOpen={summaryModalOpen}
-        onClose={() => setSummaryModalOpen(false)}
-        weekDays={weekDays}
-        schedule={schedule}
-        users={users}
-        shifts={SHIFTS}
-      />
+        <ScheduleSummaryModal
+          isOpen={summaryModalOpen}
+          onClose={() => setSummaryModalOpen(false)}
+          weekDays={weekDays}
+          schedule={schedule}
+          users={users}
+          shifts={SHIFTS}
+        />
+      </div>
     </div>
   );
 }

@@ -17,6 +17,9 @@ const Schedule = lazy(() => import('./pages/Schedule'));
 const Tasks = lazy(() => import('./pages/Tasks'));
 const Events = lazy(() => import('./pages/Events'));
 const Staff = lazy(() => import('./pages/Staff'));
+const Messages = lazy(() => import('./pages/Messages'));
+const Settings = lazy(() => import('./pages/Settings'));
+const Points = lazy(() => import('./pages/Points'));
 
 // Componente de carregamento
 const LoadingFallback = () => (
@@ -24,6 +27,51 @@ const LoadingFallback = () => (
     <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-yellow-500"></div>
   </div>
 );
+
+// Componente para configurar viewport e meta tags para dispositivos móveis
+const MobileMetaTags = () => {
+  useEffect(() => {
+    // Atualiza a meta tag viewport para garantir a escala correta
+    const viewportMeta = document.querySelector('meta[name="viewport"]');
+    if (viewportMeta) {
+      viewportMeta.setAttribute('content', 'width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover');
+    } else {
+      const meta = document.createElement('meta');
+      meta.name = 'viewport';
+      meta.content = 'width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover';
+      document.getElementsByTagName('head')[0].appendChild(meta);
+    }
+
+    // Adiciona meta tag para modo de aplicativo em iOS
+    const appleMobileWebAppCapable = document.querySelector('meta[name="apple-mobile-web-app-capable"]');
+    if (!appleMobileWebAppCapable) {
+      const meta = document.createElement('meta');
+      meta.name = 'apple-mobile-web-app-capable';
+      meta.content = 'yes';
+      document.getElementsByTagName('head')[0].appendChild(meta);
+    }
+
+    // Status bar transparente para iOS
+    const statusBarStyle = document.querySelector('meta[name="apple-mobile-web-app-status-bar-style"]');
+    if (!statusBarStyle) {
+      const meta = document.createElement('meta');
+      meta.name = 'apple-mobile-web-app-status-bar-style';
+      meta.content = 'black-translucent';
+      document.getElementsByTagName('head')[0].appendChild(meta);
+    }
+
+    // Tema cor para browsers Android
+    const themeColor = document.querySelector('meta[name="theme-color"]');
+    if (!themeColor) {
+      const meta = document.createElement('meta');
+      meta.name = 'theme-color';
+      meta.content = '#121212';
+      document.getElementsByTagName('head')[0].appendChild(meta);
+    }
+  }, []);
+
+  return null;
+};
 
 const ScrollToTop = () => {
   const { pathname } = useLocation();
@@ -35,6 +83,43 @@ const ScrollToTop = () => {
     }
   }, [pathname]);
   
+  return null;
+};
+
+// Componente para lidar com eventos de toque móvel
+const TouchEventHandler = () => {
+  useEffect(() => {
+    // Prevenir zoom de pinça em dispositivos touch
+    const preventZoom = (e: TouchEvent) => {
+      if (e.touches.length > 1) {
+        e.preventDefault();
+      }
+    };
+
+    // Prevenir atraso de 300ms em dispositivos móveis
+    document.addEventListener('touchstart', () => {}, { passive: false });
+    document.addEventListener('touchmove', preventZoom, { passive: false });
+
+    // Prevenir pull-to-refresh em iOS/Android
+    let startY = 0;
+    document.addEventListener('touchstart', (e) => {
+      startY = e.touches[0].pageY;
+    }, { passive: false });
+
+    document.addEventListener('touchmove', (e) => {
+      const y = e.touches[0].pageY;
+      const scrollTop = window.scrollY || document.documentElement.scrollTop;
+      if (scrollTop === 0 && y > startY) {
+        e.preventDefault();
+      }
+    }, { passive: false });
+
+    return () => {
+      document.removeEventListener('touchstart', () => {}, { passive: false } as EventListenerOptions);
+      document.removeEventListener('touchmove', preventZoom, { passive: false } as EventListenerOptions);
+    };
+  }, []);
+
   return null;
 };
 
@@ -78,6 +163,41 @@ const AppContent = () => {
       setUser(currentUser);
     }
   }, [isAuthenticated, currentUser, setUser]);
+
+  // Configurar visualização em tela cheia para dispositivos móveis
+  useEffect(() => {
+    const enableFullscreen = () => {
+      const doc = window.document as any;
+      const docEl = doc.documentElement;
+
+      const requestFullScreen = 
+        docEl.requestFullscreen || 
+        docEl.mozRequestFullScreen || 
+        docEl.webkitRequestFullScreen || 
+        docEl.msRequestFullscreen;
+
+      if (requestFullScreen && deviceInfo.isMobile) {
+        requestFullScreen.call(docEl);
+      }
+    };
+
+    // Tentar habilitar tela cheia ao interagir com a página
+    const handleUserInteraction = () => {
+      enableFullscreen();
+      document.removeEventListener('click', handleUserInteraction);
+      document.removeEventListener('touchstart', handleUserInteraction);
+    };
+
+    if (deviceInfo.isMobile) {
+      document.addEventListener('click', handleUserInteraction);
+      document.addEventListener('touchstart', handleUserInteraction);
+    }
+
+    return () => {
+      document.removeEventListener('click', handleUserInteraction);
+      document.removeEventListener('touchstart', handleUserInteraction);
+    };
+  }, [deviceInfo.isMobile]);
 
   // Manipulador para o botão voltar do navegador mobile
   useEffect(() => {
@@ -146,6 +266,9 @@ const AppContent = () => {
     ${theme === 'dark' ? 'dark bg-gradient-to-b from-gray-900 to-gray-800' : 'bg-gradient-to-b from-gray-100 to-gray-200'}
     ${deviceInfo.isIOS ? 'ios-safe-bottom ios-safe-top' : ''}
     ${deviceInfo.hasNotch ? 'notch-aware' : ''}
+    ${deviceInfo.isAndroid ? 'android-safe-area' : ''}
+    ${deviceInfo.isTouchDevice ? 'touch-device' : ''}
+    ${deviceInfo.isSmallScreen ? 'small-screen-device' : ''}
   `;
 
   const contentClasses = `
@@ -153,10 +276,13 @@ const AppContent = () => {
     ${deviceInfo.isMobile ? 'mobile-safe-bottom' : ''} 
     ${deviceInfo.isIOS ? 'ios-safe-bottom' : ''}
     ${deviceInfo.hasNotch ? 'home-indicator-aware' : ''}
+    ${deviceInfo.isSmallScreen ? 'compact-ui' : ''}
   `;
 
   return (
     <div className={containerClasses}>
+      <MobileMetaTags />
+      <TouchEventHandler />
       <AdminInitializer masterEmail="" />
       <Toaster
         position="top-center"
@@ -295,6 +421,30 @@ const AppContent = () => {
               element={
                 <PrivateRoute>
                   <Staff />
+                </PrivateRoute>
+              } 
+            />
+            <Route 
+              path="/messages" 
+              element={
+                <PrivateRoute>
+                  <Messages />
+                </PrivateRoute>
+              } 
+            />
+            <Route 
+              path="/settings" 
+              element={
+                <PrivateRoute>
+                  <Settings />
+                </PrivateRoute>
+              } 
+            />
+            <Route 
+              path="/points" 
+              element={
+                <PrivateRoute>
+                  <Points />
                 </PrivateRoute>
               } 
             />

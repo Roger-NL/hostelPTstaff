@@ -24,6 +24,13 @@
   --browser-navbar-safari-ios: 88px;
   --browser-navbar-chrome-android: 56px;
   --browser-navbar-average: 72px;
+  
+  /* Tamanhos de tela para referência */
+  --screen-xs: 480px;
+  --screen-sm: 640px;
+  --screen-md: 768px;
+  --screen-lg: 1024px;
+  --screen-xl: 1280px;
 }
 
 /* CSS para detectar automaticamente o browser e aplicar os ajustes */
@@ -62,6 +69,44 @@ body {
   input, select, textarea {
     font-size: 16px !important; /* Impede que o Safari faça zoom nos inputs */
   }
+}
+
+/* Suporte específico para Android */
+.android-safe-area {
+  padding-top: env(safe-area-inset-top, 0px);
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+/* Estilos específicos para dispositivos com toque */
+.touch-device {
+  -webkit-tap-highlight-color: transparent; /* Remove flash de tap */
+  touch-action: manipulation; /* Optimiza comportamentos táteis */
+}
+
+.touch-device a, 
+.touch-device button {
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+}
+
+/* Classes para dispositivos com telas pequenas */
+.small-screen-device {
+  font-size: 95%; /* Ligeiramente menor para telas pequenas */
+}
+
+.small-screen-device input,
+.small-screen-device button {
+  min-height: 44px; /* Mínimo de área clicável recomendada */
+}
+
+/* Layout compacto para telas pequenas */
+.compact-ui {
+  padding: 0.75rem !important;
+}
+
+.compact-ui .space-y-4 {
+  margin-top: 0.75rem !important;
+  margin-bottom: 0.75rem !important;
 }
 
 /* Script para atualizar altura em dispositivos móveis */

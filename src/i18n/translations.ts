@@ -66,7 +66,10 @@ export const translations = {
       passwordsDoNotMatch: 'Passwords do not match',
       passwordTooShort: 'Password must be at least 6 characters',
       invalidEmail: 'Please enter a valid email address',
-      quickLoginFailed: 'Quick login failed. Please enter your password'
+      quickLoginFailed: 'Quick login failed. Please enter your password',
+      titleTooShort: 'Title must be at least 3 characters',
+      invalidPoints: 'Points must be a positive number',
+      dueDateRequired: 'Due date is required'
     },
     
     // Tasks
@@ -85,6 +88,8 @@ export const translations = {
     checklist: 'Checklist',
     comments: 'Comments',
     addComment: 'Add Comment',
+    taskAdded: 'Task added successfully',
+    taskUpdated: 'Task updated successfully',
     
     // Task Status
     todo: 'To Do',
@@ -418,7 +423,10 @@ export const translations = {
       passwordsDoNotMatch: 'As senhas não coincidem',
       passwordTooShort: 'A senha deve ter pelo menos 6 caracteres',
       invalidEmail: 'Por favor, insira um endereço de email válido',
-      quickLoginFailed: 'Login rápido falhou. Por favor, digite sua senha'
+      quickLoginFailed: 'Login rápido falhou. Por favor, digite sua senha',
+      titleTooShort: 'Título deve ter pelo menos 3 caracteres',
+      invalidPoints: 'Pontos devem ser um número positivo',
+      dueDateRequired: 'Data de entrega é obrigatória'
     },
     
     // Tasks
@@ -437,6 +445,8 @@ export const translations = {
     checklist: 'Lista de Verificação',
     comments: 'Comentários',
     addComment: 'Adicionar Comentário',
+    taskAdded: 'Tarefa adicionada com sucesso',
+    taskUpdated: 'Tarefa atualizada com sucesso',
     
     // Task Status
     todo: 'A Fazer',

@@ -821,7 +821,7 @@ export const useStore = create<AppState>((set, get) => ({
       comments: [],
       checklist: [],
       createdBy: user.id,
-      type: taskData.isPrivate ? 'personal' : 'hostel'
+      type: taskData.type
     };
 
     // Primeiro atualiza o estado local para feedback imediato

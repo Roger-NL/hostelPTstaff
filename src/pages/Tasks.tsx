@@ -32,6 +32,7 @@ import PhotoCapture from '../components/PhotoCapture';
 import { toast } from 'react-hot-toast';
 import { Popover, PopoverTrigger, PopoverContent } from '../components/ui/popover';
 import { uploadTaskPhoto } from '../services/task.service';
+import PageHeader from '../components/PageHeader';
 
 interface TaskFormData {
   title: string;
@@ -126,15 +127,43 @@ export default function Tasks() {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (editingTaskId) {
-      updateTask(editingTaskId, formData);
-    } else {
-      addTask(formData);
+    // Validação mais completa
+    if (!formData.title.trim()) {
+      toast.error(t('error.required'));
+      return;
     }
     
-    setFormData(initialFormData);
-    setEditingTaskId(null);
-    setShowForm(false);
+    if (formData.title.trim().length < 3) {
+      toast.error(t('error.titleTooShort') || 'Title must be at least 3 characters');
+      return;
+    }
+    
+    if (formData.points < 0) {
+      toast.error(t('error.invalidPoints') || 'Points must be a positive number');
+      return;
+    }
+    
+    if (!formData.dueDate) {
+      toast.error(t('error.dueDateRequired') || 'Due date is required');
+      return;
+    }
+
+    try {
+      if (editingTaskId) {
+        updateTask(editingTaskId, formData);
+        toast.success(t('taskUpdated') || 'Task updated successfully');
+      } else {
+        addTask(formData);
+        toast.success(t('taskAdded') || 'Task added successfully');
+      }
+      
+      setFormData(initialFormData);
+      setEditingTaskId(null);
+      setShowForm(false);
+    } catch (error) {
+      console.error('Error in task operation:', error);
+      toast.error(t('error.general'));
+    }
   };
 
   const handleEdit = (task: Task) => {
@@ -856,10 +885,10 @@ export default function Tasks() {
 
   return (
     <div className="page-container flex flex-col">
-      <div className="page-header flex flex-wrap items-center justify-between gap-2 mb-4 py-2 z-10 bg-gray-900/80 backdrop-blur-sm">
-        <h2 className="text-lg xs:text-xl font-extralight text-white">Task Management</h2>
-        <div className="flex items-center gap-2">
-          {isAdmin && (
+      <PageHeader 
+        title="Task Management" 
+        actions={
+          isAdmin && (
             <>
               <div className="flex-shrink-0 flex items-center gap-2">
                 <button
@@ -890,9 +919,9 @@ export default function Tasks() {
                 <span className="xs:hidden">Add</span>
               </button>
             </>
-          )}
-        </div>
-      </div>
+          )
+        }
+      />
 
       <div className="page-content bg-gray-800/50 backdrop-blur-sm rounded-lg p-3 xs:p-4 sm:p-6">
         <div className="flex flex-col lg:flex-row gap-4 h-full">
@@ -931,6 +960,7 @@ export default function Tasks() {
                     type="text"
                     value={formData.title}
                     onChange={e => setFormData({ ...formData, title: e.target.value })}
+                    onBlur={e => setFormData({ ...formData, title: e.target.value.trim() })}
                     className="w-full bg-gray-700/30 border border-white/10 rounded-lg px-3 py-2 text-white text-sm"
                     required
                   />
@@ -943,6 +973,7 @@ export default function Tasks() {
                   <textarea
                     value={formData.description}
                     onChange={e => setFormData({ ...formData, description: e.target.value })}
+                    onBlur={e => setFormData({ ...formData, description: e.target.value.trim() })}
                     className="w-full bg-gray-700/30 border border-white/10 rounded-lg px-3 py-2 text-white text-sm h-24"
                     required
                   />
@@ -1159,7 +1190,8 @@ export default function Tasks() {
                 </button>
                 <button
                   type="submit"
-                  className="px-3 xs:px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors text-sm"
+                  className={`px-3 xs:px-4 py-2 ${formData.title.trim().length >= 3 ? 'bg-green-500 hover:bg-green-600' : 'bg-gray-500 cursor-not-allowed'} text-white rounded-lg transition-colors text-sm`}
+                  disabled={formData.title.trim().length < 3}
                 >
                   {editingTaskId ? 'Update Task' : 'Add Task'}
                 </button>
