@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useStore } from '../store/useStore';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from '../hooks/useTranslation';
@@ -45,18 +45,7 @@ export default function MainDashboard() {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const [view, setView] = useState('dashboard');
-  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(true);
   
-  // Effect para manter a sidebar colapsada em todos os tamanhos de tela
-  useEffect(() => {
-    const handleResize = () => {
-      setIsSidebarCollapsed(true);
-    };
-    
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
-  }, []);
-
   // Calculate unread messages
   const unreadCount = messages?.filter(msg => !msg.read.includes(user?.id || '')).length || 0;
 
@@ -120,90 +109,11 @@ export default function MainDashboard() {
 
   return (
     <div className="flex h-screen bg-gray-900 text-white">
-      {/* Sidebar - Sempre colapsado em mobile e desktop */}
-      <div
-        className={`bg-gray-800/50 w-64 shrink-0 transition-all duration-300 fixed lg:static top-0 bottom-0 z-30 ${
-          isSidebarCollapsed ? '-translate-x-full lg:translate-x-0 lg:w-0 lg:opacity-0' : 'translate-x-0'
-        }`}
-      >
-        {/* Logo */}
-        <div className="p-4 border-b border-gray-700/30 flex items-center justify-between">
-          <h1 className="text-xl font-extralight tracking-wider">
-            Hostel PT Staff
-          </h1>
-          <button
-            onClick={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
-            className="text-gray-400 hover:text-white transition-colors"
-          >
-            <ChevronLeft size={20} />
-          </button>
-        </div>
-
-        {/* Menu */}
-        <div className="p-4 content-scrollable">
-          {menuItems.map((item) => (
-            <button
-              key={item.view}
-              onClick={() => setView(item.view)}
-              className={`w-full flex items-center gap-3 p-2 rounded-lg transition-colors text-left mb-1
-                ${view === item.view ? 'bg-gray-700/60 text-white' : 'text-gray-400 hover:text-white hover:bg-gray-700/30'}`}
-            >
-              <item.icon size={18} />
-              <span className={`text-sm ${isSidebarCollapsed ? 'lg:hidden' : ''}`}>{item.label}</span>
-              {item.badge ? (
-                <span className="ml-auto bg-pink-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
-                  {item.badge}
-                </span>
-              ) : null}
-            </button>
-          ))}
-        </div>
-
-        {/* User Profile */}
-        <div className="absolute bottom-0 left-0 right-0 p-4 border-t border-gray-700/30 mobile-safe-bottom">
-          <div className="p-3 rounded-xl bg-gradient-to-r from-blue-500/10 to-violet-500/10">
-            <div className="flex items-center gap-3 mb-3">
-              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-500 to-violet-500 flex items-center justify-center text-white font-bold">
-                {user?.name?.[0]?.toUpperCase() || 'U'}
-              </div>
-              <div className={`flex-1 ${isSidebarCollapsed ? 'lg:hidden' : ''}`}>
-                <h3 className="text-sm font-medium">{user?.name || 'User'}</h3>
-                <p className="text-xs text-gray-500 dark:text-gray-400 font-light">{getUserRoleText(user?.role)}</p>
-              </div>
-            </div>
-            <button
-              onClick={handleLogout}
-              className={`w-full p-2.5 rounded-lg bg-gray-700/50 hover:bg-gray-700 transition-colors text-sm font-light flex items-center ${
-                isSidebarCollapsed ? 'lg:justify-center' : 'justify-center gap-2'
-              }`}
-            >
-              <LogOut size={14} />
-              <span className={isSidebarCollapsed ? 'lg:hidden' : ''}>{t('logout')}</span>
-            </button>
-          </div>
-        </div>
-      </div>
-      
-      {/* Mobile sidebar overlay */}
-      {!isSidebarCollapsed && (
-        <div
-          className="fixed inset-0 bg-black/50 z-20"
-          onClick={() => setIsSidebarCollapsed(true)}
-        ></div>
-      )}
-
       {/* Main Content */}
       <div className="flex-1 overflow-hidden flex flex-col">
         {/* Top Bar */}
         <div className="bg-gray-800/50 backdrop-blur-sm p-4 border-b border-gray-700/30 flex items-center justify-between mobile-safe-top">
           <div className="flex items-center gap-3">
-            <button
-              onClick={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
-              className="text-gray-400 hover:text-white transition-colors"
-              aria-label="Toggle menu"
-            >
-              {isSidebarCollapsed ? <Menu size={20} /> : <ChevronsLeft size={20} />}
-            </button>
             <h2 className="text-lg font-light">{menuItems.find((item) => item.view === view)?.label}</h2>
           </div>
           <div className="flex items-center gap-2">
