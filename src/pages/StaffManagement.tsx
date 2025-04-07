@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { User, UserPlus, X, Trash2, Award, Clock, AlertCircle } from 'lucide-react';
 import { useTranslation } from '../hooks/useTranslation';
 import { useStore } from '../store/useStore';
+import PageHeader from '../components/PageHeader';
 
 const StaffManagement: React.FC = () => {
   const { t } = useTranslation();
@@ -92,6 +93,12 @@ const StaffManagement: React.FC = () => {
 
   return (
     <div className="space-y-6 relative">
+      <PageHeader 
+        title={t('staff.title')} 
+        onAddItem={isAdmin ? () => setIsAddModalOpen(true) : undefined}
+        addItemLabel={t('staff.addUser')}
+      />
+
       {/* Alert Message */}
       {showAlert && (
         <div className={`fixed top-4 right-4 ${alertType === 'error' ? 'bg-red-500/90' : 'bg-green-500/90'} text-white px-4 py-2 rounded-lg shadow-lg flex items-center gap-2 z-50 animate-fade-in`}>
@@ -124,22 +131,8 @@ const StaffManagement: React.FC = () => {
         </div>
       )}
 
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <h2 className="text-2xl font-light text-white">{t('staff.title')}</h2>
-        {isAdmin && (
-          <button
-            onClick={() => setIsAddModalOpen(true)}
-            className="px-4 py-2 bg-yellow-500 text-gray-900 rounded-lg hover:bg-yellow-400 transition-colors duration-300 flex items-center gap-2"
-          >
-            <UserPlus size={20} />
-            {t('staff.addUser')}
-          </button>
-        )}
-      </div>
-
       {/* Staff List */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 p-4">
         {users.map((staffMember) => (
           <div
             key={staffMember.id}

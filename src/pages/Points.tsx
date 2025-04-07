@@ -174,10 +174,10 @@ export default function Points() {
   };
   
   return (
-    <div className="page-container flex flex-col">
-      <PageHeader title="Points History" />
+    <div className="w-full h-full relative">
+      <PageHeader title={t('points.title')} />
       
-      <div className="page-content bg-gray-800/50 backdrop-blur-sm rounded-lg p-3 xs:p-4 sm:p-6">
+      <div className="p-4">
         {/* Summary Cards */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-6">
           <div className="bg-gray-900/60 backdrop-blur-sm rounded-lg p-4 border border-white/5">

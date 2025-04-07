@@ -5,43 +5,28 @@ import { useTranslation } from '../hooks/useTranslation';
 import {
   Users,
   Award,
-  Sun,
-  Moon,
-  CloudRain,
-  Waves,
-  Wind,
-  Thermometer,
-  TrendingUp,
-  User,
-  Clock,
-  Activity,
-  LayoutDashboard,
   Calendar,
   ClipboardList,
   Settings as SettingsIcon,
-  ChevronLeft,
-  ChevronRight,
   LogOut,
   PartyPopper,
   MessageCircle,
-  Menu,
   HomeIcon,
-  ChevronsLeft,
-  ChevronsRight,
-  CheckSquare
+  CheckSquare,
+  BellRing
 } from 'lucide-react';
-import { format } from 'date-fns';
+import DashboardContent from './DashboardContent';
+import LaundrySchedule from './LaundrySchedule';
 import Schedule from './Schedule';
 import Staff from './Staff';
 import Tasks from './Tasks';
 import Events from './Events';
 import SettingsPage from './Settings';
 import Messages from './Messages';
-import DashboardContent from './DashboardContent';
-import LaundrySchedule from './LaundrySchedule';
+import Points from './Points';
 
 export default function MainDashboard() {
-  const { user, users, tasks, messages, logout } = useStore();
+  const { user, messages, logout } = useStore();
   const { t } = useTranslation();
   const navigate = useNavigate();
   const [view, setView] = useState('dashboard');
@@ -77,83 +62,126 @@ export default function MainDashboard() {
     };
   }, []);
 
-  // Função para obter o texto de role do usuário
-  const getUserRoleText = (role?: string) => {
-    if (!role) return '';
-    
-    // Verifica se a chave de tradução existe
-    try {
-      const translatedRole = t(`roles.${role}`);
-      // Se retornar a própria chave, significa que a tradução não existe
-      if (translatedRole === `roles.${role}`) {
-        // Fallback para texto com primeira letra maiúscula
-        return role.charAt(0).toUpperCase() + role.slice(1);
-      }
-      return translatedRole;
-    } catch (error) {
-      // Em caso de erro, retorna o role original com primeira letra maiúscula
-      return role.charAt(0).toUpperCase() + role.slice(1);
-    }
-  };
-
-  // Função para obter a saudação baseada na hora do dia
-  const getGreeting = () => {
-    const hour = new Date().getHours();
-    
-    if (hour >= 5 && hour < 12) {
-      return t('dashboard.welcomeMorning').replace('{name}', user?.name?.split(' ')[0] || '');
-    } else if (hour >= 12 && hour < 18) {
-      return t('dashboard.welcomeAfternoon').replace('{name}', user?.name?.split(' ')[0] || '');
-    } else {
-      return t('dashboard.welcomeEvening').replace('{name}', user?.name?.split(' ')[0] || '');
-    }
-  };
-
   // Construir os itens do menu, incluindo autorizações apenas para admin
-  const baseMenuItems = [
-    { icon: LayoutDashboard, label: t('dashboard.title'), view: 'dashboard' },
+  const menuItems = [
+    { icon: HomeIcon, label: t('dashboard.title'), view: 'dashboard' },
     { icon: Calendar, label: t('schedule.title'), view: 'schedule' },
-    { icon: ClipboardList, label: t('taskManagement'), view: 'tasks' },
+    { icon: ClipboardList, label: t('tasks.title'), view: 'tasks' },
     { icon: Users, label: t('staff.title'), view: 'staff' },
     { icon: PartyPopper, label: t('events.title'), view: 'events' },
     { icon: MessageCircle, label: t('messages.title'), view: 'messages', badge: unreadCount },
-    { icon: HomeIcon, label: t('laundry.title'), view: 'laundry' },
-    { icon: SettingsIcon, label: t('settings.title'), view: 'settings' }
+    { icon: HomeIcon, label: t('hostel.title'), view: 'hostel' },
+    { icon: Award, label: t('points.title'), view: 'points' },
   ];
   
   // Adicionar opção de autorizações se o usuário for admin
-  const menuItems = user?.role === 'admin' 
-    ? [
-        ...baseMenuItems.slice(0, 7),
-        { icon: CheckSquare, label: t('approvals.title'), view: 'approvals' },
-        baseMenuItems[7]
-      ] 
-    : baseMenuItems;
+  if (user?.role === 'admin') {
+    menuItems.push({ icon: CheckSquare, label: t('approvals.title'), view: 'approvals' });
+  }
+  
+  // Sempre adicionar settings no final
+  menuItems.push({ icon: SettingsIcon, label: t('settings.title'), view: 'settings' });
 
   return (
-    <div className="flex h-screen bg-gray-900 text-white">
-      {/* Main Content */}
-      <div className="flex-1 overflow-hidden flex flex-col">
-        {/* Top Bar */}
-        <div className="bg-gray-800/50 backdrop-blur-sm p-4 border-b border-gray-700/30 flex items-center justify-between mobile-safe-top">
-          <div className="flex items-center gap-3">
-            <h2 className="text-lg font-light">{menuItems.find((item) => item.view === view)?.label}</h2>
-          </div>
-          <div className="flex items-center gap-2">
-            <div className="text-sm font-light hidden md:block">{getGreeting()}</div>
-            <button
-              onClick={handleLogout}
-              className="p-2 rounded-full hover:bg-gray-700/50 transition-colors text-gray-400 hover:text-white"
-              aria-label="Logout"
-            >
-              <LogOut size={18} />
-            </button>
+    <div className="flex h-screen bg-gray-900 text-white overflow-hidden">
+      {/* Side Navigation */}
+      <div className="w-16 lg:w-56 bg-gray-800/30 backdrop-blur-md border-r border-white/5 shrink-0 hidden md:flex flex-col">
+        <div className="p-4 flex items-center gap-3 border-b border-white/5">
+          <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-purple-600 rounded-lg flex items-center justify-center text-white">
+            <BellRing size={16} />
           </div>
         </div>
+        
+        <nav className="flex-1 overflow-y-auto py-4">
+          <ul className="space-y-1 px-2">
+            {menuItems.map((item) => (
+              <li key={item.view}>
+                <button
+                  onClick={() => setView(item.view)}
+                  className={`w-full flex items-center gap-3 py-2 px-3 rounded-lg transition-colors
+                    ${view === item.view ? 'bg-blue-500/20 text-blue-400' : 'text-gray-400 hover:text-white hover:bg-white/5'}`}
+                >
+                  <div className="relative">
+                    <item.icon size={20} />
+                    {item.badge && item.badge > 0 && (
+                      <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-4 h-4 flex items-center justify-center">
+                        {item.badge > 9 ? '9+' : item.badge}
+                      </span>
+                    )}
+                  </div>
+                  <span className="hidden lg:block truncate">{item.label}</span>
+                </button>
+              </li>
+            ))}
+          </ul>
+        </nav>
+        
+        <div className="p-4 border-t border-white/5">
+          {user && (
+            <div className="mb-3 flex items-center gap-3">
+              <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white">
+                {user.name[0].toUpperCase()}
+              </div>
+              <div className="hidden lg:block overflow-hidden">
+                <p className="text-sm font-medium text-white truncate">{user.name}</p>
+                <p className="text-xs text-gray-400 truncate">{user.email}</p>
+              </div>
+            </div>
+          )}
+          <button
+            onClick={handleLogout}
+            className="w-full flex items-center gap-3 py-2 px-3 rounded-lg text-red-400 hover:bg-red-500/10 transition-colors"
+          >
+            <LogOut size={20} />
+            <span className="hidden lg:block">{t('logout')}</span>
+          </button>
+        </div>
+      </div>
 
-        {/* Content */}
-        <div className="flex-1 overflow-auto p-4 content-scrollable">
-          {/* Render the selected view component */}
+      {/* Mobile Top Navigation */}
+      <div className="md:hidden flex items-center justify-between p-4 bg-gray-800/50 backdrop-blur-sm border-b border-white/5 fixed top-0 left-0 right-0 z-10">
+        <div className="flex items-center gap-2">
+          <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-purple-600 rounded-lg flex items-center justify-center text-white">
+            <BellRing size={16} />
+          </div>
+        </div>
+        
+        <div className="flex items-center gap-2">
+          {user && (
+            <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white">
+              {user.name[0].toUpperCase()}
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Mobile Bottom Navigation */}
+      <div className="md:hidden flex items-center justify-around py-2 px-1 bg-gray-800/90 backdrop-blur-lg border-t border-white/5 fixed bottom-0 left-0 right-0 z-10">
+        {menuItems.slice(0, 5).map((item) => (
+          <button
+            key={item.view}
+            onClick={() => setView(item.view)}
+            className={`p-2 rounded-md flex flex-col items-center ${
+              view === item.view ? 'text-blue-400' : 'text-gray-400'
+            }`}
+          >
+            <div className="relative">
+              <item.icon size={20} />
+              {item.badge && item.badge > 0 && (
+                <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-4 h-4 flex items-center justify-center">
+                  {item.badge > 9 ? '9+' : item.badge}
+                </span>
+              )}
+            </div>
+            <span className="text-xs mt-1">{item.label.split(' ')[0]}</span>
+          </button>
+        ))}
+      </div>
+
+      {/* Main Content */}
+      <div className="flex-1 overflow-hidden flex flex-col md:pt-0 pt-16 pb-14 md:pb-0">
+        {/* Render the selected view component */}
+        <div className="flex-1 overflow-auto">
           {view === 'dashboard' && <DashboardContent />}
           {view === 'schedule' && <Schedule />}
           {view === 'tasks' && <Tasks />}
@@ -161,9 +189,10 @@ export default function MainDashboard() {
           {view === 'events' && <Events />}
           {view === 'settings' && <SettingsPage />}
           {view === 'messages' && <Messages />}
-          {view === 'laundry' && <LaundrySchedule />}
+          {view === 'points' && <Points />}
+          {view === 'hostel' && <LaundrySchedule />}
           {view === 'approvals' && user?.role === 'admin' && (
-            <div className="space-y-6">
+            <div className="p-4 space-y-6">
               <h2 className="text-xl font-light">{t('approvals.photoApprovals')}</h2>
               <div className="bg-gray-800/50 backdrop-blur-sm rounded-xl p-6 border border-gray-700/30">
                 <p className="text-center text-gray-400 py-8">

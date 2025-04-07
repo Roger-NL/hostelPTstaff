@@ -4,6 +4,7 @@ import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import SimpleDatePicker from '../components/SimpleDatePicker';
 import { useMediaQuery } from 'react-responsive';
+import PageHeader from '../components/PageHeader';
 
 interface Room {
   id: string;
@@ -163,12 +164,14 @@ const Hostel = () => {
 
   return (
     <div className="h-full flex flex-col bg-gray-900 text-white overflow-hidden">
-      <div className="p-4 bg-gray-800 border-b border-white/10">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-          <h1 className="text-xl font-semibold">Reservas do Hostel</h1>
-          <HeaderButtons />
-        </div>
-        <div className="mt-3 flex flex-col sm:flex-row gap-3 sm:items-center">
+      <PageHeader 
+        title="Reservas do Hostel" 
+        onAddItem={() => setIsCreateModalOpen(true)}
+        addItemLabel="Adicionar Reserva"
+      />
+      
+      <div className="p-4 flex-1 overflow-y-auto">
+        <div className="flex flex-col sm:flex-row gap-3 sm:items-center mb-4">
           <div className="flex items-center gap-2">
             <button 
               onClick={handlePrevMonth} 
@@ -198,15 +201,12 @@ const Hostel = () => {
             ))}
           </div>
         </div>
-      </div>
 
-      {/* Calendário principal ou visualização da hospedagem */}
-      <div className="flex-1 overflow-y-auto p-4">
-        {/* Implementar visualização do calendário ou dos quartos */}
+        {/* Visualização dos quartos */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-          {/* Exemplo de card de quarto */}
+          {/* Cards de quarto */}
           {rooms.map(room => (
-            <div key={room.id} className="bg-gray-800 rounded-lg overflow-hidden border border-white/10">
+            <div key={room.id} className="bg-gray-800/60 rounded-lg overflow-hidden border border-white/10 hover:border-white/20 hover:bg-gray-800/80 transition-all shadow-md">
               <div className="p-4">
                 <h3 className="font-medium">Quarto {room.number}</h3>
                 <p className="text-sm text-gray-400">{room.name}</p>

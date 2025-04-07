@@ -1,16 +1,26 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useStore } from '../store/useStore';
-import { ChevronLeft, Menu, X, User, Settings, Home, Calendar, ClipboardList, BellRing, Award, LogOut } from 'lucide-react';
+import { Menu, X, Settings, Home, Calendar, ClipboardList, BellRing, Award, LogOut, PlusCircle } from 'lucide-react';
 import { useTranslation } from '../hooks/useTranslation';
 import { useDeviceInfo } from '../utils/deviceDetector';
+import BackButton from './BackButton';
 
 interface PageHeaderProps {
   title: string;
   actions?: React.ReactNode;
+  showBackButton?: boolean;
+  onAddItem?: () => void;
+  addItemLabel?: string;
 }
 
-export default function PageHeader({ title, actions }: PageHeaderProps) {
+export default function PageHeader({ 
+  title, 
+  actions, 
+  showBackButton = true, 
+  onAddItem,
+  addItemLabel
+}: PageHeaderProps) {
   const navigate = useNavigate();
   const [showSidebar, setShowSidebar] = useState(false);
   const { user, logout } = useStore();
@@ -82,11 +92,6 @@ export default function PageHeader({ title, actions }: PageHeaderProps) {
     setTouchStartX(null);
   };
   
-  // Handler para navegar de volta ao dashboard
-  const handleBack = () => {
-    navigate('/dashboard');
-  };
-  
   // Handler para navegação no sidebar
   const handleNavigation = (path: string) => {
     navigate(path);
@@ -99,11 +104,8 @@ export default function PageHeader({ title, actions }: PageHeaderProps) {
     navigate('/login');
   };
   
-  // Determinar a altura do header com base no dispositivo
-  const headerHeightClass = deviceInfo.hasNotch ? 'pt-safe-top' : '';
-  
   return (
-    <div className={`page-header py-2 z-40 ${headerHeightClass}`} onTouchStart={handleTouchStart} onTouchEnd={handleTouchEnd}>
+    <div className="px-4 py-3" onTouchStart={handleTouchStart} onTouchEnd={handleTouchEnd}>
       {/* Overlay do sidebar */}
       {showSidebar && (
         <div 
@@ -203,27 +205,32 @@ export default function PageHeader({ title, actions }: PageHeaderProps) {
         </div>
       </div>
       
-      {/* Header content */}
-      <div className="flex items-center justify-between mb-4">
-        <div className="flex items-center gap-2">
-          <button 
-            onClick={handleBack}
-            className="w-8 h-8 flex items-center justify-center bg-gray-800/70 backdrop-blur-sm text-white rounded-full hover:bg-gray-700 transition-colors"
-            aria-label="Go back"
-          >
-            <ChevronLeft size={20} />
-          </button>
-          <h1 className="text-lg xs:text-xl font-extralight text-white">{title}</h1>
+      {/* Header content - redesenhado para ficar como a página Events */}
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          {showBackButton && <BackButton variant="icon-only" />}
+          <h1 className="text-xl font-medium text-white">{title}</h1>
         </div>
         
         <div className="flex items-center gap-2">
+          {onAddItem && (
+            <button 
+              onClick={onAddItem}
+              className="bg-green-500 hover:bg-green-600 text-white rounded-lg px-3 py-2 flex items-center gap-2 text-sm transition-colors"
+            >
+              <PlusCircle size={18} />
+              {addItemLabel && <span className="hidden md:inline">{addItemLabel}</span>}
+            </button>
+          )}
+          
           {actions}
+          
           <button 
             onClick={() => setShowSidebar(true)}
-            className="w-8 h-8 md:hidden flex items-center justify-center bg-gray-800/70 backdrop-blur-sm text-white rounded-full hover:bg-gray-700 transition-colors"
+            className="w-10 h-10 md:hidden flex items-center justify-center text-white rounded-full"
             aria-label="Open menu"
           >
-            <Menu size={20} />
+            <Menu size={22} />
           </button>
         </div>
       </div>

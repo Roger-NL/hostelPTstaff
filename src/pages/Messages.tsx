@@ -187,7 +187,7 @@ export default function Messages() {
         }
       />
       
-      <div className="page-content bg-gray-800/50 backdrop-blur-sm rounded-lg overflow-hidden flex flex-col h-[calc(100vh-120px)]">
+      <div className="p-4 flex flex-col h-[calc(100vh-120px)]">
         {/* Delete Confirmation Modal */}
         {showDeleteConfirm && (
           <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-3 xs:p-4">

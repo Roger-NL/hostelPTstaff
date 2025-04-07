@@ -325,21 +325,13 @@ export default function Events() {
     <div className="page-container flex flex-col">
       <PageHeader 
         title={t('events.title')} 
-        actions={
-          isAdmin && (
-            <button
-              onClick={() => {
-                setFormData(initialFormData);
-                setEditingEventId(null);
-                setShowForm(true);
-              }}
-              className="h-9 px-3 bg-green-500 text-white rounded-xl shadow-md hover:bg-green-600 transition-colors flex items-center gap-1.5 text-sm font-light"
-            >
-              <Plus size={16} />
-              <span>{t('events.addEvent')}</span>
-            </button>
-          )
-        }
+        onAddItem={isAdmin ? () => {
+          setFormData(initialFormData);
+          setEditingEventId(null);
+          setShowForm(true);
+        } : undefined}
+        addItemLabel={t('events.addEvent')}
+        showBackButton={true}
       />
 
       <div className="page-content bg-gray-800/50 backdrop-blur-sm rounded-lg p-3 xs:p-4 sm:p-6">

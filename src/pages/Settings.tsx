@@ -195,7 +195,7 @@ export default function Settings() {
     <div className="page-container">
       <PageHeader title={t('settings.title')} />
       
-      <div className="page-content">
+      <div className="page-content p-4">
         <div className="space-y-6">
           {user?.role === 'admin' && (
             <SettingsSection title={t('settings.title')} icon={<Shield className="text-purple-500" size={24} />}>

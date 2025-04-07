@@ -6,6 +6,7 @@ import { Plus, Trash2, Edit, Mail, Phone, MapPin, Calendar, Shield, ShieldOff, U
 import type { UserData, User } from '../types';
 import * as authService from '../services/auth.service';
 import SimpleDatePicker from '../components/SimpleDatePicker';
+import PageHeader from '../components/PageHeader';
 
 interface StaffFormData {
   name: string;
@@ -212,146 +213,144 @@ export default function Staff() {
   const isAdmin = currentUser?.role === 'admin';
 
   return (
-    <div className="h-[calc(100vh-6rem)] flex flex-col overflow-auto pb-6">
-      <div className="flex flex-wrap items-center justify-between gap-2 mb-4 sticky top-0 bg-gray-900/80 backdrop-blur-sm py-2 z-10">
-        <h2 className="text-lg xs:text-xl font-extralight text-white">{t('staff.title')}</h2>
-        
-        <div className="flex items-center gap-1.5 xs:gap-2">
-          <button 
-            onClick={loadUsers} 
-            className="h-9 px-2.5 xs:px-3 bg-blue-500 text-white rounded-lg xs:rounded-xl shadow-md hover:bg-blue-600 transition-colors flex items-center gap-1.5 text-xs xs:text-sm font-light"
-            disabled={isLoading}
-          >
-            <RefreshCw size={16} className={`transition-transform duration-300 ${isLoading ? 'animate-spin' : ''}`} />
-            <span className="hidden xs:inline">{t('refresh')}</span>
-          </button>
+    <div className="w-full h-full">
+      <PageHeader 
+        title={t('staff.title')} 
+        onAddItem={isAdmin ? () => {
+          setShowForm(true);
+          setEditingId(null);
+          setFormData(initialFormData);
+        } : undefined}
+        addItemLabel={t('addUser')}
+      />
+      
+      <div className="h-[calc(100vh-6rem)] flex flex-col overflow-auto pb-6 p-4">
+        <div className="bg-gray-800/50 backdrop-blur-sm rounded-lg p-4 xs:p-5 sm:p-6 space-y-4">
+          <div className="flex flex-wrap items-center justify-between gap-2 mb-4 sticky top-0 bg-gray-900/80 backdrop-blur-sm py-2 z-10">
+            <h2 className="text-lg xs:text-xl font-extralight text-white">{t('staff.title')}</h2>
+            
+            <div className="flex items-center gap-1.5 xs:gap-2">
+              <button 
+                onClick={loadUsers} 
+                className="h-9 px-2.5 xs:px-3 bg-blue-500 text-white rounded-lg xs:rounded-xl shadow-md hover:bg-blue-600 transition-colors flex items-center gap-1.5 text-xs xs:text-sm font-light"
+                disabled={isLoading}
+              >
+                <RefreshCw size={16} className={`transition-transform duration-300 ${isLoading ? 'animate-spin' : ''}`} />
+                <span className="hidden xs:inline">{t('refresh')}</span>
+              </button>
+            </div>
+          </div>
           
-          {isAdmin && (
-            <button 
-              onClick={() => {
-                setShowForm(true);
-                setEditingId(null);
-                setFormData(initialFormData);
-              }}
-              className="h-9 px-2.5 xs:px-3 bg-green-500 text-white rounded-lg xs:rounded-xl shadow-md hover:bg-green-600 transition-colors flex items-center gap-1.5 text-xs xs:text-sm font-light"
-              disabled={isLoading}
-            >
-              <Plus size={16} />
-              <span className="hidden xs:inline">{t('addUser')}</span>
-              <span className="xs:hidden">Add</span>
-            </button>
+          {isLoading && (
+            <div className="flex justify-center my-4">
+              <div className="bg-gray-800/80 px-4 py-2 rounded-full text-white/80 text-sm font-light flex items-center gap-2">
+                <RefreshCw size={14} className="animate-spin" />
+                <span>Carregando...</span>
+              </div>
+            </div>
           )}
-        </div>
-      </div>
-      
-      {isLoading && (
-        <div className="flex justify-center my-4">
-          <div className="bg-gray-800/80 px-4 py-2 rounded-full text-white/80 text-sm font-light flex items-center gap-2">
-            <RefreshCw size={14} className="animate-spin" />
-            <span>Carregando...</span>
-          </div>
-        </div>
-      )}
-      
-      <p className="text-xs text-center text-white/80 mb-3">
-        Total de usuários: {users.length}
-      </p>
-      
-      {/* Staff List */}
-      <div className="bg-gray-800/50 backdrop-blur-sm rounded-lg p-3 xs:p-4 sm:p-6 flex-1 overflow-auto">
-        {/* Admins Section */}
-        <div className="mb-6">
-          <h3 className="text-base xs:text-lg font-medium text-white mb-3 flex items-center gap-2 sticky top-0">
-            <Shield className="text-purple-400" size={18} />
-            {t('staff.roles.admin')}
-          </h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 xs:gap-4">
-            {admins.map(admin => (
-              <div
-                key={admin.id}
-                className="bg-gray-700/50 rounded-lg p-3 xs:p-4 border border-purple-500/20 hover:border-purple-500/30 transition-colors"
-              >
-                <div className="flex justify-between items-start mb-3">
-                  <h3 className="text-base font-medium text-white truncate pr-2">{admin.name}</h3>
-                  {isAdmin && (
-                    <div className="flex gap-1 xs:gap-1.5 shrink-0">
-                      {admin.id !== currentUser?.id && admins.length > 1 && (
-                        <button
-                          onClick={() => handleRoleChange(admin.id, 'remove')}
-                          className="h-7 w-7 flex items-center justify-center bg-gray-600/50 hover:bg-purple-500/20 text-purple-400 hover:text-purple-300 rounded-full transition-colors"
-                          title={t('staff.alerts.onlyAdminEdit')}
-                        >
-                          <ShieldOff size={16} />
-                        </button>
-                      )}
-                      <button
-                        onClick={() => handleEdit(admin)}
-                        className="h-7 w-7 flex items-center justify-center bg-gray-600/50 hover:bg-blue-500/20 text-blue-400 hover:text-blue-300 rounded-full transition-colors"
-                        title={t('edit')}
-                      >
-                        <Edit size={16} />
-                      </button>
-                      {admin.id !== currentUser?.id && (
-                        <button
-                          onClick={() => handleDelete(admin.id)}
-                          className="h-7 w-7 flex items-center justify-center bg-gray-600/50 hover:bg-red-500/20 text-red-400 hover:text-red-300 rounded-full transition-colors"
-                          title={t('staff.delete')}
-                        >
-                          <Trash2 size={16} />
-                        </button>
+          
+          <p className="text-xs text-center text-white/80 mb-3">
+            Total de usuários: {users.length}
+          </p>
+          
+          {/* Staff List */}
+          <div className="bg-gray-800/50 backdrop-blur-sm rounded-lg p-3 xs:p-4 sm:p-6 flex-1 overflow-auto">
+            {/* Admins Section */}
+            <div className="mb-6">
+              <h3 className="text-base xs:text-lg font-medium text-white mb-3 flex items-center gap-2 sticky top-0">
+                <Shield className="text-purple-400" size={18} />
+                {t('staff.roles.admin')}
+              </h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 xs:gap-4">
+                {admins.map(admin => (
+                  <div
+                    key={admin.id}
+                    className="bg-gray-700/50 rounded-lg p-3 xs:p-4 border border-purple-500/20 hover:border-purple-500/30 transition-colors"
+                  >
+                    <div className="flex justify-between items-start mb-3">
+                      <h3 className="text-base font-medium text-white truncate pr-2">{admin.name}</h3>
+                      {isAdmin && (
+                        <div className="flex gap-1 xs:gap-1.5 shrink-0">
+                          {admin.id !== currentUser?.id && admins.length > 1 && (
+                            <button
+                              onClick={() => handleRoleChange(admin.id, 'remove')}
+                              className="h-7 w-7 flex items-center justify-center bg-gray-600/50 hover:bg-purple-500/20 text-purple-400 hover:text-purple-300 rounded-full transition-colors"
+                              title={t('staff.alerts.onlyAdminEdit')}
+                            >
+                              <ShieldOff size={16} />
+                            </button>
+                          )}
+                          <button
+                            onClick={() => handleEdit(admin)}
+                            className="h-7 w-7 flex items-center justify-center bg-gray-600/50 hover:bg-blue-500/20 text-blue-400 hover:text-blue-300 rounded-full transition-colors"
+                            title={t('edit')}
+                          >
+                            <Edit size={16} />
+                          </button>
+                          {admin.id !== currentUser?.id && (
+                            <button
+                              onClick={() => handleDelete(admin.id)}
+                              className="h-7 w-7 flex items-center justify-center bg-gray-600/50 hover:bg-red-500/20 text-red-400 hover:text-red-300 rounded-full transition-colors"
+                              title={t('staff.delete')}
+                            >
+                              <Trash2 size={16} />
+                            </button>
+                          )}
+                        </div>
                       )}
                     </div>
-                  )}
-                </div>
-                <StaffInfo staff={admin} />
+                    <StaffInfo staff={admin} />
+                  </div>
+                ))}
               </div>
-            ))}
-          </div>
-        </div>
+            </div>
 
-        {/* Staff Section */}
-        <div>
-          <h3 className="text-base xs:text-lg font-medium text-white mb-3 flex items-center gap-2 sticky top-0">
-            <Users className="text-blue-400" size={18} />
-            {t('staff.roles.volunteer')}
-          </h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 xs:gap-4">
-            {volunteers.map(staff => (
-              <div
-                key={staff.id}
-                className="bg-gray-700/50 rounded-lg p-3 xs:p-4 border border-white/10 hover:border-white/20 transition-colors"
-              >
-                <div className="flex justify-between items-start mb-3">
-                  <h3 className="text-base font-medium text-white truncate pr-2">{staff.name}</h3>
-                  {isAdmin && (
-                    <div className="flex gap-1 xs:gap-1.5 shrink-0">
-                      <button
-                        onClick={() => handleRoleChange(staff.id, 'make')}
-                        className="h-7 w-7 flex items-center justify-center bg-gray-600/50 hover:bg-purple-500/20 text-purple-400 hover:text-purple-300 rounded-full transition-colors"
-                        title={t('staff.makeAdmin')}
-                      >
-                        <Shield size={16} />
-                      </button>
-                      <button
-                        onClick={() => handleEdit(staff)}
-                        className="h-7 w-7 flex items-center justify-center bg-gray-600/50 hover:bg-blue-500/20 text-blue-400 hover:text-blue-300 rounded-full transition-colors"
-                        title={t('edit')}
-                      >
-                        <Edit size={16} />
-                      </button>
-                      <button
-                        onClick={() => handleDelete(staff.id)}
-                        className="h-7 w-7 flex items-center justify-center bg-gray-600/50 hover:bg-red-500/20 text-red-400 hover:text-red-300 rounded-full transition-colors"
-                        title={t('staff.delete')}
-                      >
-                        <Trash2 size={16} />
-                      </button>
+            {/* Staff Section */}
+            <div>
+              <h3 className="text-base xs:text-lg font-medium text-white mb-3 flex items-center gap-2 sticky top-0">
+                <Users className="text-blue-400" size={18} />
+                {t('staff.roles.volunteer')}
+              </h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 xs:gap-4">
+                {volunteers.map(staff => (
+                  <div
+                    key={staff.id}
+                    className="bg-gray-700/50 rounded-lg p-3 xs:p-4 border border-white/10 hover:border-white/20 transition-colors"
+                  >
+                    <div className="flex justify-between items-start mb-3">
+                      <h3 className="text-base font-medium text-white truncate pr-2">{staff.name}</h3>
+                      {isAdmin && (
+                        <div className="flex gap-1 xs:gap-1.5 shrink-0">
+                          <button
+                            onClick={() => handleRoleChange(staff.id, 'make')}
+                            className="h-7 w-7 flex items-center justify-center bg-gray-600/50 hover:bg-purple-500/20 text-purple-400 hover:text-purple-300 rounded-full transition-colors"
+                            title={t('staff.makeAdmin')}
+                          >
+                            <Shield size={16} />
+                          </button>
+                          <button
+                            onClick={() => handleEdit(staff)}
+                            className="h-7 w-7 flex items-center justify-center bg-gray-600/50 hover:bg-blue-500/20 text-blue-400 hover:text-blue-300 rounded-full transition-colors"
+                            title={t('edit')}
+                          >
+                            <Edit size={16} />
+                          </button>
+                          <button
+                            onClick={() => handleDelete(staff.id)}
+                            className="h-7 w-7 flex items-center justify-center bg-gray-600/50 hover:bg-red-500/20 text-red-400 hover:text-red-300 rounded-full transition-colors"
+                            title={t('staff.delete')}
+                          >
+                            <Trash2 size={16} />
+                          </button>
+                        </div>
+                      )}
                     </div>
-                  )}
-                </div>
-                <StaffInfo staff={staff} />
+                    <StaffInfo staff={staff} />
+                  </div>
+                ))}
               </div>
-            ))}
+            </div>
           </div>
         </div>
       </div>

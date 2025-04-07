@@ -5,6 +5,7 @@ import { PlusCircle, X, AlertCircle, Trash2, Loader2, Check, Save } from 'lucide
 import { toast } from 'react-hot-toast';
 import { format, parse, addDays } from 'date-fns';
 import { ptBR, enUS } from 'date-fns/locale';
+import PageHeader from '../components/PageHeader';
 import { 
   loadLaundrySchedule,
   addLaundryReservation,
@@ -165,18 +166,22 @@ export default function LaundrySchedule() {
   // Renderiza a escala para uma semana
   return (
     <div className="w-full h-full relative overflow-auto">
+      <PageHeader 
+        title={t('laundry.title')}
+        showBackButton={true}
+        onAddItem={() => setShowModal(true)}
+        addItemLabel={t('laundry.addReservation')}
+      />
+      
       {loading ? (
         <div className="flex items-center justify-center h-64">
           <Loader2 className="animate-spin text-blue-500" size={32} />
           <span className="ml-2 text-gray-600 dark:text-gray-300">{t('common.loading')}</span>
         </div>
       ) : (
-        <div className="space-y-4">
+        <div className="p-4 space-y-4">
           {/* Controlador de data */}
           <div className="flex flex-wrap justify-between items-center mb-4 gap-2">
-            <h2 className="text-lg font-medium text-gray-700 dark:text-gray-200">
-              {t('laundry.title')}
-            </h2>
             <div className="flex space-x-2">
               <button
                 onClick={() => setSelectedDate(new Date())}

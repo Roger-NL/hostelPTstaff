@@ -886,39 +886,32 @@ export default function Tasks() {
   return (
     <div className="page-container flex flex-col">
       <PageHeader 
-        title="Task Management" 
+        title={t('tasks.title')} 
+        onAddItem={isAdmin ? () => setShowForm(true) : undefined}
+        addItemLabel={t('tasks.addTask')}
+        showBackButton={true}
         actions={
           isAdmin && (
-            <>
-              <div className="flex-shrink-0 flex items-center gap-2">
-                <button
-                  onClick={() => setShowConfirmCleanup(true)}
-                  className="h-9 px-2.5 xs:px-3 bg-amber-500 text-white rounded-lg xs:rounded-xl shadow-md hover:bg-amber-600 transition-colors flex items-center gap-1.5 text-xs xs:text-sm font-light"
-                  disabled={isLoadingAction}
-                >
-                  <Trash2 size={16} />
-                  <span className="hidden sm:inline">Limpar Tarefas Excluídas</span>
-                  <span className="sm:hidden">Limpar</span>
-                </button>
-                <button
-                  onClick={() => setShowConfirmAllDelete(true)}
-                  className="h-9 px-2.5 xs:px-3 bg-red-500 text-white rounded-lg xs:rounded-xl shadow-md hover:bg-red-600 transition-colors flex items-center gap-1.5 text-xs xs:text-sm font-light"
-                  disabled={isLoadingAction}
-                >
-                  <AlertTriangle size={16} />
-                  <span className="hidden sm:inline">Excluir Todas</span>
-                  <span className="sm:hidden">Excluir</span>
-                </button>
-              </div>
+            <div className="flex-shrink-0 flex items-center gap-2">
               <button
-                onClick={() => setShowForm(true)}
-                className="h-9 px-2.5 xs:px-3 bg-green-500 text-white rounded-lg xs:rounded-xl shadow-md hover:bg-green-600 transition-colors flex items-center gap-1.5 text-xs xs:text-sm font-light"
+                onClick={() => setShowConfirmCleanup(true)}
+                className="h-9 px-2.5 xs:px-3 bg-amber-500 text-white rounded-lg shadow-md hover:bg-amber-600 transition-colors flex items-center gap-1.5 text-xs xs:text-sm font-light"
+                disabled={isLoadingAction}
               >
-                <Plus size={16} />
-                <span className="hidden xs:inline">Add Task</span>
-                <span className="xs:hidden">Add</span>
+                <Trash2 size={16} />
+                <span className="hidden sm:inline">{t('tasks.cleanup')}</span>
+                <span className="sm:hidden">{t('cleanup')}</span>
               </button>
-            </>
+              <button
+                onClick={() => setShowConfirmAllDelete(true)}
+                className="h-9 px-2.5 xs:px-3 bg-red-500 text-white rounded-lg shadow-md hover:bg-red-600 transition-colors flex items-center gap-1.5 text-xs xs:text-sm font-light"
+                disabled={isLoadingAction}
+              >
+                <AlertTriangle size={16} />
+                <span className="hidden sm:inline">{t('tasks.deleteAll')}</span>
+                <span className="sm:hidden">{t('delete')}</span>
+              </button>
+            </div>
           )
         }
       />

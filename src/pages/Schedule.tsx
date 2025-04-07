@@ -526,41 +526,41 @@ export default function Schedule() {
       <PageHeader 
         title={format(selectedWeek, 'MMMM yyyy')}
         actions={
-          <div className="flex items-center gap-1.5 xs:gap-2">
+          <div className="flex items-center gap-2">
             <button
               onClick={() => setSummaryModalOpen(true)}
-              className="w-8 h-8 xs:w-9 xs:h-9 flex items-center justify-center bg-blue-500/50 rounded-full text-white hover:bg-blue-600/50 transition-colors"
+              className="w-9 h-9 flex items-center justify-center bg-blue-500/50 hover:bg-blue-600/50 text-white rounded-full transition-colors"
+              title="Summary"
             >
-              <FileText size={16} className="xs:hidden" />
-              <FileText size={18} className="hidden xs:block" />
+              <FileText size={18} />
             </button>
             <button
               onClick={() => setDatePickerOpen(!datePickerOpen)}
-              className="calendar-button w-8 h-8 xs:w-9 xs:h-9 flex items-center justify-center bg-gray-700/50 rounded-full text-white hover:bg-gray-600 transition-colors"
+              className="calendar-button w-9 h-9 flex items-center justify-center bg-gray-700/50 hover:bg-gray-600 text-white rounded-full transition-colors"
+              title="Select date"
             >
-              <CalendarIcon size={16} className="xs:hidden" />
-              <CalendarIcon size={18} className="hidden xs:block" />
+              <CalendarIcon size={18} />
             </button>
             <button
               onClick={handlePreviousWeek}
-              className="w-8 h-8 xs:w-9 xs:h-9 flex items-center justify-center bg-gray-700/50 rounded-full text-white hover:bg-gray-600 transition-colors"
+              className="w-9 h-9 flex items-center justify-center bg-gray-700/50 hover:bg-gray-600 text-white rounded-full transition-colors"
+              title="Previous week"
             >
-              <ChevronLeft size={16} className="xs:hidden" />
-              <ChevronLeft size={18} className="hidden xs:block" />
+              <ChevronLeft size={18} />
             </button>
             <button
               onClick={handleNextWeek}
-              className="w-8 h-8 xs:w-9 xs:h-9 flex items-center justify-center bg-gray-700/50 rounded-full text-white hover:bg-gray-600 transition-colors"
+              className="w-9 h-9 flex items-center justify-center bg-gray-700/50 hover:bg-gray-600 text-white rounded-full transition-colors"
+              title="Next week"
             >
-              <ChevronRight size={16} className="xs:hidden" />
-              <ChevronRight size={18} className="hidden xs:block" />
+              <ChevronRight size={18} />
             </button>
           </div>
         }
       />
       
       {/* Calendar view */}
-      <div className="page-content flex-1 overflow-hidden">
+      <div className="page-content p-4 flex-1 overflow-hidden">
         {!isMobileView && (
           <div className="bg-gray-800/50 backdrop-blur-sm rounded-lg flex-1 flex flex-col min-h-0">
             <div className="overflow-x-auto overflow-y-hidden h-full">
