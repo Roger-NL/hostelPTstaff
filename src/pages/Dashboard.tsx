@@ -45,14 +45,12 @@ export default function MainDashboard() {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const [view, setView] = useState('dashboard');
-  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(window.innerWidth < 1024);
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(true);
   
-  // Effect para ajustar sidebar baseado no tamanho da tela
+  // Effect para manter a sidebar colapsada em todos os tamanhos de tela
   useEffect(() => {
     const handleResize = () => {
-      if (window.innerWidth < 1024) {
-        setIsSidebarCollapsed(true);
-      }
+      setIsSidebarCollapsed(true);
     };
     
     window.addEventListener('resize', handleResize);
@@ -122,22 +120,22 @@ export default function MainDashboard() {
 
   return (
     <div className="flex h-screen bg-gray-900 text-white">
-      {/* Sidebar */}
+      {/* Sidebar - Sempre colapsado em mobile e desktop */}
       <div
-        className={`bg-gray-800/50 w-64 shrink-0 transition-all duration-300 fixed lg:static top-0 bottom-0 z-20 ${
-          isSidebarCollapsed ? '-translate-x-full lg:translate-x-0 lg:w-16' : 'translate-x-0'
+        className={`bg-gray-800/50 w-64 shrink-0 transition-all duration-300 fixed lg:static top-0 bottom-0 z-30 ${
+          isSidebarCollapsed ? '-translate-x-full lg:translate-x-0 lg:w-0 lg:opacity-0' : 'translate-x-0'
         }`}
       >
         {/* Logo */}
         <div className="p-4 border-b border-gray-700/30 flex items-center justify-between">
-          <h1 className={`text-xl font-extralight tracking-wider ${isSidebarCollapsed ? 'lg:hidden' : ''}`}>
+          <h1 className="text-xl font-extralight tracking-wider">
             Hostel PT Staff
           </h1>
           <button
             onClick={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
-            className="text-gray-400 hover:text-white transition-colors hidden lg:block"
+            className="text-gray-400 hover:text-white transition-colors"
           >
-            <ChevronLeft size={20} className={`transition-transform duration-300 ${isSidebarCollapsed ? 'rotate-180' : ''}`} />
+            <ChevronLeft size={20} />
           </button>
         </div>
 
@@ -189,7 +187,7 @@ export default function MainDashboard() {
       {/* Mobile sidebar overlay */}
       {!isSidebarCollapsed && (
         <div
-          className="fixed inset-0 bg-black/50 z-10 lg:hidden"
+          className="fixed inset-0 bg-black/50 z-20"
           onClick={() => setIsSidebarCollapsed(true)}
         ></div>
       )}
@@ -201,13 +199,23 @@ export default function MainDashboard() {
           <div className="flex items-center gap-3">
             <button
               onClick={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
-              className="text-gray-400 hover:text-white transition-colors lg:hidden"
+              className="text-gray-400 hover:text-white transition-colors"
+              aria-label="Toggle menu"
             >
-              <Menu size={20} />
+              {isSidebarCollapsed ? <Menu size={20} /> : <ChevronsLeft size={20} />}
             </button>
             <h2 className="text-lg font-light">{menuItems.find((item) => item.view === view)?.label}</h2>
           </div>
-          <div className="text-sm font-light hidden md:block">{getGreeting()}</div>
+          <div className="flex items-center gap-2">
+            <div className="text-sm font-light hidden md:block">{getGreeting()}</div>
+            <button
+              onClick={handleLogout}
+              className="p-2 rounded-full hover:bg-gray-700/50 transition-colors text-gray-400 hover:text-white"
+              aria-label="Logout"
+            >
+              <LogOut size={18} />
+            </button>
+          </div>
         </div>
 
         {/* Content */}

@@ -24,7 +24,8 @@ import {
   CheckCircle,
   AlertCircle,
   Clock as ClockIcon,
-  Shield
+  Shield,
+  Settings
 } from 'lucide-react';
 import { firestore } from '../config/firebase';
 import { doc, updateDoc, getDoc } from 'firebase/firestore';
@@ -88,6 +89,11 @@ export default function DashboardContent() {
   const [isPromoting, setIsPromoting] = useState(false);
   const { loadAllUsers } = useAuth();
   const navigate = useNavigate();
+
+  // Função para navegar para outras páginas
+  const navigateTo = (path: string) => {
+    navigate(path);
+  };
 
   // Carrega todos os usuários quando o componente é montado
   useEffect(() => {
@@ -417,367 +423,447 @@ export default function DashboardContent() {
   const hasCurrentVolunteers = currentVolunteers && currentVolunteers.length > 0;
 
   return (
-    <div className="space-y-6 xs:space-y-8">
-      {/* User next shift - MOVED TO TOP */}
-      <div className="bg-white/90 dark:bg-gray-800/70 backdrop-blur-md rounded-xl p-4 xs:p-5 sm:p-6 border border-gray-200/70 dark:border-gray-700/50">
-        <h2 className="text-lg xs:text-xl font-extralight text-gray-800 dark:text-white mb-3 xs:mb-4 flex items-center gap-2">
-          <Clock size={18} className="text-teal-500 xs:hidden" />
-          <Clock size={20} className="text-teal-500 hidden xs:block" />
-          {t('dashboard.yourNextShift') || "Your Next Shift"}
-        </h2>
-        
-        {userNextShift ? (
-          <div className="flex flex-col items-center justify-center py-6 text-center">
-            <div className="w-20 h-20 xs:w-24 xs:h-24 rounded-full bg-gradient-to-br from-teal-500 to-emerald-500 flex items-center justify-center text-white mb-4">
-              <Calendar size={32} className="xs:hidden" />
-              <Calendar size={40} className="hidden xs:block" />
-            </div>
-            <h3 className="text-md xs:text-lg font-light text-gray-800 dark:text-white">{userNextShift.date}</h3>
-            <p className="text-xl xs:text-2xl font-extralight text-gray-700 dark:text-gray-300 mt-2">{userNextShift.shift}</p>
-            <div className="mt-6 px-4 py-2 bg-teal-100 dark:bg-teal-900/30 text-teal-800 dark:text-teal-300 rounded-lg text-xs xs:text-sm font-light flex items-center gap-2">
-              <Shield size={14} className="xs:hidden" />
-              <Shield size={16} className="hidden xs:block" />
-              <span>{t('dashboard.dutyConfirmed')}</span>
-            </div>
-          </div>
-        ) : (
-          <div className="flex flex-col items-center justify-center py-10 text-center">
-            <div className="w-16 h-16 rounded-full bg-gray-100 dark:bg-gray-700 flex items-center justify-center text-gray-400 dark:text-gray-500 mb-4">
-              <Calendar size={24} />
-            </div>
-            <p className="text-gray-500 dark:text-gray-400 font-light">
-              {t('dashboard.noUpcomingShifts')}
-            </p>
-          </div>
-        )}
-      </div>
-
-      {/* Welcome section with stats */}
-      <div className="grid grid-cols-2 xs:grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-3 xs:gap-4 sm:gap-6">
-        <DashboardCard 
-          title={t('dashboard.stats.tasks') || "Tasks"} 
-          value={completedTasks} 
-          icon={<>
-            <ClipboardList size={18} className="xs:hidden" />
-            <ClipboardList size={24} className="hidden xs:block" />
-          </>}
-          trend={{ value: completionRate, isPositive: true }}
-          navigateTo="/tasks"
-        />
-        <DashboardCard 
-          title={t('dashboard.stats.events') || "Events"} 
-          value={upcomingEvents} 
-          icon={<>
-            <PartyPopper size={18} className="xs:hidden" />
-            <PartyPopper size={24} className="hidden xs:block" />
-          </>}
-          navigateTo="/events"
-        />
-        <DashboardCard 
-          title={t('dashboard.stats.messages') || "Messages"} 
-          value={unreadMessages} 
-          icon={<>
-            <MessageCircle size={18} className="xs:hidden" />
-            <MessageCircle size={24} className="hidden xs:block" />
-          </>}
-          navigateTo="/messages"
-        />
-        <DashboardCard 
-          title={t('dashboard.stats.points') || "Your Points"} 
-          value={user?.points || 0} 
-          icon={<>
-            <Award size={18} className="xs:hidden" />
-            <Award size={24} className="hidden xs:block" />
-          </>}
-          navigateTo="/points"
-        />
-      </div>
-
-      {/* Today's team section - UPDATED */}
-      <div className="bg-white/90 dark:bg-gray-800/70 backdrop-blur-md rounded-xl p-4 xs:p-5 sm:p-6 border border-gray-200/70 dark:border-gray-700/50">
-        <h2 className="text-lg xs:text-xl font-extralight text-gray-800 dark:text-white mb-3 xs:mb-4 flex items-center gap-2">
-          <Users size={18} className="text-blue-500 xs:hidden" />
-          <Users size={20} className="text-blue-500 hidden xs:block" />
-          {t('dashboard.todayTeam') || "Today's Team"}
-        </h2>
-        
-        <div className="space-y-3 xs:space-y-4">
-          {/* Last active shift with volunteers */}
-          <div className="space-y-2 xs:space-y-3">
-            <div className="flex items-center justify-between">
-              <h3 className="text-xs xs:text-sm font-medium text-gray-600 dark:text-gray-300 flex items-center gap-1.5">
-                <ClockIcon size={14} className="text-gray-500 xs:hidden" />
-                <ClockIcon size={16} className="text-gray-500 hidden xs:block" />
-                {t('dashboard.lastActiveShift')}
-              </h3>
-              <span className="text-xxs xs:text-xs font-light text-gray-500">
-                {formatDisplayDate(lastActiveShiftInfo.date)} - {lastActiveShiftInfo.shift}
+    <div className="space-y-6">
+      {/* Menu rápido de navegação */}
+      <div className="mb-6 bg-gray-800/40 backdrop-blur-sm rounded-xl border border-gray-700/30 p-4">
+        <h2 className="text-lg font-light mb-3">{t('navigation.quickMenu')}</h2>
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
+          <button
+            onClick={() => navigateTo('/schedule')}
+            className="flex flex-col items-center justify-center p-4 bg-gray-800/50 rounded-xl hover:bg-blue-600/20 transition-all duration-300 border border-gray-700/30 hover:border-blue-500/30 group"
+          >
+            <Calendar className="w-6 h-6 text-gray-300 group-hover:text-blue-400 transition-colors duration-300" />
+            <span className="mt-2 text-sm text-gray-300 group-hover:text-white">{t('schedule.title')}</span>
+          </button>
+          
+          <button
+            onClick={() => navigateTo('/tasks')}
+            className="flex flex-col items-center justify-center p-4 bg-gray-800/50 rounded-xl hover:bg-green-600/20 transition-all duration-300 border border-gray-700/30 hover:border-green-500/30 group"
+          >
+            <ClipboardList className="w-6 h-6 text-gray-300 group-hover:text-green-400 transition-colors duration-300" />
+            <span className="mt-2 text-sm text-gray-300 group-hover:text-white">{t('tasks.title')}</span>
+          </button>
+          
+          <button
+            onClick={() => navigateTo('/events')}
+            className="flex flex-col items-center justify-center p-4 bg-gray-800/50 rounded-xl hover:bg-purple-600/20 transition-all duration-300 border border-gray-700/30 hover:border-purple-500/30 group"
+          >
+            <PartyPopper className="w-6 h-6 text-gray-300 group-hover:text-purple-400 transition-colors duration-300" />
+            <span className="mt-2 text-sm text-gray-300 group-hover:text-white">{t('events.title')}</span>
+          </button>
+          
+          <button
+            onClick={() => navigateTo('/messages')}
+            className="flex flex-col items-center justify-center p-4 bg-gray-800/50 rounded-xl hover:bg-yellow-600/20 transition-all duration-300 border border-gray-700/30 hover:border-yellow-500/30 group relative"
+          >
+            <MessageCircle className="w-6 h-6 text-gray-300 group-hover:text-yellow-400 transition-colors duration-300" />
+            <span className="mt-2 text-sm text-gray-300 group-hover:text-white">{t('messages.title')}</span>
+            {unreadMessages > 0 && (
+              <span className="absolute top-2 right-2 w-5 h-5 bg-red-500 rounded-full flex items-center justify-center text-xs text-white">
+                {unreadMessages}
               </span>
-            </div>
-            
-            <div className="flex flex-wrap gap-2">
-              {lastActiveShiftInfo.volunteers && lastActiveShiftInfo.volunteers.length > 0 ? (
-                <div className="w-full">
-                  <div className="text-xs font-medium text-gray-700 dark:text-gray-300 mb-1.5">{lastActiveShiftInfo.shift}</div>
-                  <div className="flex flex-wrap gap-2">
-                    {lastActiveShiftInfo.volunteers.map(volunteer => volunteer && (
-                      <div key={volunteer.id} className="flex items-center px-2 py-1 rounded-lg bg-gray-100 dark:bg-gray-700/50 gap-1.5">
-                        <div className="w-5 h-5 xs:w-6 xs:h-6 rounded-full bg-gradient-to-br from-blue-500/20 to-violet-500/20 flex items-center justify-center text-blue-600 text-xs">
-                          {volunteer.name[0]}
-                        </div>
-                        <span className="text-xs font-light text-gray-800 dark:text-gray-200">
-                          {volunteer.name.split(' ')[0]}
-                          {volunteer.id === user?.id && ` (${t('dashboard.you')})`}
-                        </span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              ) : (
-                <span className="text-xs text-gray-500 dark:text-gray-400">{t('dashboard.noVolunteersAssigned')}</span>
-              )}
-            </div>
-          </div>
-
-          {/* Current shift - only show if there are volunteers */}
-          {hasCurrentVolunteers && (
-            <div className="space-y-2 xs:space-y-3">
-              <div className="flex items-center justify-between">
-                <h3 className="text-xs xs:text-sm font-medium text-blue-600 dark:text-blue-400 flex items-center gap-1.5">
-                  <ClockIcon size={14} className="text-blue-500 xs:hidden" />
-                  <ClockIcon size={16} className="text-blue-500 hidden xs:block" />
-                  {getShiftName(currentShift)} {/* Current */}
-                </h3>
-                <span className="text-xxs xs:text-xs font-medium text-blue-600 dark:text-blue-400">{currentShift}</span>
+            )}
+          </button>
+          
+          <button
+            onClick={() => navigateTo('/points')}
+            className="flex flex-col items-center justify-center p-4 bg-gray-800/50 rounded-xl hover:bg-amber-600/20 transition-all duration-300 border border-gray-700/30 hover:border-amber-500/30 group"
+          >
+            <Award className="w-6 h-6 text-gray-300 group-hover:text-amber-400 transition-colors duration-300" />
+            <span className="mt-2 text-sm text-gray-300 group-hover:text-white">{t('points.title')}</span>
+          </button>
+          
+          <button
+            onClick={() => navigateTo('/staff')}
+            className="flex flex-col items-center justify-center p-4 bg-gray-800/50 rounded-xl hover:bg-teal-600/20 transition-all duration-300 border border-gray-700/30 hover:border-teal-500/30 group"
+          >
+            <Users className="w-6 h-6 text-gray-300 group-hover:text-teal-400 transition-colors duration-300" />
+            <span className="mt-2 text-sm text-gray-300 group-hover:text-white">{t('staff.title')}</span>
+          </button>
+          
+          <button
+            onClick={() => navigateTo('/settings')}
+            className="flex flex-col items-center justify-center p-4 bg-gray-800/50 rounded-xl hover:bg-gray-600/50 transition-all duration-300 border border-gray-700/30 hover:border-gray-500/50 group"
+          >
+            <Settings className="w-6 h-6 text-gray-300 group-hover:text-white transition-colors duration-300" />
+            <span className="mt-2 text-sm text-gray-300 group-hover:text-white">{t('settings.title')}</span>
+          </button>
+          
+          {user?.role === 'admin' && (
+            <button
+              onClick={() => navigate('/staff')}
+              className="flex flex-col items-center justify-center p-4 bg-gray-800/50 rounded-xl hover:bg-pink-600/20 transition-all duration-300 border border-gray-700/30 hover:border-pink-500/30 group"
+            >
+              <Shield className="w-6 h-6 text-gray-300 group-hover:text-pink-400 transition-colors duration-300" />
+              <span className="mt-2 text-sm text-gray-300 group-hover:text-white">{t('admin.title')}</span>
+            </button>
+          )}
+        </div>
+      </div>
+      
+      {/* Status do Usuário */}
+      <div className="space-y-6 xs:space-y-8">
+        {/* User next shift - MOVED TO TOP */}
+        <div className="bg-white/90 dark:bg-gray-800/70 backdrop-blur-md rounded-xl p-4 xs:p-5 sm:p-6 border border-gray-200/70 dark:border-gray-700/50">
+          <h2 className="text-lg xs:text-xl font-extralight text-gray-800 dark:text-white mb-3 xs:mb-4 flex items-center gap-2">
+            <Clock size={18} className="text-teal-500 xs:hidden" />
+            <Clock size={20} className="text-teal-500 hidden xs:block" />
+            {t('dashboard.yourNextShift') || "Your Next Shift"}
+          </h2>
+          
+          {userNextShift ? (
+            <div className="flex flex-col items-center justify-center py-6 text-center">
+              <div className="w-20 h-20 xs:w-24 xs:h-24 rounded-full bg-gradient-to-br from-teal-500 to-emerald-500 flex items-center justify-center text-white mb-4">
+                <Calendar size={32} className="xs:hidden" />
+                <Calendar size={40} className="hidden xs:block" />
               </div>
-              
-              <div className="flex flex-wrap gap-2">
-                <div className="w-full">
-                  <div className="text-xs font-medium text-blue-600 dark:text-blue-300 mb-1.5">{currentShift}</div>
-                  <div className="flex flex-wrap gap-2">
-                    {currentVolunteers.map(volunteer => volunteer && (
-                      <div key={volunteer.id} className="flex items-center px-2 py-1 rounded-lg bg-blue-100 dark:bg-blue-900/30 gap-1.5">
-                        <div className="w-5 h-5 xs:w-6 xs:h-6 rounded-full bg-blue-500 flex items-center justify-center text-white text-xs">
-                          {volunteer.name[0]}
-                        </div>
-                        <span className="text-xs font-medium text-blue-800 dark:text-blue-300">
-                          {volunteer.name.split(' ')[0]}
-                          {volunteer.id === user?.id && ` (${t('dashboard.you')})`}
-                        </span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
+              <h3 className="text-md xs:text-lg font-light text-gray-800 dark:text-white">{userNextShift.date}</h3>
+              <p className="text-xl xs:text-2xl font-extralight text-gray-700 dark:text-gray-300 mt-2">{userNextShift.shift}</p>
+              <div className="mt-6 px-4 py-2 bg-teal-100 dark:bg-teal-900/30 text-teal-800 dark:text-teal-300 rounded-lg text-xs xs:text-sm font-light flex items-center gap-2">
+                <Shield size={14} className="xs:hidden" />
+                <Shield size={16} className="hidden xs:block" />
+                <span>{t('dashboard.dutyConfirmed')}</span>
               </div>
+            </div>
+          ) : (
+            <div className="flex flex-col items-center justify-center py-10 text-center">
+              <div className="w-16 h-16 rounded-full bg-gray-100 dark:bg-gray-700 flex items-center justify-center text-gray-400 dark:text-gray-500 mb-4">
+                <Calendar size={24} />
+              </div>
+              <p className="text-gray-500 dark:text-gray-400 font-light">
+                {t('dashboard.noUpcomingShifts')}
+              </p>
             </div>
           )}
-
-          {/* Next shift with volunteers */}
-          <div className="space-y-2 xs:space-y-3">
-            <div className="flex items-center justify-between">
-              <h3 className="text-xs xs:text-sm font-medium text-gray-600 dark:text-gray-300 flex items-center gap-1.5">
-                <ClockIcon size={14} className="text-gray-500 xs:hidden" />
-                <ClockIcon size={16} className="text-gray-500 hidden xs:block" />
-                {t('dashboard.nextShiftWithVolunteers')}
-              </h3>
-              <span className="text-xxs xs:text-xs font-light text-gray-500">
-                {formatDisplayDate(nextShiftWithVolunteersInfo.date)} - {nextShiftWithVolunteersInfo.shift}
-              </span>
-            </div>
-            
-            <div className="flex flex-wrap gap-2">
-              {nextShiftWithVolunteersInfo.volunteers && nextShiftWithVolunteersInfo.volunteers.length > 0 ? (
-                <div className="w-full">
-                  <div className="text-xs font-medium text-gray-700 dark:text-gray-300 mb-1.5">{nextShiftWithVolunteersInfo.shift}</div>
-                  <div className="flex flex-wrap gap-2">
-                    {nextShiftWithVolunteersInfo.volunteers.map(volunteer => volunteer && (
-                      <div key={volunteer.id} className="flex items-center px-2 py-1 rounded-lg bg-gray-100 dark:bg-gray-700/50 gap-1.5">
-                        <div className="w-5 h-5 xs:w-6 xs:h-6 rounded-full bg-gradient-to-br from-blue-500/20 to-violet-500/20 flex items-center justify-center text-blue-600 text-xs">
-                          {volunteer.name[0]}
-                        </div>
-                        <span className="text-xs font-light text-gray-800 dark:text-gray-200">
-                          {volunteer.name.split(' ')[0]}
-                          {volunteer.id === user?.id && ` (${t('dashboard.you')})`}
-                        </span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              ) : (
-                <span className="text-xs text-gray-500 dark:text-gray-400">{t('dashboard.noVolunteersAssigned')}</span>
-              )}
-            </div>
-          </div>
         </div>
-      </div>
 
-      {/* Weather and Other sections */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 xs:gap-6">
-        {/* Weather section */}
-        <div className="bg-white/90 dark:bg-gray-800/70 backdrop-blur-md rounded-xl p-4 xs:p-5 sm:p-6 border border-gray-200/70 dark:border-gray-700/50 lg:col-span-1">
+        {/* Welcome section with stats */}
+        <div className="grid grid-cols-2 xs:grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-3 xs:gap-4 sm:gap-6">
+          <DashboardCard 
+            title={t('dashboard.stats.tasks') || "Tasks"} 
+            value={completedTasks} 
+            icon={<>
+              <ClipboardList size={18} className="xs:hidden" />
+              <ClipboardList size={24} className="hidden xs:block" />
+            </>}
+            trend={{ value: completionRate, isPositive: true }}
+            navigateTo="/tasks"
+          />
+          <DashboardCard 
+            title={t('dashboard.stats.events') || "Events"} 
+            value={upcomingEvents} 
+            icon={<>
+              <PartyPopper size={18} className="xs:hidden" />
+              <PartyPopper size={24} className="hidden xs:block" />
+            </>}
+            navigateTo="/events"
+          />
+          <DashboardCard 
+            title={t('dashboard.stats.messages') || "Messages"} 
+            value={unreadMessages} 
+            icon={<>
+              <MessageCircle size={18} className="xs:hidden" />
+              <MessageCircle size={24} className="hidden xs:block" />
+            </>}
+            navigateTo="/messages"
+          />
+          <DashboardCard 
+            title={t('dashboard.stats.points') || "Your Points"} 
+            value={user?.points || 0} 
+            icon={<>
+              <Award size={18} className="xs:hidden" />
+              <Award size={24} className="hidden xs:block" />
+            </>}
+            navigateTo="/points"
+          />
+        </div>
+
+        {/* Today's team section - UPDATED */}
+        <div className="bg-white/90 dark:bg-gray-800/70 backdrop-blur-md rounded-xl p-4 xs:p-5 sm:p-6 border border-gray-200/70 dark:border-gray-700/50">
           <h2 className="text-lg xs:text-xl font-extralight text-gray-800 dark:text-white mb-3 xs:mb-4 flex items-center gap-2">
-            <Sun size={18} className="text-amber-500 xs:hidden" />
-            <Sun size={20} className="text-amber-500 hidden xs:block" />
-            {t('dashboard.weather.title') || "Beach Conditions"}
+            <Users size={18} className="text-blue-500 xs:hidden" />
+            <Users size={20} className="text-blue-500 hidden xs:block" />
+            {t('dashboard.todayTeam') || "Today's Team"}
           </h2>
+          
           <div className="space-y-3 xs:space-y-4">
-            <div className="flex items-center justify-between px-3 xs:px-4 py-2 rounded-lg bg-gradient-to-r from-amber-500/20 to-yellow-500/20 border border-amber-200/50 dark:border-amber-700/30">
-              <div className="flex items-center gap-1.5 xs:gap-2">
-                <Thermometer size={16} className="text-amber-500 xs:hidden" />
-                <Thermometer size={18} className="text-amber-500 hidden xs:block" />
-                <span className="text-gray-700 dark:text-gray-300 font-light text-xs xs:text-sm">{t('dashboard.weather.temperature') || "Temperature"}</span>
+            {/* Last active shift with volunteers */}
+            <div className="space-y-2 xs:space-y-3">
+              <div className="flex items-center justify-between">
+                <h3 className="text-xs xs:text-sm font-medium text-gray-600 dark:text-gray-300 flex items-center gap-1.5">
+                  <ClockIcon size={14} className="text-gray-500 xs:hidden" />
+                  <ClockIcon size={16} className="text-gray-500 hidden xs:block" />
+                  {t('dashboard.lastActiveShift')}
+                </h3>
+                <span className="text-xxs xs:text-xs font-light text-gray-500">
+                  {formatDisplayDate(lastActiveShiftInfo.date)} - {lastActiveShiftInfo.shift}
+                </span>
               </div>
-              <span className="font-medium text-gray-900 dark:text-white text-xs xs:text-sm">{weather.temperature}°C</span>
-            </div>
-            <div className="flex items-center justify-between px-3 xs:px-4 py-2 rounded-lg bg-gradient-to-r from-blue-500/20 to-teal-500/20 border border-blue-200/50 dark:border-blue-700/30">
-              <div className="flex items-center gap-1.5 xs:gap-2">
-                <Wind size={16} className="text-blue-500 xs:hidden" />
-                <Wind size={18} className="text-blue-500 hidden xs:block" />
-                <span className="text-gray-700 dark:text-gray-300 font-light text-xs xs:text-sm">{t('dashboard.weather.windSpeed') || "Wind Speed"}</span>
-              </div>
-              <span className="font-medium text-gray-900 dark:text-white text-xs xs:text-sm">{weather.windSpeed} km/h</span>
-            </div>
-            <div className="flex items-center justify-between px-3 xs:px-4 py-2 rounded-lg bg-gradient-to-r from-teal-500/20 to-cyan-500/20 border border-teal-200/50 dark:border-teal-700/30">
-              <div className="flex items-center gap-1.5 xs:gap-2">
-                <Waves size={16} className="text-teal-500 xs:hidden" />
-                <Waves size={18} className="text-teal-500 hidden xs:block" />
-                <span className="text-gray-700 dark:text-gray-300 font-light text-xs xs:text-sm">{t('dashboard.weather.waveHeight') || "Wave Height"}</span>
-              </div>
-              <span className="font-medium text-gray-900 dark:text-white text-xs xs:text-sm">{weather.waveHeight}m</span>
-            </div>
-            <div className="flex items-center justify-between px-3 xs:px-4 py-2 rounded-lg bg-gradient-to-r from-cyan-500/20 to-blue-500/20 border border-cyan-200/50 dark:border-cyan-700/30">
-              <div className="flex items-center gap-1.5 xs:gap-2">
-                <CloudRain size={16} className="text-cyan-500 xs:hidden" />
-                <CloudRain size={18} className="text-cyan-500 hidden xs:block" />
-                <span className="text-gray-700 dark:text-gray-300 font-light text-xs xs:text-sm">{t('dashboard.weather.humidity') || "Humidity"}</span>
-              </div>
-              <span className="font-medium text-gray-900 dark:text-white text-xs xs:text-sm">{weather.humidity}%</span>
-            </div>
-          </div>
-        </div>
-
-        {/* Tasks */}
-        <div className="bg-white/90 dark:bg-gray-800/70 backdrop-blur-md rounded-xl p-4 xs:p-5 sm:p-6 border border-gray-200/70 dark:border-gray-700/50 lg:col-span-2">
-          <h2 className="text-lg xs:text-xl font-extralight text-gray-800 dark:text-white mb-3 xs:mb-4 flex items-center gap-2">
-            <ClipboardList size={18} className="text-indigo-500 xs:hidden" />
-            <ClipboardList size={20} className="text-indigo-500 hidden xs:block" />
-            {t('dashboard.pendingTasks')}
-          </h2>
-          
-          <div className="space-y-2 xs:space-y-3">
-            {tasks.filter(t => t.status !== 'done' && t.type === 'hostel').slice(0, 5).length > 0 ? (
-              tasks.filter(t => t.status !== 'done' && t.type === 'hostel').slice(0, 5).map(task => (
-                <div 
-                  key={task.id} 
-                  className={`flex items-center justify-between p-2.5 xs:p-3 rounded-lg ${
-                    task.status === 'inProgress'
-                      ? 'bg-amber-100/50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800/20'
-                      : 'bg-gray-100/50 dark:bg-gray-700/20 border border-gray-200 dark:border-gray-700/20'
-                  }`}
-                >
-                  <div className="flex items-center gap-2 flex-1 min-w-0">
-                    <div className={`w-5 h-5 xs:w-6 xs:h-6 rounded-full flex items-center justify-center ${
-                      task.status === 'inProgress'
-                        ? 'bg-amber-500 text-white'
-                        : 'bg-gray-500 text-white'
-                    }`}>
-                      {task.status === 'inProgress'
-                        ? <Activity size={12} className="xs:hidden" />
-                        : <AlertCircle size={12} className="xs:hidden" />
-                      }
-                      {task.status === 'inProgress'
-                        ? <Activity size={14} className="hidden xs:block" />
-                        : <AlertCircle size={14} className="hidden xs:block" />
-                      }
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <h4 className="text-xs xs:text-sm font-medium text-gray-800 dark:text-gray-200 truncate">
-                        {task.title}
-                      </h4>
-                      <p className="text-xxs xs:text-xs font-light text-gray-500 dark:text-gray-400 truncate">
-                        {task.description.length > 40 
-                          ? task.description.substring(0, 40) + '...' 
-                          : task.description}
-                      </p>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-1.5 text-xs font-medium">
-                    <div className="flex items-center gap-1 ml-2 text-amber-500">
-                      <Award size={12} className="xs:hidden" />
-                      <Award size={14} className="hidden xs:block" />
-                      <span className="text-xxs xs:text-xs">{task.points}</span>
-                    </div>
-                  </div>
-                </div>
-              ))
-            ) : (
-              <div className="text-center py-4 xs:py-6">
-                <div className="w-10 h-10 xs:w-12 xs:h-12 mx-auto bg-gray-100 dark:bg-gray-700/30 rounded-full flex items-center justify-center mb-2 xs:mb-3">
-                  <ClipboardList size={18} className="text-gray-400 xs:hidden" />
-                  <ClipboardList size={20} className="text-gray-400 hidden xs:block" />
-                </div>
-                <p className="text-xs xs:text-sm text-gray-500 dark:text-gray-400">
-                  {t('dashboard.noTasks')}
-                </p>
-              </div>
-            )}
-          </div>
-        </div>
-
-        {/* User Schedule */}
-        <div className="bg-white/90 dark:bg-gray-800/70 backdrop-blur-md rounded-xl p-4 xs:p-5 sm:p-6 border border-gray-200/70 dark:border-gray-700/50 md:col-span-3">
-          <h2 className="text-lg xs:text-xl font-extralight text-gray-800 dark:text-white mb-3 xs:mb-4 flex items-center gap-2">
-            <Calendar size={18} className="text-blue-500 xs:hidden" />
-            <Calendar size={20} className="text-blue-500 hidden xs:block" />
-            {t('dashboard.yourSchedule')}
-          </h2>
-          
-          <div className="space-y-4">
-            <div className="p-3 xs:p-4 rounded-lg bg-gradient-to-r from-blue-500/10 to-violet-500/10 border border-blue-200/30 dark:border-blue-700/20 space-y-3">
-              <h3 className="text-sm xs:text-base font-medium text-blue-800 dark:text-blue-300">
-                {t('dashboard.nextShiftSimple')}
-              </h3>
-              
-              {userNextShift ? (
-                <div className="space-y-2">
-                  <div className="flex items-center gap-2">
-                    <Calendar size={14} className="text-blue-500 xs:hidden" />
-                    <Calendar size={16} className="text-blue-500 hidden xs:block" />
-                    <span className="text-xs xs:text-sm text-gray-700 dark:text-gray-300">{userNextShift.date}</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Clock size={14} className="text-blue-500 xs:hidden" />
-                    <Clock size={16} className="text-blue-500 hidden xs:block" />
-                    <span className="text-xs xs:text-sm text-gray-700 dark:text-gray-300">{userNextShift.shift} ({getShiftName(userNextShift.shift as ShiftTime)})</span>
-                  </div>
-                </div>
-              ) : (
-                <p className="text-xs xs:text-sm text-gray-600 dark:text-gray-400 font-light">
-                  {t('dashboard.noUpcomingShifts')}
-                </p>
-              )}
-            </div>
-            
-            <div>
-              <h3 className="text-xs xs:text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                {t('dashboard.daysOff')}
-              </h3>
               
               <div className="flex flex-wrap gap-2">
-                {daysOff.length > 0 ? (
-                  daysOff.map((day, index) => (
-                    <div 
-                      key={index}
-                      className="px-3 py-1 rounded-full bg-gray-100 dark:bg-gray-700/50 text-xxs xs:text-xs font-light text-gray-700 dark:text-gray-300 border border-gray-200/50 dark:border-gray-700"
-                    >
-                      {format(day, 'EEE, dd MMM')}
+                {lastActiveShiftInfo.volunteers && lastActiveShiftInfo.volunteers.length > 0 ? (
+                  <div className="w-full">
+                    <div className="text-xs font-medium text-gray-700 dark:text-gray-300 mb-1.5">{lastActiveShiftInfo.shift}</div>
+                    <div className="flex flex-wrap gap-2">
+                      {lastActiveShiftInfo.volunteers.map(volunteer => volunteer && (
+                        <div key={volunteer.id} className="flex items-center px-2 py-1 rounded-lg bg-gray-100 dark:bg-gray-700/50 gap-1.5">
+                          <div className="w-5 h-5 xs:w-6 xs:h-6 rounded-full bg-gradient-to-br from-blue-500/20 to-violet-500/20 flex items-center justify-center text-blue-600 text-xs">
+                            {volunteer.name[0]}
+                          </div>
+                          <span className="text-xs font-light text-gray-800 dark:text-gray-200">
+                            {volunteer.name.split(' ')[0]}
+                            {volunteer.id === user?.id && ` (${t('dashboard.you')})`}
+                          </span>
+                        </div>
+                      ))}
                     </div>
-                  ))
+                  </div>
                 ) : (
-                  <p className="text-xs text-gray-600 dark:text-gray-400 font-light">
-                    {t('dashboard.noDaysOff')}
+                  <span className="text-xs text-gray-500 dark:text-gray-400">{t('dashboard.noVolunteersAssigned')}</span>
+                )}
+              </div>
+            </div>
+
+            {/* Current shift - only show if there are volunteers */}
+            {hasCurrentVolunteers && (
+              <div className="space-y-2 xs:space-y-3">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-xs xs:text-sm font-medium text-blue-600 dark:text-blue-400 flex items-center gap-1.5">
+                    <ClockIcon size={14} className="text-blue-500 xs:hidden" />
+                    <ClockIcon size={16} className="text-blue-500 hidden xs:block" />
+                    {getShiftName(currentShift)} {/* Current */}
+                  </h3>
+                  <span className="text-xxs xs:text-xs font-medium text-blue-600 dark:text-blue-400">{currentShift}</span>
+                </div>
+                
+                <div className="flex flex-wrap gap-2">
+                  <div className="w-full">
+                    <div className="text-xs font-medium text-blue-600 dark:text-blue-300 mb-1.5">{currentShift}</div>
+                    <div className="flex flex-wrap gap-2">
+                      {currentVolunteers.map(volunteer => volunteer && (
+                        <div key={volunteer.id} className="flex items-center px-2 py-1 rounded-lg bg-blue-100 dark:bg-blue-900/30 gap-1.5">
+                          <div className="w-5 h-5 xs:w-6 xs:h-6 rounded-full bg-blue-500 flex items-center justify-center text-white text-xs">
+                            {volunteer.name[0]}
+                          </div>
+                          <span className="text-xs font-medium text-blue-800 dark:text-blue-300">
+                            {volunteer.name.split(' ')[0]}
+                            {volunteer.id === user?.id && ` (${t('dashboard.you')})`}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Next shift with volunteers */}
+            <div className="space-y-2 xs:space-y-3">
+              <div className="flex items-center justify-between">
+                <h3 className="text-xs xs:text-sm font-medium text-gray-600 dark:text-gray-300 flex items-center gap-1.5">
+                  <ClockIcon size={14} className="text-gray-500 xs:hidden" />
+                  <ClockIcon size={16} className="text-gray-500 hidden xs:block" />
+                  {t('dashboard.nextShiftWithVolunteers')}
+                </h3>
+                <span className="text-xxs xs:text-xs font-light text-gray-500">
+                  {formatDisplayDate(nextShiftWithVolunteersInfo.date)} - {nextShiftWithVolunteersInfo.shift}
+                </span>
+              </div>
+              
+              <div className="flex flex-wrap gap-2">
+                {nextShiftWithVolunteersInfo.volunteers && nextShiftWithVolunteersInfo.volunteers.length > 0 ? (
+                  <div className="w-full">
+                    <div className="text-xs font-medium text-gray-700 dark:text-gray-300 mb-1.5">{nextShiftWithVolunteersInfo.shift}</div>
+                    <div className="flex flex-wrap gap-2">
+                      {nextShiftWithVolunteersInfo.volunteers.map(volunteer => volunteer && (
+                        <div key={volunteer.id} className="flex items-center px-2 py-1 rounded-lg bg-gray-100 dark:bg-gray-700/50 gap-1.5">
+                          <div className="w-5 h-5 xs:w-6 xs:h-6 rounded-full bg-gradient-to-br from-blue-500/20 to-violet-500/20 flex items-center justify-center text-blue-600 text-xs">
+                            {volunteer.name[0]}
+                          </div>
+                          <span className="text-xs font-light text-gray-800 dark:text-gray-200">
+                            {volunteer.name.split(' ')[0]}
+                            {volunteer.id === user?.id && ` (${t('dashboard.you')})`}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                ) : (
+                  <span className="text-xs text-gray-500 dark:text-gray-400">{t('dashboard.noVolunteersAssigned')}</span>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Weather and Other sections */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 xs:gap-6">
+          {/* Weather section */}
+          <div className="bg-white/90 dark:bg-gray-800/70 backdrop-blur-md rounded-xl p-4 xs:p-5 sm:p-6 border border-gray-200/70 dark:border-gray-700/50 lg:col-span-1">
+            <h2 className="text-lg xs:text-xl font-extralight text-gray-800 dark:text-white mb-3 xs:mb-4 flex items-center gap-2">
+              <Sun size={18} className="text-amber-500 xs:hidden" />
+              <Sun size={20} className="text-amber-500 hidden xs:block" />
+              {t('dashboard.weather.title') || "Beach Conditions"}
+            </h2>
+            <div className="space-y-3 xs:space-y-4">
+              <div className="flex items-center justify-between px-3 xs:px-4 py-2 rounded-lg bg-gradient-to-r from-amber-500/20 to-yellow-500/20 border border-amber-200/50 dark:border-amber-700/30">
+                <div className="flex items-center gap-1.5 xs:gap-2">
+                  <Thermometer size={16} className="text-amber-500 xs:hidden" />
+                  <Thermometer size={18} className="text-amber-500 hidden xs:block" />
+                  <span className="text-gray-700 dark:text-gray-300 font-light text-xs xs:text-sm">{t('dashboard.weather.temperature') || "Temperature"}</span>
+                </div>
+                <span className="font-medium text-gray-900 dark:text-white text-xs xs:text-sm">{weather.temperature}°C</span>
+              </div>
+              <div className="flex items-center justify-between px-3 xs:px-4 py-2 rounded-lg bg-gradient-to-r from-blue-500/20 to-teal-500/20 border border-blue-200/50 dark:border-blue-700/30">
+                <div className="flex items-center gap-1.5 xs:gap-2">
+                  <Wind size={16} className="text-blue-500 xs:hidden" />
+                  <Wind size={18} className="text-blue-500 hidden xs:block" />
+                  <span className="text-gray-700 dark:text-gray-300 font-light text-xs xs:text-sm">{t('dashboard.weather.windSpeed') || "Wind Speed"}</span>
+                </div>
+                <span className="font-medium text-gray-900 dark:text-white text-xs xs:text-sm">{weather.windSpeed} km/h</span>
+              </div>
+              <div className="flex items-center justify-between px-3 xs:px-4 py-2 rounded-lg bg-gradient-to-r from-teal-500/20 to-cyan-500/20 border border-teal-200/50 dark:border-teal-700/30">
+                <div className="flex items-center gap-1.5 xs:gap-2">
+                  <Waves size={16} className="text-teal-500 xs:hidden" />
+                  <Waves size={18} className="text-teal-500 hidden xs:block" />
+                  <span className="text-gray-700 dark:text-gray-300 font-light text-xs xs:text-sm">{t('dashboard.weather.waveHeight') || "Wave Height"}</span>
+                </div>
+                <span className="font-medium text-gray-900 dark:text-white text-xs xs:text-sm">{weather.waveHeight}m</span>
+              </div>
+              <div className="flex items-center justify-between px-3 xs:px-4 py-2 rounded-lg bg-gradient-to-r from-cyan-500/20 to-blue-500/20 border border-cyan-200/50 dark:border-cyan-700/30">
+                <div className="flex items-center gap-1.5 xs:gap-2">
+                  <CloudRain size={16} className="text-cyan-500 xs:hidden" />
+                  <CloudRain size={18} className="text-cyan-500 hidden xs:block" />
+                  <span className="text-gray-700 dark:text-gray-300 font-light text-xs xs:text-sm">{t('dashboard.weather.humidity') || "Humidity"}</span>
+                </div>
+                <span className="font-medium text-gray-900 dark:text-white text-xs xs:text-sm">{weather.humidity}%</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Tasks */}
+          <div className="bg-white/90 dark:bg-gray-800/70 backdrop-blur-md rounded-xl p-4 xs:p-5 sm:p-6 border border-gray-200/70 dark:border-gray-700/50 lg:col-span-2">
+            <h2 className="text-lg xs:text-xl font-extralight text-gray-800 dark:text-white mb-3 xs:mb-4 flex items-center gap-2">
+              <ClipboardList size={18} className="text-indigo-500 xs:hidden" />
+              <ClipboardList size={20} className="text-indigo-500 hidden xs:block" />
+              {t('dashboard.pendingTasks')}
+            </h2>
+            
+            <div className="space-y-2 xs:space-y-3">
+              {tasks.filter(t => t.status !== 'done' && t.type === 'hostel').slice(0, 5).length > 0 ? (
+                tasks.filter(t => t.status !== 'done' && t.type === 'hostel').slice(0, 5).map(task => (
+                  <div 
+                    key={task.id} 
+                    className={`flex items-center justify-between p-2.5 xs:p-3 rounded-lg ${
+                      task.status === 'inProgress'
+                        ? 'bg-amber-100/50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800/20'
+                        : 'bg-gray-100/50 dark:bg-gray-700/20 border border-gray-200 dark:border-gray-700/20'
+                    }`}
+                  >
+                    <div className="flex items-center gap-2 flex-1 min-w-0">
+                      <div className={`w-5 h-5 xs:w-6 xs:h-6 rounded-full flex items-center justify-center ${
+                        task.status === 'inProgress'
+                          ? 'bg-amber-500 text-white'
+                          : 'bg-gray-500 text-white'
+                      }`}>
+                        {task.status === 'inProgress'
+                          ? <Activity size={12} className="xs:hidden" />
+                          : <AlertCircle size={12} className="xs:hidden" />
+                        }
+                        {task.status === 'inProgress'
+                          ? <Activity size={14} className="hidden xs:block" />
+                          : <AlertCircle size={14} className="hidden xs:block" />
+                        }
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <h4 className="text-xs xs:text-sm font-medium text-gray-800 dark:text-gray-200 truncate">
+                          {task.title}
+                        </h4>
+                        <p className="text-xxs xs:text-xs font-light text-gray-500 dark:text-gray-400 truncate">
+                          {task.description.length > 40 
+                            ? task.description.substring(0, 40) + '...' 
+                            : task.description}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-1.5 text-xs font-medium">
+                      <div className="flex items-center gap-1 ml-2 text-amber-500">
+                        <Award size={12} className="xs:hidden" />
+                        <Award size={14} className="hidden xs:block" />
+                        <span className="text-xxs xs:text-xs">{task.points}</span>
+                      </div>
+                    </div>
+                  </div>
+                ))
+              ) : (
+                <div className="text-center py-4 xs:py-6">
+                  <div className="w-10 h-10 xs:w-12 xs:h-12 mx-auto bg-gray-100 dark:bg-gray-700/30 rounded-full flex items-center justify-center mb-2 xs:mb-3">
+                    <ClipboardList size={18} className="text-gray-400 xs:hidden" />
+                    <ClipboardList size={20} className="text-gray-400 hidden xs:block" />
+                  </div>
+                  <p className="text-xs xs:text-sm text-gray-500 dark:text-gray-400">
+                    {t('dashboard.noTasks')}
+                  </p>
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* User Schedule */}
+          <div className="bg-white/90 dark:bg-gray-800/70 backdrop-blur-md rounded-xl p-4 xs:p-5 sm:p-6 border border-gray-200/70 dark:border-gray-700/50 md:col-span-3">
+            <h2 className="text-lg xs:text-xl font-extralight text-gray-800 dark:text-white mb-3 xs:mb-4 flex items-center gap-2">
+              <Calendar size={18} className="text-blue-500 xs:hidden" />
+              <Calendar size={20} className="text-blue-500 hidden xs:block" />
+              {t('dashboard.yourSchedule')}
+            </h2>
+            
+            <div className="space-y-4">
+              <div className="p-3 xs:p-4 rounded-lg bg-gradient-to-r from-blue-500/10 to-violet-500/10 border border-blue-200/30 dark:border-blue-700/20 space-y-3">
+                <h3 className="text-sm xs:text-base font-medium text-blue-800 dark:text-blue-300">
+                  {t('dashboard.nextShiftSimple')}
+                </h3>
+                
+                {userNextShift ? (
+                  <div className="space-y-2">
+                    <div className="flex items-center gap-2">
+                      <Calendar size={14} className="text-blue-500 xs:hidden" />
+                      <Calendar size={16} className="text-blue-500 hidden xs:block" />
+                      <span className="text-xs xs:text-sm text-gray-700 dark:text-gray-300">{userNextShift.date}</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Clock size={14} className="text-blue-500 xs:hidden" />
+                      <Clock size={16} className="text-blue-500 hidden xs:block" />
+                      <span className="text-xs xs:text-sm text-gray-700 dark:text-gray-300">{userNextShift.shift} ({getShiftName(userNextShift.shift as ShiftTime)})</span>
+                    </div>
+                  </div>
+                ) : (
+                  <p className="text-xs xs:text-sm text-gray-600 dark:text-gray-400 font-light">
+                    {t('dashboard.noUpcomingShifts')}
                   </p>
                 )}
+              </div>
+              
+              <div>
+                <h3 className="text-xs xs:text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  {t('dashboard.daysOff')}
+                </h3>
+                
+                <div className="flex flex-wrap gap-2">
+                  {daysOff.length > 0 ? (
+                    daysOff.map((day, index) => (
+                      <div 
+                        key={index}
+                        className="px-3 py-1 rounded-full bg-gray-100 dark:bg-gray-700/50 text-xxs xs:text-xs font-light text-gray-700 dark:text-gray-300 border border-gray-200/50 dark:border-gray-700"
+                      >
+                        {format(day, 'EEE, dd MMM')}
+                      </div>
+                    ))
+                  ) : (
+                    <p className="text-xs text-gray-600 dark:text-gray-400 font-light">
+                      {t('dashboard.noDaysOff')}
+                    </p>
+                  )}
+                </div>
               </div>
             </div>
           </div>

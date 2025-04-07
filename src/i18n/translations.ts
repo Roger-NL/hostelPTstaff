@@ -218,6 +218,23 @@ export const translations = {
       pendingTasks: 'Pending Tasks'
     },
     
+    // Navigation
+    navigation: {
+      quickMenu: 'Quick Navigation',
+      mainMenu: 'Main Menu',
+      shortcuts: 'Shortcuts',
+      actions: 'Actions'
+    },
+    
+    // Admin
+    admin: {
+      title: 'Admin Panel',
+      userManagement: 'User Management',
+      systemSettings: 'System Settings',
+      analytics: 'Analytics',
+      logs: 'System Logs'
+    },
+    
     // Settings
     settings: {
       title: 'Settings',
@@ -573,6 +590,23 @@ export const translations = {
       recentActivity: 'Atividade Recente',
       upcomingEvents: 'Próximos Eventos',
       pendingTasks: 'Tarefas Pendentes'
+    },
+    
+    // Navigation
+    navigation: {
+      quickMenu: 'Navegação Rápida',
+      mainMenu: 'Menu Principal',
+      shortcuts: 'Atalhos',
+      actions: 'Ações'
+    },
+    
+    // Admin
+    admin: {
+      title: 'Painel de Administração',
+      userManagement: 'Gerenciamento de Usuários',
+      systemSettings: 'Configurações do Sistema',
+      analytics: 'Análises',
+      logs: 'Logs do Sistema'
     },
     
     // Settings
