@@ -291,6 +291,8 @@ export const translations = {
       actions: 'Actions',
       makeAdmin: 'Make Admin',
       removeAdmin: 'Remove Admin',
+      userRegistered: 'User registered successfully!',
+      registerFailed: 'Failed to register user',
       alerts: {
         onlyAdminEdit: 'Only administrators can change user roles.',
         onlyAdminDelete: 'Only administrators can delete users.',
@@ -640,6 +642,8 @@ export const translations = {
       actions: 'Ações',
       makeAdmin: 'Tornar Administrador',
       removeAdmin: 'Remover Administrador',
+      userRegistered: 'Usuário registrado com sucesso!',
+      registerFailed: 'Falha ao registrar usuário',
       alerts: {
         onlyAdminEdit: 'Apenas administradores podem alterar funções de usuários.',
         onlyAdminDelete: 'Apenas administradores podem excluir usuários.',
