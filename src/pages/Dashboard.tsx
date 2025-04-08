@@ -69,8 +69,17 @@ export default function MainDashboard() {
     };
   }, []);
 
+  // Define the type for menu items
+  type MenuItem = {
+    icon: React.ElementType;
+    label: string;
+    view: string;
+    badge?: number;
+    action?: () => void;
+  };
+
   // Construir os itens do menu, incluindo autorizações apenas para admin
-  const menuItems = [
+  const menuItems: MenuItem[] = [
     { icon: HomeIcon, label: t('dashboard.title'), view: 'dashboard' },
     { icon: Calendar, label: t('schedule.title'), view: 'schedule' },
     { icon: ClipboardList, label: t('tasks.title'), view: 'tasks' },
@@ -88,6 +97,9 @@ export default function MainDashboard() {
   
   // Sempre adicionar settings no final
   menuItems.push({ icon: SettingsIcon, label: t('settings.title'), view: 'settings' });
+  
+  // Adicionar logout como item do menu
+  menuItems.push({ icon: LogOut, label: t('logout'), view: 'logout', action: handleLogout });
 
   return (
     <div className="flex h-screen bg-gray-900 text-white overflow-hidden">
@@ -104,9 +116,13 @@ export default function MainDashboard() {
             {menuItems.map((item) => (
               <li key={item.view}>
                 <button
-                  onClick={() => setView(item.view)}
+                  onClick={item.action || (() => setView(item.view))}
                   className={`w-full flex items-center gap-3 py-2 px-3 rounded-lg transition-colors
-                    ${view === item.view ? 'bg-blue-500/20 text-blue-400' : 'text-gray-400 hover:text-white hover:bg-white/5'}`}
+                    ${item.view === 'logout' 
+                      ? 'text-red-400 hover:bg-red-500/10 mt-4' 
+                      : view === item.view 
+                        ? 'bg-blue-500/20 text-blue-400' 
+                        : 'text-gray-400 hover:text-white hover:bg-white/5'}`}
                 >
                   <div className="relative">
                     <item.icon size={20} />
@@ -135,13 +151,6 @@ export default function MainDashboard() {
               </div>
             </div>
           )}
-          <button
-            onClick={handleLogout}
-            className="w-full flex items-center gap-3 py-2 px-3 rounded-lg text-red-400 hover:bg-red-500/10 transition-colors"
-          >
-            <LogOut size={20} />
-            <span className="hidden lg:block">{t('logout')}</span>
-          </button>
           
           {/* Botão de alternar idioma */}
           <button
@@ -171,6 +180,14 @@ export default function MainDashboard() {
         </div>
         
         <div className="flex items-center gap-2">
+          {/* Botão de logout para Mobile */}
+          <button
+            onClick={handleLogout}
+            className="w-8 h-8 flex items-center justify-center bg-red-500/20 hover:bg-red-500/40 text-red-400 hover:text-red-300 rounded-full transition-colors"
+          >
+            <LogOut size={16} />
+          </button>
+          
           {/* Botão de alternar idioma para Mobile */}
           <button
             onClick={toggleLanguage}
@@ -192,7 +209,7 @@ export default function MainDashboard() {
         {menuItems.slice(0, 5).map((item) => (
           <button
             key={item.view}
-            onClick={() => setView(item.view)}
+            onClick={item.action || (() => setView(item.view))}
             className={`p-2 rounded-md flex flex-col items-center ${
               view === item.view ? 'text-blue-400' : 'text-gray-400'
             }`}

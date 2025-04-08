@@ -12,11 +12,11 @@ interface AuthState {
 }
 
 export const useAuth = () => {
-  const { user, login: storeLogin, logout: storeLogout } = useStore();
+  const { user: storeUser, login: storeLogin, logout: storeLogout } = useStore();
   const [authState, setAuthState] = useState<AuthState>({
-    isAuthenticated: !!user,
+    isAuthenticated: !!storeUser,
     isLoading: true,
-    currentUser: user as User | null
+    currentUser: storeUser as User | null
   });
   
   // Controle para evitar múltiplas chamadas à API de carregamento de usuários
@@ -106,28 +106,29 @@ export const useAuth = () => {
   // Otimização: memoiza a função de login para não recriar a cada render
   const login = useCallback(async (email: string, password: string) => {
     try {
+      console.log('Attempting login for:', email);
       const userProfile = await authService.login(email, password);
+      console.log('Login successful, user profile:', userProfile);
       
-      if (userProfile) {
-        storeLogin(email, password);
-        setAuthState({
-          isAuthenticated: true,
-          isLoading: false,
-          currentUser: userProfile
-        });
-        
-        // Atualiza também o armazenamento global do usuário
-        useStore.getState().setUser(userProfile);
-        
-        return userProfile;
-      } else {
-        throw new Error('Perfil de usuário não encontrado');
-      }
+      // Primeiro atualiza o store
+      useStore.getState().setUser(userProfile);
+      
+      // Depois atualiza o estado local
+      setAuthState({
+        isAuthenticated: true,
+        isLoading: false,
+        currentUser: userProfile
+      });
+      
+      // Aguarda um momento para garantir que os estados foram atualizados
+      await new Promise(resolve => setTimeout(resolve, 100));
+      
+      return userProfile;
     } catch (error) {
       console.error('Login error:', error);
       throw error;
     }
-  }, [storeLogin]);
+  }, []);
 
   // Otimização: memoiza a função de registro para não recriar a cada render
   const register = useCallback(async (email: string, password: string, userData: Partial<User>) => {
@@ -150,7 +151,7 @@ export const useAuth = () => {
       };
       
       // Verificar se o usuário atual é admin para determinar qual função usar
-      const isAdmin = user && user.role === 'admin';
+      const isAdmin = storeUser && storeUser.role === 'admin';
       
       // Se for admin, usar registerStaffOnly para não mudar a autenticação
       // Se não for admin (cadastro próprio), usar o método register normal
@@ -161,7 +162,7 @@ export const useAuth = () => {
       if (newUser) {
         // Se não for admin (cadastro próprio), fazer login com o novo usuário
         if (!isAdmin) {
-          storeLogin(email, password);
+          useStore.getState().setUser(newUser);
           setAuthState({
             isAuthenticated: true,
             isLoading: false,
@@ -176,13 +177,12 @@ export const useAuth = () => {
       console.error('Registration error:', error);
       throw error;
     }
-  }, [storeLogin, user]);
+  }, [storeUser, useStore.getState().setUser]);
 
   // Otimização: memoiza a função de logout para não recriar a cada render
   const logout = useCallback(async () => {
     try {
       await authService.logout();
-      storeLogout();
       setAuthState({
         isAuthenticated: false,
         isLoading: false,
@@ -195,18 +195,20 @@ export const useAuth = () => {
       console.error('Logout error:', error);
       throw error;
     }
-  }, [storeLogout]);
+  }, []);
 
   // Escutando mudanças de autenticação
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
+      console.log('Auth state changed:', firebaseUser?.email);
+      
       if (firebaseUser) {
-        // Usuário já autenticado
         try {
-          const userData = await authService.getUserProfile(firebaseUser.uid);
+          const userData = await authService.getUserByEmail(firebaseUser.email || '');
+          console.log('User data from Firestore:', userData);
           
           if (userData) {
-            storeLogin(userData.email, '');
+            useStore.getState().setUser(userData);
             setAuthState({
               isAuthenticated: true,
               isLoading: false,
@@ -228,7 +230,6 @@ export const useAuth = () => {
           });
         }
       } else {
-        // Usuário não autenticado
         setAuthState({
           isAuthenticated: false,
           isLoading: false,
@@ -238,7 +239,7 @@ export const useAuth = () => {
     });
 
     return () => unsubscribe();
-  }, [storeLogin]);
+  }, [useStore.getState().setUser]);
   
   // Memoização dos valores do authState para evitar recálculos
   const authValues = useMemo(() => {

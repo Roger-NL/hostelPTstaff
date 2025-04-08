@@ -1,37 +1,27 @@
 import React from 'react';
-import { Navigate } from 'react-router-dom';
+import { Navigate, Outlet } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
+import LoadingFallback from './common/LoadingFallback';
+import { useStore } from '../store/useStore';
+import type { AppState } from '../store/useStore';
 
 interface PrivateRouteProps {
-  children: React.ReactNode;
-  requiredRole?: 'user' | 'admin'; // Papel necessário para acessar a rota
+  children?: React.ReactNode;
 }
 
-const PrivateRoute: React.FC<PrivateRouteProps> = ({ children, requiredRole }) => {
-  const { isAuthenticated, isLoading, currentUser } = useAuth();
-  
-  // Se estiver carregando, exibe um indicador de carregamento
+const PrivateRoute: React.FC<PrivateRouteProps> = ({ children }) => {
+  const { currentUser: authUser, isLoading } = useAuth();
+  const storeUser = useStore((state: AppState) => state.user);
+
   if (isLoading) {
-    return (
-      <div className="flex items-center justify-center h-screen">
-        <div className="animate-spin rounded-full h-32 w-32 border-t-2 border-b-2 border-yellow-500"></div>
-      </div>
-    );
+    return <LoadingFallback />;
   }
-  
-  // Se não estiver autenticado, redireciona para a página de login
-  if (!isAuthenticated) {
+
+  if (!authUser && !storeUser) {
     return <Navigate to="/login" replace />;
   }
-  
-  // Se um papel específico for necessário, verifica se o usuário tem esse papel
-  if (requiredRole && currentUser?.role !== requiredRole) {
-    // Se o usuário não tiver o papel necessário, redireciona para o dashboard
-    return <Navigate to="/dashboard" replace />;
-  }
-  
-  // Se autenticado e com permissões adequadas, renderiza os children
-  return <>{children}</>;
+
+  return children ? <>{children}</> : <Outlet />;
 };
 
 export default PrivateRoute; 

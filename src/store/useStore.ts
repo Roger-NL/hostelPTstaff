@@ -30,7 +30,8 @@ import {
   rejectTaskPhoto
 } from '../services/task.service';
 
-interface AppState {
+// Add export to the interface
+export interface AppState {
   theme: 'light' | 'dark';
   language: 'en' | 'pt';
   user: UserData | null;
