@@ -330,11 +330,6 @@ const AppContent = () => {
     setTheme(theme === 'dark' ? 'light' : 'dark');
   };
 
-  // Alternar idioma
-  const toggleLanguage = () => {
-    setLanguage(language === 'pt' ? 'en' : 'pt');
-  };
-
   // Selecionar idioma específico e fechar o modal
   const selectLanguage = (lang: 'en' | 'pt') => {
     setLanguage(lang);
@@ -415,9 +410,8 @@ const AppContent = () => {
             
             <p className="mb-4">
               {language === 'pt' 
-                ? 'Escolha o idioma de sua preferência. Esta opção pode ser alterada posteriormente nas configurações do sistema.'
-                : 'Choose your preferred language. This option can be changed later in the system settings.'
-              }
+                ? 'Escolha o idioma de sua preferência para utilizar na aplicação.' 
+                : 'Choose your preferred language for the application.'}
             </p>
             
             <div className="flex gap-4 justify-center">
@@ -446,7 +440,7 @@ const AppContent = () => {
         </div>
       )}
       
-      {/* Mostra botões de tema e idioma APENAS na página de login ou quando não estiver autenticado */}
+      {/* Mostra botões de tema APENAS na página de login ou quando não estiver autenticado */}
       {!isAuthenticated && (
         <div className="fixed top-4 right-4 z-40 flex gap-2">
           <button
@@ -455,13 +449,6 @@ const AppContent = () => {
             aria-label={theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
           >
             {theme === 'dark' ? <Sun size={18} /> : <Moon size={18} />}
-          </button>
-          <button
-            onClick={toggleLanguage}
-            className={`p-2 rounded-full ${theme === 'dark' ? 'bg-gray-700 text-white hover:bg-gray-600' : 'bg-white text-gray-800 shadow-md hover:bg-gray-100'} transition-colors font-medium text-xs`}
-            aria-label={language === 'pt' ? 'Switch to English' : 'Alternar para Português'}
-          >
-            {language === 'pt' ? 'EN' : 'PT'}
           </button>
         </div>
       )}

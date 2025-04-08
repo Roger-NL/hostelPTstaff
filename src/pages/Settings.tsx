@@ -152,10 +152,6 @@ export default function Settings() {
     setTheme(e.target.value as 'light' | 'dark');
   };
 
-  const handleLanguageChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    setLanguage(e.target.value as 'en' | 'pt');
-  };
-
   const handleAddDomain = () => {
     if (newDomain && !systemSettings.registration.allowedDomains.includes(newDomain)) {
       setSystemSettings(prev => ({
@@ -428,17 +424,6 @@ export default function Settings() {
                     >
                       <option value="light">{t('settings.preferences.lightTheme')}</option>
                       <option value="dark">{t('settings.preferences.darkTheme')}</option>
-                    </select>
-                  </div>
-                  
-                  <div>
-                    <label className="block text-white/70 mb-1">{t('settings.preferences.language')}</label>
-                    <select 
-                      className="w-full rounded-lg bg-gray-700/50 border border-gray-600 px-3 py-2 text-white"
-                      onChange={handleLanguageChange}
-                    >
-                      <option value="en">English</option>
-                      <option value="pt">Português</option>
                     </select>
                   </div>
                   

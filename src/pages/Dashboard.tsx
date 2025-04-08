@@ -14,7 +14,6 @@ import {
   HomeIcon,
   CheckSquare,
   BellRing,
-  Globe
 } from 'lucide-react';
 import DashboardContent from './DashboardContent';
 import LaundrySchedule from './LaundrySchedule';
@@ -27,7 +26,7 @@ import Messages from './Messages';
 import Points from './Points';
 
 export default function MainDashboard() {
-  const { user, messages, logout, language, setLanguage } = useStore();
+  const { user, messages, logout, language } = useStore();
   const { t } = useTranslation();
   const navigate = useNavigate();
   const [view, setView] = useState('dashboard');
@@ -38,12 +37,6 @@ export default function MainDashboard() {
   const handleLogout = () => {
     logout();
     navigate('/');
-  };
-
-  // Função para alternar o idioma
-  const toggleLanguage = () => {
-    const newLanguage = language === 'pt' ? 'en' : 'pt';
-    setLanguage(newLanguage);
   };
 
   // Função para lidar com a navegação vinda do DashboardContent
@@ -151,23 +144,6 @@ export default function MainDashboard() {
               </div>
             </div>
           )}
-          
-          {/* Botão de alternar idioma */}
-          <button
-            onClick={toggleLanguage}
-            className="w-full flex items-center gap-3 py-2 px-3 mt-2 rounded-lg text-gray-400 hover:bg-blue-500/10 hover:text-blue-400 transition-colors"
-          >
-            <Globe size={20} />
-            <span className="hidden lg:block">
-              {language === 'pt' ? 'English' : 'Português'}
-            </span>
-            <span className="hidden lg:flex items-center justify-center text-xs ml-auto">
-              {language === 'pt' ? '🇺🇸' : '🇧🇷'}
-            </span>
-            <span className="md:hidden">
-              {language === 'pt' ? '🇺🇸' : '🇧🇷'}
-            </span>
-          </button>
         </div>
       </div>
 
@@ -186,14 +162,6 @@ export default function MainDashboard() {
             className="w-8 h-8 flex items-center justify-center bg-red-500/20 hover:bg-red-500/40 text-red-400 hover:text-red-300 rounded-full transition-colors"
           >
             <LogOut size={16} />
-          </button>
-          
-          {/* Botão de alternar idioma para Mobile */}
-          <button
-            onClick={toggleLanguage}
-            className="w-8 h-8 flex items-center justify-center bg-gray-700/50 hover:bg-blue-500/20 text-gray-300 hover:text-blue-400 rounded-full transition-colors"
-          >
-            {language === 'pt' ? '🇺🇸' : '🇧🇷'}
           </button>
           
           {user && (
@@ -234,9 +202,9 @@ export default function MainDashboard() {
           {view === 'dashboard' && <DashboardContent />}
           {view === 'schedule' && <Schedule />}
           {view === 'tasks' && <Tasks />}
+          {view === 'settings' && <SettingsPage />}
           {view === 'staff' && <Staff />}
           {view === 'events' && <Events />}
-          {view === 'settings' && <SettingsPage />}
           {view === 'messages' && <Messages />}
           {view === 'points' && <Points />}
           {view === 'hostel' && <LaundrySchedule />}
