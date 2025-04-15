@@ -105,7 +105,7 @@ export interface AppState {
   approvePhoto: (taskId: string, adminId: string) => void;
   
   // Função para rejeitar foto de tarefa
-  rejectPhoto: (taskId: string, adminId: string) => void;
+  rejectPhoto: (taskId: string, adminId: string) => Promise<void>;
 }
 
 // Definindo dados padrão vazios
@@ -875,7 +875,7 @@ export const useStore = create<AppState>((set, get) => ({
     console.log('Tarefas desabilitadas');
     return true;
   },
-  rejectPhoto: async (taskId, adminId) => {
+  rejectTaskPhoto: async (taskId) => {
     console.log('Tarefas desabilitadas');
     return true;
   },
@@ -1264,30 +1264,32 @@ export const useStore = create<AppState>((set, get) => ({
     });
   },
   
-  rejectPhoto: (taskId: string, adminId: string) => {
-    set((state) => {
-      const taskIndex = state.tasks.findIndex(task => task.id === taskId);
-      
-      // Se a tarefa não existir ou não tiver foto, não faz nada
-      if (taskIndex === -1 || !state.tasks[taskIndex].photo) {
-        return state;
-      }
-      
-      // Clona o array de tarefas para evitar mutação
-      const updatedTasks = [...state.tasks];
-      
-      // Atualiza a foto para rejeitada (usando approved: false)
-      updatedTasks[taskIndex] = {
-        ...updatedTasks[taskIndex],
-        photo: {
-          ...updatedTasks[taskIndex].photo!,
-          approved: false,
-          approvedBy: adminId,
-          approvedAt: new Date().toISOString()
+  // Função para rejeitar foto de tarefa
+  rejectPhoto: async (taskId: string, adminId: string) => {
+    try {
+      await rejectTaskPhoto(taskId);
+      set((state) => {
+        const taskIndex = state.tasks.findIndex(task => task.id === taskId);
+        if (taskIndex === -1) return state;
+        
+        const updatedTasks = [...state.tasks];
+        const task = { ...updatedTasks[taskIndex] };
+        
+        if (task.photo) {
+          task.photo = {
+            ...task.photo,
+            approved: false,
+            approvedBy: adminId,
+            approvedAt: new Date().toISOString()
+          };
         }
-      };
-      
-      return { tasks: updatedTasks };
-    });
+        
+        updatedTasks[taskIndex] = task;
+        return { tasks: updatedTasks };
+      });
+    } catch (error) {
+      console.error('Erro ao rejeitar foto:', error);
+      throw error;
+    }
   }
 }));
