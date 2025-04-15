@@ -21,7 +21,7 @@ import {
   where,
   serverTimestamp
 } from 'firebase/firestore';
-import { User, UserData } from '../types';
+import { User } from '../types';
 
 // Tipo estendido para incluir o papel de superadmin
 type ExtendedUserRole = User['role'] | 'superadmin';
@@ -193,21 +193,19 @@ export const registerStaffOnly = async (userData: UserRegistrationData): Promise
     const newUserId = crypto.randomUUID();
     
     // 3. Criar objeto com dados do usuário para salvar no Firestore
-    const userDoc: UserData = {
+    const userDoc: User = {
       id: newUserId,
       email: userData.email,
-      name: userData.name || '',
-      password: userData.password, // UserData pode ter password
+      name: userData.name,
       country: userData.country || '',
-      age: userData.age || '0',
+      age: typeof userData.age === 'string' ? parseInt(userData.age, 10) : (userData.age || 0),
       relationshipStatus: userData.relationshipStatus || 'single',
-      gender: userData.gender || 'other',
       phone: userData.phone || '',
       arrivalDate: userData.arrivalDate || '',
       departureDate: userData.departureDate || '',
-      isAuthenticated: true, // Necessário para UserData
-      role: 'user', // Sempre criar como usuário normal
-      points: 0
+      gender: userData.gender || 'other',
+      points: 0,
+      role: 'user'
     };
     
     // 4. Adicionar timestamp de criação para o Firestore
@@ -296,11 +294,11 @@ export const login = async (email: string, password: string): Promise<User> => {
       console.log(`Perfil básico criado para o usuário: ${authUser.uid}`);
       
       return basicProfile;
-    } else {
-      console.log(`Perfil do usuário encontrado no Firestore: ${authUser.uid}`);
-      // Retorna o perfil completo do usuário, não apenas o objeto de autenticação
-      return { id: authUser.uid, ...userDoc.data() } as User;
     }
+    
+    console.log(`Perfil do usuário encontrado no Firestore: ${authUser.uid}`);
+    // Retorna o perfil completo do usuário
+    return { id: authUser.uid, ...userDoc.data() } as User;
   } catch (error) {
     console.error('Erro ao fazer login:', error);
     throw error;
@@ -479,4 +477,40 @@ export const removeAdmin = async (userId: string): Promise<boolean> => {
     console.error('Erro ao remover privilégios de administrador:', error);
     return false;
   }
+};
+
+export const getUserByEmail = async (email: string): Promise<User | null> => {
+  try {
+    console.log('Buscando usuário por email:', email);
+    
+    // Busca o usuário no Firestore usando uma query
+    const usersRef = collection(firestore, 'users');
+    const q = query(usersRef, where('email', '==', email));
+    const querySnapshot = await getDocs(q);
+    
+    if (!querySnapshot.empty) {
+      const userDoc = querySnapshot.docs[0];
+      console.log('Usuário encontrado:', userDoc.id);
+      return { id: userDoc.id, ...userDoc.data() } as User;
+    }
+    
+    console.log('Usuário não encontrado');
+    return null;
+  } catch (error) {
+    console.error('Erro ao buscar usuário por email:', error);
+    return null;
+  }
+};
+
+export const authService = {
+  login,
+  logout,
+  register,
+  registerStaffOnly,
+  getUserByEmail,
+  getUserProfile,
+  updateUserProfile,
+  deleteUser,
+  getCurrentUser,
+  isMasterUser
 }; 

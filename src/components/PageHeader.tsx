@@ -124,11 +124,11 @@ export default function PageHeader({
         <div className="flex flex-col h-full">
           <div className={`p-4 border-b border-white/10 ${deviceInfo.hasNotch ? 'pt-safe-top' : ''}`}>
             <div className="flex items-center justify-between">
-              <h2 className="text-lg font-light text-white">{t('menu')}</h2>
+              <h2 className="text-lg font-light text-white">{t('navigation.menu')}</h2>
               <button 
                 onClick={() => setShowSidebar(false)}
                 className="w-8 h-8 flex items-center justify-center text-white/70 hover:text-white rounded-full hover:bg-white/10"
-                aria-label="Close menu"
+                aria-label={t('close')}
               >
                 <X size={20} />
               </button>
@@ -154,53 +154,53 @@ export default function PageHeader({
                   className="w-full flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-white/10 text-sm text-left"
                 >
                   <LayoutDashboard size={18} />
-                  <span>Dashboard</span>
+                  <span>{t('navigation.items.dashboard')}</span>
                 </button>
                 <button
                   onClick={() => handleNavigation('/schedule')}
                   className="w-full flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-white/10 text-sm text-left"
                 >
                   <Calendar size={18} />
-                  <span>Horários</span>
+                  <span>{t('navigation.items.schedule')}</span>
                 </button>
                 <button
                   onClick={() => handleNavigation('/events')}
                   className="w-full flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-white/10 text-sm text-left"
                 >
                   <PartyPopper size={18} />
-                  <span>Eventos</span>
+                  <span>{t('navigation.items.events')}</span>
                 </button>
                 <button
                   onClick={() => handleNavigation('/messages')}
                   className="w-full flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-white/10 text-sm text-left"
                 >
                   <MessageSquare size={18} />
-                  <span>Mensagens</span>
+                  <span>{t('navigation.items.messages')}</span>
                 </button>
                 <button
                   onClick={() => handleNavigation('/points')}
                   className="w-full flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-white/10 text-sm text-left"
                 >
                   <Award size={18} />
-                  <span>Pontos</span>
+                  <span>{t('navigation.items.points')}</span>
                 </button>
-                <div className="px-3 py-2 flex items-center gap-2 rounded-lg bg-amber-900/30 border border-amber-500/30 text-amber-300 text-sm text-left">
+                <div className="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-gray-500 text-sm">
                   <AlertTriangle size={18} />
-                  <span>Tarefas (desativado)</span>
+                  <span>{t('tasks.disabled')}</span>
                 </div>
                 <button
                   onClick={() => handleNavigation('/staff')}
                   className="w-full flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-white/10 text-sm text-left"
                 >
                   <Users size={18} />
-                  <span>Staff</span>
+                  <span>{t('navigation.items.staff')}</span>
                 </button>
                 <button
                   onClick={() => handleNavigation('/settings')}
                   className="w-full flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-white/10 text-sm text-left"
                 >
                   <Settings size={18} />
-                  <span>Configurações</span>
+                  <span>{t('navigation.items.settings')}</span>
                 </button>
               </div>
             </nav>

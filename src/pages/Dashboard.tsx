@@ -73,23 +73,23 @@ export default function MainDashboard() {
 
   // Construir os itens do menu, incluindo autorizações apenas para admin
   const menuItems: MenuItem[] = [
-    { icon: HomeIcon, label: t('dashboard.title'), view: 'dashboard' },
-    { icon: Calendar, label: t('schedule.title'), view: 'schedule' },
-    { icon: ClipboardList, label: t('tasks.title'), view: 'tasks' },
-    { icon: Users, label: t('staff.title'), view: 'staff' },
-    { icon: PartyPopper, label: t('events.title'), view: 'events' },
-    { icon: MessageCircle, label: t('messages.title'), view: 'messages', badge: unreadCount },
-    { icon: HomeIcon, label: t('hostel.title'), view: 'hostel' },
-    { icon: Award, label: t('points.title'), view: 'points' },
+    { icon: HomeIcon, label: t('navigation.items.dashboard'), view: 'dashboard' },
+    { icon: Calendar, label: t('navigation.items.schedule'), view: 'schedule' },
+    { icon: ClipboardList, label: t('navigation.items.tasks'), view: 'tasks' },
+    { icon: Users, label: t('navigation.items.staff'), view: 'staff' },
+    { icon: PartyPopper, label: t('navigation.items.events'), view: 'events' },
+    { icon: MessageCircle, label: t('navigation.items.messages'), view: 'messages', badge: unreadCount },
+    { icon: HomeIcon, label: t('navigation.items.hostel'), view: 'hostel' },
+    { icon: Award, label: t('navigation.items.points'), view: 'points' },
   ];
   
   // Adicionar opção de autorizações se o usuário for admin
   if (user?.role === 'admin') {
-    menuItems.push({ icon: CheckSquare, label: t('approvals.title'), view: 'approvals' });
+    menuItems.push({ icon: CheckSquare, label: t('navigation.items.approvals'), view: 'approvals' });
   }
   
   // Sempre adicionar settings no final
-  menuItems.push({ icon: SettingsIcon, label: t('settings.title'), view: 'settings' });
+  menuItems.push({ icon: SettingsIcon, label: t('navigation.items.settings'), view: 'settings' });
   
   // Adicionar logout como item do menu
   menuItems.push({ icon: LogOut, label: t('logout'), view: 'logout', action: handleLogout });

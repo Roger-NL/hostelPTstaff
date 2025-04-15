@@ -231,7 +231,23 @@ export const translations = {
       quickMenu: 'Quick Navigation',
       mainMenu: 'Main Menu',
       shortcuts: 'Shortcuts',
-      actions: 'Actions'
+      actions: 'Actions',
+      backToDashboard: 'Back to Dashboard',
+      menu: 'Menu',
+      items: {
+        scheduleManagement: 'Schedule Management',
+        tasks: 'Tasks',
+        staffManagement: 'Staff Management',
+        events: 'Events',
+        messages: 'Messages',
+        hostel: 'Hostel',
+        points: 'Points',
+        approvals: 'Approvals',
+        settings: 'Settings',
+        dashboard: 'Dashboard',
+        schedule: 'Schedule',
+        staff: 'Staff'
+      }
     },
     
     // Admin
@@ -359,6 +375,7 @@ export const translations = {
     selectDate: 'Select date',
     previousWeek: 'Previous week',
     nextWeek: 'Next week',
+    logout: 'Logout',
     
     // Approval system
     approvals: {
@@ -384,6 +401,33 @@ export const translations = {
       waitingApproval: 'Waiting for approval',
       rejected: 'Rejected'
     },
+    
+    // Tasks
+    tasks: {
+      title: 'Tasks',
+      management: 'Task Management',
+      add: 'Add Task',
+      list: 'Task List',
+      noTasks: 'No tasks found',
+      disabled: 'Tasks (disabled)'
+    },
+    
+    // Points
+    points: {
+      title: 'Points',
+      yourPoints: 'Your Points',
+      history: 'Points History',
+      noPoints: 'No points recorded',
+      total: 'Total Points'
+    },
+    
+    // Hostel
+    hostel: {
+      title: 'Hostel',
+      management: 'Hostel Management',
+      settings: 'Hostel Settings',
+      info: 'Hostel Information'
+    }
   },
   pt: {
     // Common
@@ -392,13 +436,13 @@ export const translations = {
     // Auth
     welcome: 'Bem-vindo ao Carcavelos Summer Beach',
     login: 'Entrar',
-    register: 'Registrar',
-    email: 'Email',
+    register: 'Cadastrar',
+    email: 'E-mail',
     password: 'Senha',
     confirmPassword: 'Confirmar Senha',
-    forgotPassword: 'Esqueceu a senha?',
+    forgotPassword: 'Esqueceu sua senha?',
     resetPassword: 'Redefinir Senha',
-    backToLogin: 'Voltar para Login',
+    backToLogin: 'Voltar ao Login',
     quickLogin: 'Entrar com esta conta',
     useAnotherAccount: 'Usar outra conta',
     quickLoginHint: 'Acesso rápido com suas credenciais salvas',
@@ -441,8 +485,8 @@ export const translations = {
     // Error messages
     error: {
       required: 'Todos os campos obrigatórios devem ser preenchidos',
-      invalidCredentials: 'Usuário ou senha inválidos',
-      emailExists: 'Este email já está em uso',
+      invalidCredentials: 'E-mail ou senha inválidos',
+      emailExists: 'Este e-mail já está em uso',
       general: 'Ocorreu um erro. Por favor, tente novamente',
       wrongPassword: 'Senha incorreta',
       userNotFound: 'Usuário não encontrado',
@@ -451,11 +495,11 @@ export const translations = {
       unauthorized: 'Você não está autorizado a realizar esta ação',
       passwordsDoNotMatch: 'As senhas não coincidem',
       passwordTooShort: 'A senha deve ter pelo menos 6 caracteres',
-      invalidEmail: 'Por favor, insira um endereço de email válido',
+      invalidEmail: 'Por favor, insira um endereço de e-mail válido',
       quickLoginFailed: 'Login rápido falhou. Por favor, digite sua senha',
-      titleTooShort: 'Título deve ter pelo menos 3 caracteres',
-      invalidPoints: 'Pontos devem ser um número positivo',
-      dueDateRequired: 'Data de entrega é obrigatória'
+      titleTooShort: 'O título deve ter pelo menos 3 caracteres',
+      invalidPoints: 'Os pontos devem ser um número positivo',
+      dueDateRequired: 'A data de entrega é obrigatória'
     },
     
     // Tasks
@@ -573,7 +617,7 @@ export const translations = {
       welcomeMorning: 'Bom dia, {name}!',
       welcomeAfternoon: 'Boa tarde, {name}!',
       welcomeEvening: 'Boa noite, {name}!',
-      currentShift: 'Você está no seu turno atual: {shift}',
+      currentShift: 'Você está no turno atual: {shift}',
       currentShiftSimple: 'Turno Atual',
       nextShift: 'Próximo turno: {date} às {shift}',
       previousShift: 'Turno Anterior',
@@ -584,14 +628,14 @@ export const translations = {
       noShiftsScheduled: 'Você não tem turnos agendados',
       noVolunteersAssigned: 'Nenhum voluntário designado',
       you: 'Você',
-      todayTeam: "Equipe de Hoje",
-      todaysTasks: "Tarefas de Hoje",
-      noTasks: "Nenhuma tarefa encontrada",
-      yourNextShift: "Seu Próximo Turno",
-      yourSchedule: "Sua Agenda",
-      dutyConfirmed: "Turno confirmado",
-      noUpcomingShifts: "Nenhum turno agendado",
-      noDaysOff: "Nenhum dia de folga nesta semana",
+      todayTeam: 'Equipe de Hoje',
+      todaysTasks: 'Tarefas de Hoje',
+      noTasks: 'Nenhuma tarefa encontrada',
+      yourNextShift: 'Seu Próximo Turno',
+      yourSchedule: 'Sua Agenda',
+      dutyConfirmed: 'Turno confirmado',
+      noUpcomingShifts: 'Nenhum turno agendado',
+      noDaysOff: 'Nenhum dia de folga nesta semana',
       stats: {
         tasks: 'Tarefas',
         points: 'Pontos',
@@ -617,7 +661,23 @@ export const translations = {
       quickMenu: 'Navegação Rápida',
       mainMenu: 'Menu Principal',
       shortcuts: 'Atalhos',
-      actions: 'Ações'
+      actions: 'Ações',
+      backToDashboard: 'Voltar ao Painel',
+      menu: 'Menu',
+      items: {
+        scheduleManagement: 'Gerenciamento de Escala',
+        tasks: 'Tarefas',
+        staffManagement: 'Gerenciamento de Equipe',
+        events: 'Eventos',
+        messages: 'Mensagens',
+        hostel: 'Hostel',
+        points: 'Pontos',
+        approvals: 'Aprovações',
+        settings: 'Configurações',
+        dashboard: 'Painel',
+        schedule: 'Escala',
+        staff: 'Equipe'
+      }
     },
     
     // Admin
@@ -665,21 +725,21 @@ export const translations = {
     
     // Laundry Schedule
     laundry: {
-      title: 'Escala de Lavanderia',
+      title: 'Agenda de Lavanderia',
       add: 'Adicionar',
-      staff: 'Staff',
+      staff: 'Equipe',
       guest: 'Hóspede',
       addReservation: 'Adicionar Reserva',
       guestName: 'Nome',
       guestNamePlaceholder: 'Digite o nome...',
-      isStaff: 'É Staff/Hostel',
+      isStaff: 'É membro da equipe',
       slot: 'Horário',
       reservationSummary: 'Você está reservando um horário para:',
       nameRequired: 'Nome é obrigatório',
       addingReservation: 'Adicionando {name} ao horário {slot}...',
-      reservationAdded: '{name} adicionado ao horário {slot}',
+      reservationAdded: '{name} adicionado(a) ao horário {slot}',
       removingReservation: 'Removendo {name} do horário {slot}...',
-      reservationRemoved: '{name} removido do horário {slot}',
+      reservationRemoved: '{name} removido(a) do horário {slot}',
       slots: {
         header: 'Horários',
         morning: 'Manhã',
@@ -690,11 +750,11 @@ export const translations = {
     
     // Staff
     staff: {
-      title: 'Gerenciamento de Staff',
+      title: 'Gerenciamento de Equipe',
       addUser: 'Adicionar Usuário',
-      editUser: 'Editar Membro da Staff',
+      editUser: 'Editar Membro da Equipe',
       name: 'Nome',
-      email: 'Email',
+      email: 'E-mail',
       password: 'Senha',
       role: 'Função',
       roles: {
@@ -708,8 +768,8 @@ export const translations = {
       actions: 'Ações',
       makeAdmin: 'Tornar Administrador',
       removeAdmin: 'Remover Administrador',
-      userRegistered: 'Usuário registrado com sucesso!',
-      registerFailed: 'Falha ao registrar usuário',
+      userRegistered: 'Usuário cadastrado com sucesso!',
+      registerFailed: 'Falha ao cadastrar usuário',
       alerts: {
         onlyAdminEdit: 'Apenas administradores podem alterar funções de usuários.',
         onlyAdminDelete: 'Apenas administradores podem excluir usuários.',
@@ -745,10 +805,11 @@ export const translations = {
     selectDate: 'Selecionar data',
     previousWeek: 'Semana anterior',
     nextWeek: 'Próxima semana',
+    logout: 'Sair',
     
     // Sistema de aprovação
     approvals: {
-      title: 'Autorizações',
+      title: 'Aprovações',
       photoApprovals: 'Aprovação de Fotos',
       pendingPhotos: 'Fotos Pendentes',
       approvePhoto: 'Aprovar Foto',
@@ -770,5 +831,32 @@ export const translations = {
       waitingApproval: 'Aguardando aprovação',
       rejected: 'Rejeitada'
     },
+    
+    // Tasks
+    tasks: {
+      title: 'Tarefas',
+      management: 'Gerenciamento de Tarefas',
+      add: 'Adicionar Tarefa',
+      list: 'Lista de Tarefas',
+      noTasks: 'Nenhuma tarefa encontrada',
+      disabled: 'Tarefas (desativado)'
+    },
+    
+    // Points
+    points: {
+      title: 'Pontos',
+      yourPoints: 'Seus Pontos',
+      history: 'Histórico de Pontos',
+      noPoints: 'Nenhum ponto registrado',
+      total: 'Total de Pontos'
+    },
+    
+    // Hostel
+    hostel: {
+      title: 'Hostel',
+      management: 'Gerenciamento do Hostel',
+      settings: 'Configurações do Hostel',
+      info: 'Informações do Hostel'
+    }
   }
 };

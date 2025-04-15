@@ -7,13 +7,13 @@ import { UserCircle, ChevronDown, LogIn, User, Check } from 'lucide-react';
 // Definição do tipo para logins salvos
 interface SavedLogin {
   email: string;
-  name?: string;
+  name: string;
+  password?: string;
   timestamp: number;
   lastUsed?: number;
-  password?: string; // Campo opcional para senha (criptografada)
 }
 
-const BACKGROUND_IMAGE = "url('https://images.unsplash.com/photo-1502680390469-be75c86b636f?ixlib=rb-1.2.1&auto=format&fit=crop&w=3200&q=80')";
+const BACKGROUND_IMAGE = "url('https://images.unsplash.com/photo-1502680390469-be75c86b636f?ixlib=rb-1.2.1&auto=format&fit=crop&w=1200&q=70')";
 
 // Chave para armazenar logins no localStorage
 const SAVED_LOGINS_KEY = 'hostel_saved_logins';
@@ -33,14 +33,20 @@ const Login: React.FC = () => {
   const navigate = useNavigate();
   const { login } = useAuth();
   
+  const [isLoading, setIsLoading] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [rememberPassword, setRememberPassword] = useState(false);
-  const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [savedLogins, setSavedLogins] = useState<SavedLogin[]>([]);
   const [showSavedLogins, setShowSavedLogins] = useState(false);
   const [showQuickLogin, setShowQuickLogin] = useState(false);
+  
+  useEffect(() => {
+    // Pré-carrega a imagem de fundo
+    const img = new Image();
+    img.src = BACKGROUND_IMAGE.replace(/url\(['"](.+)['"]\)/, '$1');
+  }, []);
   
   // Carrega logins salvos quando o componente monta
   useEffect(() => {
@@ -147,57 +153,22 @@ const Login: React.FC = () => {
   };
 
   // Login rápido com o último usuário
-  const handleQuickLogin = async () => {
-    if (savedLogins.length === 0) return;
-    
-    const lastLogin = savedLogins[0];
-    setEmail(lastLogin.email);
-    
-    // Verifica se temos a senha salva temporariamente
-    const lastPwd = getLastPassword();
-    if (lastPwd) {
-      setPassword(lastPwd);
-      // Tenta fazer login automaticamente
-      setLoading(true);
+  const handleQuickLogin = async (savedLogin: SavedLogin) => {
+    try {
+      setIsLoading(true);
       setError(null);
       
-      try {
-        const userProfile = await login(lastLogin.email, lastPwd);
-        console.log('Login rápido bem-sucedido:', userProfile.name);
-        
-        // Atualiza login usado
-        saveLogin(lastLogin.email, userProfile.name, rememberPassword);
-        
-        // Redireciona para o dashboard
-        navigate('/dashboard');
-      } catch (err: any) {
-        console.error('Erro no login rápido:', err);
-        // Apenas limpa a senha se falhar, mas mantém o email
-        setPassword('');
-        
-        // Remove a senha temporária se estiver incorreta
-        sessionStorage.removeItem('temp_last_pwd');
-        
-        // Em vez de mostrar erro, apenas muda para o formulário de login regular
-        setShowQuickLogin(false);
-        
-        // Foca no campo de senha
-        setTimeout(() => {
-          const passwordField = document.getElementById('password-field');
-          if (passwordField) passwordField.focus();
-        }, 100);
-      } finally {
-        setLoading(false);
-      }
-    } else {
-      // Se não tivermos a senha, apenas mostra o formulário de login
-      setShowQuickLogin(false);
+      const password = savedLogin.password ? decryptPassword(savedLogin.password) : '';
+      await login(savedLogin.email, password);
       
-      // Foca no campo de senha
-      setTimeout(() => {
-        const passwordField = document.getElementById('password-field');
-        if (passwordField) passwordField.focus();
-      }, 100);
+      // Se chegou aqui, login foi bem sucedido
+      navigate('/dashboard');
+    } catch (error) {
+      console.error('Erro no login rápido:', error);
+      setError(t('login.invalidCredentials'));
+      setShowQuickLogin(false);
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -214,12 +185,11 @@ const Login: React.FC = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setLoading(true);
+    setIsLoading(true);
     setError(null);
     
-    console.log('Login: Tentando fazer login com email:', email);
-    
     try {
+      console.log('Login: Tentando fazer login com email:', email);
       const userProfile = await login(email, password);
       console.log('Login: Login bem-sucedido, redirecionando para dashboard. Papel do usuário:', userProfile.role);
       
@@ -253,7 +223,7 @@ const Login: React.FC = () => {
         setError(t('error.invalidCredentials'));
       }
     } finally {
-      setLoading(false);
+      setIsLoading(false);
     }
   };
   
@@ -315,7 +285,7 @@ const Login: React.FC = () => {
             )}
             
             {/* Login rápido com último usuário */}
-            {showQuickLogin && savedLogins.length > 0 && !loading && (
+            {showQuickLogin && savedLogins.length > 0 && !isLoading && (
               <div className="p-4 bg-blue-600/30 border border-blue-500/40 rounded-xl mb-4 backdrop-blur-sm shadow-lg">
                 <div className="flex items-center gap-3 mb-2">
                   <div className="bg-blue-500/30 p-2 rounded-full">
@@ -334,7 +304,7 @@ const Login: React.FC = () => {
                 </div>
                 <button
                   type="button"
-                  onClick={handleQuickLogin}
+                  onClick={() => handleQuickLogin(savedLogins[0])}
                   className="w-full py-3 px-4 bg-blue-600 hover:bg-blue-700 rounded-lg text-white font-semibold transition-all duration-300 flex items-center justify-center gap-2 shadow-md hover:shadow-lg transform hover:-translate-y-0.5"
                 >
                   <LogIn className="w-5 h-5" />
@@ -352,7 +322,7 @@ const Login: React.FC = () => {
               </div>
             )}
             
-            {(!showQuickLogin || loading) && (
+            {(!showQuickLogin || isLoading) && (
               <form onSubmit={handleSubmit} className="space-y-6">
                 <div className="relative">
                   <div className="relative">
@@ -446,10 +416,10 @@ const Login: React.FC = () => {
                 <div>
                   <button
                     type="submit"
-                    disabled={loading}
+                    disabled={isLoading}
                     className="w-full bg-black/30 hover:bg-black/40 text-white rounded-lg px-6 py-3 font-light tracking-wide transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                   >
-                    {loading ? (
+                    {isLoading ? (
                       <svg className="w-5 h-5 animate-spin" viewBox="0 0 24 24">
                         <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
                         <path

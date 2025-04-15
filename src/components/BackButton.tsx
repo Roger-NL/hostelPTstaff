@@ -25,10 +25,10 @@ const BackButton: React.FC<BackButtonProps> = ({
       className={`flex items-center justify-center gap-2 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-colors shadow-md border-2 border-blue-400 ${
         variant === 'with-text' ? 'px-5 py-2.5' : 'w-12 h-12'
       } ${className}`}
-      aria-label={t('navigation.backToDashboard') || 'Back to Dashboard'}
+      aria-label={t('navigation.backToDashboard')}
     >
       <ChevronLeft size={24} strokeWidth={3} />
-      {variant === 'with-text' && <span className="text-sm font-bold">Dashboard</span>}
+      {variant === 'with-text' && <span className="text-sm font-bold">{t('navigation.items.dashboard')}</span>}
     </button>
   );
 };

@@ -1,7 +1,7 @@
-import React, { useEffect, useState } from 'react';
-import { setupMasterUser } from '../scripts/setupMasterUser';
-import { auth, firestore } from '../config/firebase';
-import { doc, getDoc } from 'firebase/firestore';
+import React, { useEffect } from 'react';
+import { useAuth } from '../hooks/useAuth';
+import { useStore } from '../store/useStore';
+import { authService } from '../services/auth.service';
 
 interface AdminInitializerProps {
   masterEmail: string;
@@ -12,37 +12,26 @@ interface AdminInitializerProps {
  * Este componente não renderiza nada visualmente.
  */
 const AdminInitializer: React.FC<AdminInitializerProps> = ({ masterEmail }) => {
-  const [isChecking, setIsChecking] = useState(true);
-  
+  const { user } = useAuth();
+  const { setUser } = useStore();
+
   useEffect(() => {
-    const checkMasterUser = async () => {
-      try {
-        // Verifica se o usuário master já está configurado
-        const masterRef = doc(firestore, 'system', 'master');
-        const masterDoc = await getDoc(masterRef);
-        
-        if (!masterDoc.exists()) {
-          console.log('Configurando usuário master...');
-          await setupMasterUser(masterEmail);
-          console.log('Usuário master configurado com sucesso!');
-        } else {
-          console.log('Usuário master já está configurado');
+    const initializeAdmin = async () => {
+      if (!user && masterEmail) {
+        try {
+          const adminUser = await authService.getUserByEmail(masterEmail);
+          if (adminUser) {
+            setUser(adminUser);
+          }
+        } catch (error) {
+          console.error('Error initializing admin:', error);
         }
-      } catch (error) {
-        console.error('Erro ao verificar/configurar usuário master:', error);
-      } finally {
-        setIsChecking(false);
       }
     };
-    
-    // Verifica se o Firebase Auth está inicializado
-    const unsubscribe = auth.onAuthStateChanged(() => {
-      checkMasterUser();
-    });
-    
-    return () => unsubscribe();
-  }, [masterEmail]);
-  
+
+    initializeAdmin();
+  }, [user, masterEmail, setUser]);
+
   // Este componente não renderiza nada
   return null;
 };
