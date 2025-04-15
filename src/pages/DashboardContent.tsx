@@ -32,7 +32,8 @@ import {
   AlertTriangle,
   Megaphone,
   Menu,
-  X
+  X,
+  ArrowDown
 } from 'lucide-react';
 import { firestore } from '../config/firebase';
 import { doc, updateDoc, getDoc } from 'firebase/firestore';
@@ -540,43 +541,51 @@ export default function DashboardContent() {
     }
   };
 
+  const navigationItems = [
+    { icon: <HomeIcon size={18} />, label: 'Dashboard', path: '/' },
+    { icon: <Calendar size={18} />, label: 'Schedule', path: '/schedule' },
+    { icon: <ClipboardList size={18} />, label: 'Tasks', path: '/tasks' },
+    { icon: <Users size={18} />, label: 'Staff', path: '/staff' },
+    { icon: <PartyPopper size={18} />, label: 'Events', path: '/events' }
+  ];
+
   return (
     <div className="space-y-6 max-w-[2000px] mx-auto">
       {/* Pull to refresh indicator */}
-      {isMobile && pullDistance > 0 && (
-        <div 
-          className="fixed top-0 left-0 right-0 flex items-center justify-center z-50 transition-transform duration-300"
-          style={{ 
-            transform: `translateY(${pullDistance}px)`,
-            height: '60px',
-            background: 'rgba(255, 255, 255, 0.9)',
-            backdropFilter: 'blur(8px)',
-            borderBottom: '1px solid rgba(229, 231, 235, 0.5)'
-          }}
-        >
-          <div className="flex items-center gap-2">
-            {isRefreshing ? (
-              <>
-                <div className="w-5 h-5 border-2 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
-                <span className="text-sm text-gray-600">Refreshing...</span>
-              </>
-            ) : (
-              <>
-                <div 
-                  className="w-5 h-5 border-2 border-blue-500 border-t-transparent rounded-full"
-                  style={{ transform: `rotate(${Math.min(pullDistance / maxPullDistance * 360, 360)}deg)` }}
-                ></div>
-                <span className="text-sm text-gray-600">Pull to refresh</span>
-              </>
-            )}
-          </div>
-        </div>
-      )}
+      <AnimatePresence>
+        {pullDistance > 0 && (
+          <motion.div
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -20 }}
+            className="fixed top-0 left-0 right-0 flex justify-center items-center py-4 bg-gray-900/95 backdrop-blur-md z-50"
+          >
+            <div className="flex items-center gap-2 text-sm text-gray-300">
+              {isRefreshing ? (
+                <>
+                  <div className="animate-spin rounded-full h-5 w-5 border-2 border-blue-500 border-t-transparent" />
+                  <span>Refreshing...</span>
+                </>
+              ) : (
+                <>
+                  <ArrowDown size={20} className={`transform transition-transform ${pullDistance >= maxPullDistance * 0.7 ? 'rotate-180' : ''}`} />
+                  <span>{pullDistance >= maxPullDistance * 0.7 ? 'Release to refresh' : 'Pull to refresh'}</span>
+                </>
+              )}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
-      {/* Main Content */}
-      <div className="space-y-6">
+      {/* Content */}
+      <div 
+        className="space-y-6"
+        onTouchStart={handleTouchStart}
+        onTouchMove={handleTouchMove}
+        onTouchEnd={handleTouchEnd}
+      >
         {/* Status do Usuário */}
-        <div className="space-y-6 xs:space-y-8">
+        <div className="space-y-4 xs:space-y-6">
           {/* User next shift - MOVED TO TOP */}
           <motion.div 
             initial={{ opacity: 0, y: 20 }}

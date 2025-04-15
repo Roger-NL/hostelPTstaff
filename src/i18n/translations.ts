@@ -247,6 +247,13 @@ export const translations = {
         dashboard: 'Dashboard',
         schedule: 'Schedule',
         staff: 'Staff'
+      },
+      nav: {
+        dashboard: 'Dashboard',
+        schedule: 'Agenda',
+        tasks: 'Tarefas',
+        staff: 'Equipe',
+        events: 'Eventos'
       }
     },
     
@@ -427,6 +434,23 @@ export const translations = {
       management: 'Hostel Management',
       settings: 'Hostel Settings',
       info: 'Hostel Information'
+    },
+    common: {
+      loading: 'Loading...',
+      error: 'Error',
+      success: 'Success',
+      cancel: 'Cancel',
+      save: 'Save',
+      delete: 'Delete',
+      edit: 'Edit',
+      close: 'Close'
+    },
+    nav: {
+      dashboard: 'Dashboard',
+      schedule: 'Schedule',
+      tasks: 'Tasks',
+      staff: 'Staff',
+      events: 'Events'
     }
   },
   pt: {
@@ -675,8 +699,15 @@ export const translations = {
         approvals: 'Aprovações',
         settings: 'Configurações',
         dashboard: 'Painel',
-        schedule: 'Escala',
+        schedule: 'Agenda',
         staff: 'Equipe'
+      },
+      nav: {
+        dashboard: 'Dashboard',
+        schedule: 'Agenda',
+        tasks: 'Tarefas',
+        staff: 'Equipe',
+        events: 'Eventos'
       }
     },
     
@@ -857,6 +888,23 @@ export const translations = {
       management: 'Gerenciamento do Hostel',
       settings: 'Configurações do Hostel',
       info: 'Informações do Hostel'
+    },
+    common: {
+      loading: 'Carregando...',
+      error: 'Erro',
+      success: 'Sucesso',
+      cancel: 'Cancelar',
+      save: 'Salvar',
+      delete: 'Excluir',
+      edit: 'Editar',
+      close: 'Fechar'
+    },
+    nav: {
+      dashboard: 'Dashboard',
+      schedule: 'Agenda',
+      tasks: 'Tarefas',
+      staff: 'Equipe',
+      events: 'Eventos'
     }
   }
 };
