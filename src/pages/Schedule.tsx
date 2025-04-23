@@ -58,12 +58,12 @@ function ConfirmationModal({ isOpen, onClose, onConfirm, volunteerName }: Confir
   return (
     <div className="fixed inset-0 flex items-center justify-center z-50 p-4" onClick={handleBackdropClick}>
       <div 
-        className="absolute inset-0 bg-black/40 backdrop-blur-sm"
+        className="absolute inset-0 bg-black/20 backdrop-blur-sm"
       />
-      <div className="relative w-[85%] sm:w-[400px] bg-gray-800 rounded-2xl shadow-xl overflow-hidden">
-        <div className="p-4 border-b border-white/10">
-          <h3 className="text-lg font-semibold text-white mb-2 text-center">Atenção</h3>
-          <p className="text-white/80 text-sm text-center">
+      <div className="relative w-[85%] sm:w-[400px] bg-white rounded-2xl shadow-lg overflow-hidden">
+        <div className="p-4 border-b border-orange-100">
+          <h3 className="text-lg font-semibold text-orange-700 mb-2 text-center">Atenção</h3>
+          <p className="text-orange-600 text-sm text-center">
             {volunteerName} já foi adicionado 5 vezes esta semana
           </p>
         </div>
@@ -73,13 +73,13 @@ function ConfirmationModal({ isOpen, onClose, onConfirm, volunteerName }: Confir
               onConfirm();
               onClose();
             }}
-            className="w-full px-4 py-3 bg-blue-500 text-white rounded-xl hover:bg-blue-600 transition text-sm font-medium"
+            className="w-full px-4 py-3 bg-orange-600 text-white rounded-xl hover:bg-orange-700 transition text-sm font-medium"
           >
             Confirmar
           </button>
           <button
             onClick={() => onClose()}
-            className="w-full px-4 py-3 bg-gray-700 text-white rounded-xl hover:bg-gray-600 transition text-sm font-medium"
+            className="w-full px-4 py-3 bg-white text-orange-600 rounded-xl hover:bg-orange-50 transition text-sm font-medium border border-orange-100"
           >
             Cancelar
           </button>
@@ -109,17 +109,17 @@ function VolunteerModal({ isOpen, onClose, onSelect, volunteers }: ModalProps) {
   return (
     <div className="fixed inset-0 flex items-center justify-center z-50 p-4" onClick={handleBackdropClick}>
       <div 
-        className="absolute inset-0 bg-black/40 backdrop-blur-sm"
+        className="absolute inset-0 bg-black/20 backdrop-blur-sm"
       />
-      <div className="relative w-[85%] sm:w-[400px] bg-gray-800 rounded-2xl shadow-xl overflow-hidden max-h-[80vh]">
-        <div className="p-4 border-b border-white/10">
-          <h3 className="text-lg font-semibold text-white text-center">Selecionar Voluntário</h3>
+      <div className="relative w-[85%] sm:w-[400px] bg-white rounded-2xl shadow-lg overflow-hidden max-h-[80vh]">
+        <div className="p-4 border-b border-orange-100">
+          <h3 className="text-lg font-semibold text-orange-700 text-center">Selecionar Voluntário</h3>
         </div>
         <div className="max-h-[50vh] overflow-y-auto">
           {volunteers.length === 0 ? (
-            <p className="text-white/60 text-center py-6 text-sm">Nenhum voluntário disponível</p>
+            <p className="text-orange-500 text-center py-6 text-sm">Nenhum voluntário disponível</p>
           ) : (
-            <div className="divide-y divide-white/10">
+            <div className="divide-y divide-orange-100">
               {volunteers.map(volunteer => (
                 <button
                   key={volunteer.id}
@@ -127,24 +127,24 @@ function VolunteerModal({ isOpen, onClose, onSelect, volunteers }: ModalProps) {
                     console.log('Selecting volunteer:', volunteer);
                     onSelect(volunteer.id);
                   }}
-                  className="w-full p-4 text-left text-white hover:bg-white/5 transition-colors flex items-center justify-between"
+                  className="w-full p-4 text-left text-orange-700 hover:bg-orange-50 transition-colors flex items-center justify-between"
                 >
                   <span>{volunteer.name}</span>
                   {volunteer.role === 'admin' && (
-                    <span className="text-xs px-2 py-1 bg-blue-500/20 text-blue-400 rounded-full">Admin</span>
+                    <span className="text-xs px-2 py-1 bg-orange-100 text-orange-600 rounded-full">Admin</span>
                   )}
                 </button>
               ))}
             </div>
           )}
         </div>
-        <div className="p-4 border-t border-white/10">
+        <div className="p-4 border-t border-orange-100">
           <button
             onClick={() => {
               console.log('Closing volunteer modal');
               onClose();
             }}
-            className="w-full px-4 py-3 bg-gray-700 text-white rounded-xl hover:bg-gray-600 transition text-sm font-medium"
+            className="w-full px-4 py-3 bg-white text-orange-600 rounded-xl hover:bg-orange-50 transition text-sm font-medium border border-orange-100"
           >
             Cancelar
           </button>
@@ -566,18 +566,18 @@ export default function Schedule() {
           <div className="flex items-center gap-2">
             <button
               onClick={() => navigate('/dashboard')}
-              className="w-8 h-8 xs:w-9 xs:h-9 flex items-center justify-center bg-gray-700/50 rounded-full text-white hover:bg-gray-600 transition-colors"
+              className="w-8 h-8 xs:w-9 xs:h-9 flex items-center justify-center bg-white/80 rounded-full text-orange-600 hover:bg-orange-50 transition-colors"
             >
               <ArrowLeft size={16} className="xs:hidden" />
               <ArrowLeft size={18} className="hidden xs:block" />
             </button>
-            <h1 className="text-lg xs:text-xl font-extralight text-white">{format(selectedWeek, 'MMMM yyyy')}</h1>
+            <h1 className="text-lg xs:text-xl font-extralight text-orange-700">{format(selectedWeek, 'MMMM yyyy')}</h1>
           </div>
           
           <div className="flex items-center gap-1.5 xs:gap-2">
             <button
               onClick={() => setSummaryModalOpen(true)}
-              className="w-8 h-8 xs:w-9 xs:h-9 flex items-center justify-center bg-blue-500/50 rounded-full text-white hover:bg-blue-600/50 transition-colors"
+              className="w-8 h-8 xs:w-9 xs:h-9 flex items-center justify-center bg-orange-100 rounded-full text-orange-600 hover:bg-orange-200 transition-colors"
             >
               <FileText size={16} className="xs:hidden" />
               <FileText size={18} className="hidden xs:block" />
@@ -586,7 +586,7 @@ export default function Schedule() {
             <div className="relative">
               <button
                 onClick={() => setShowDateOptions(!showDateOptions)}
-                className="calendar-button w-8 h-8 xs:w-9 xs:h-9 flex items-center justify-center bg-gray-700/50 rounded-full text-white hover:bg-gray-600 transition-colors"
+                className="calendar-button w-8 h-8 xs:w-9 xs:h-9 flex items-center justify-center bg-white/80 rounded-full text-orange-600 hover:bg-orange-50 transition-colors"
               >
                 <CalendarIcon size={16} className="xs:hidden" />
                 <CalendarIcon size={18} className="hidden xs:block" />
@@ -596,26 +596,26 @@ export default function Schedule() {
               {showDateOptions && (
                 <div 
                   ref={dateOptionsRef}
-                  className="absolute right-0 mt-2 w-48 rounded-xl bg-gray-800 shadow-lg border border-white/10 overflow-hidden z-50"
+                  className="absolute right-0 mt-2 w-48 rounded-xl bg-white shadow-lg border border-orange-100 overflow-hidden z-50"
                 >
                   <div className="py-1">
                     <button
                       onClick={goToToday}
-                      className="w-full px-4 py-2 text-sm text-white hover:bg-gray-700/50 text-left flex items-center gap-2"
+                      className="w-full px-4 py-2 text-sm text-orange-600 hover:bg-orange-50 text-left flex items-center gap-2"
                     >
                       <CalendarIcon size={14} />
                       Hoje
                     </button>
                     <button
                       onClick={goToPreviousWeek}
-                      className="w-full px-4 py-2 text-sm text-white hover:bg-gray-700/50 text-left flex items-center gap-2"
+                      className="w-full px-4 py-2 text-sm text-orange-600 hover:bg-orange-50 text-left flex items-center gap-2"
                     >
                       <ChevronLeft size={14} />
                       Semana Anterior
                     </button>
                     <button
                       onClick={goToNextWeek}
-                      className="w-full px-4 py-2 text-sm text-white hover:bg-gray-700/50 text-left flex items-center gap-2"
+                      className="w-full px-4 py-2 text-sm text-orange-600 hover:bg-orange-50 text-left flex items-center gap-2"
                     >
                       <ChevronRight size={14} />
                       Próxima Semana
@@ -625,7 +625,7 @@ export default function Schedule() {
                         setDatePickerOpen(true);
                         setShowDateOptions(false);
                       }}
-                      className="w-full px-4 py-2 text-sm text-white hover:bg-gray-700/50 text-left flex items-center gap-2"
+                      className="w-full px-4 py-2 text-sm text-orange-600 hover:bg-orange-50 text-left flex items-center gap-2"
                     >
                       <CalendarIcon size={14} />
                       Escolher Data
@@ -637,14 +637,14 @@ export default function Schedule() {
 
             <button
               onClick={handlePreviousWeek}
-              className="w-8 h-8 xs:w-9 xs:h-9 flex items-center justify-center bg-gray-700/50 rounded-full text-white hover:bg-gray-600 transition-colors"
+              className="w-8 h-8 xs:w-9 xs:h-9 flex items-center justify-center bg-white/80 rounded-full text-orange-600 hover:bg-orange-50 transition-colors"
             >
               <ChevronLeft size={16} className="xs:hidden" />
               <ChevronLeft size={18} className="hidden xs:block" />
             </button>
             <button
               onClick={handleNextWeek}
-              className="w-8 h-8 xs:w-9 xs:h-9 flex items-center justify-center bg-gray-700/50 rounded-full text-white hover:bg-gray-600 transition-colors"
+              className="w-8 h-8 xs:w-9 xs:h-9 flex items-center justify-center bg-white/80 rounded-full text-orange-600 hover:bg-orange-50 transition-colors"
             >
               <ChevronRight size={16} className="xs:hidden" />
               <ChevronRight size={18} className="hidden xs:block" />
@@ -653,7 +653,7 @@ export default function Schedule() {
         </div>
 
         {/* Seletor de semana mais compacto */}
-        <div className="rounded-xl bg-gray-800/50 backdrop-blur-sm p-2 text-center text-xs text-white/70 font-light">
+        <div className="rounded-xl bg-white/80 backdrop-blur-sm p-2 text-center text-xs text-orange-600 font-light border border-orange-100">
           {format(weekDays[0], 'MMM d')} - {format(weekDays[6], 'MMM d, yyyy')}
         </div>
 
@@ -661,7 +661,7 @@ export default function Schedule() {
         {datePickerOpen && (
           <div
             ref={datePickerRef}
-            className="absolute right-5 top-20 z-50 bg-gray-800 rounded-xl border border-white/10 shadow-xl"
+            className="absolute right-5 top-20 z-50 bg-white rounded-xl border border-orange-100 shadow-xl"
             style={{ width: 'min(280px, 90vw)' }}
           >
             <SimpleDatePicker
@@ -673,15 +673,15 @@ export default function Schedule() {
       </div>
 
       {!isMobileView && (
-        <div className="bg-gray-800/50 backdrop-blur-sm rounded-lg flex-1 flex flex-col min-h-0">
+        <div className="bg-white/80 backdrop-blur-sm rounded-lg flex-1 flex flex-col min-h-0 border border-orange-100">
           <div className="overflow-x-auto overflow-y-hidden h-full">
             <div className="min-w-[800px] h-full">
               <table className="w-full h-full border-collapse">
                 <thead>
                   <tr>
-                    <th className="sticky left-0 bg-gray-800/50 backdrop-blur-sm p-2 text-left text-white/60 text-xs font-medium w-20">Shift</th>
+                    <th className="sticky left-0 bg-white/90 backdrop-blur-sm p-2 text-left text-orange-600 text-xs font-medium w-20">Shift</th>
                     {weekDays.map(day => (
-                      <th key={day.toString()} className="p-2 text-center text-white/60 min-w-[120px] max-w-[120px]">
+                      <th key={day.toString()} className="p-2 text-center text-orange-600 min-w-[120px] max-w-[120px]">
                         <div className="text-tiny font-medium">{format(day, 'EEE')}</div>
                         <div className="text-tiny">{format(day, 'MMM d')}</div>
                       </th>
@@ -690,8 +690,8 @@ export default function Schedule() {
                 </thead>
                 <tbody>
                   {SHIFTS.map(shift => (
-                    <tr key={shift} className="border-t border-white/5">
-                      <td className="sticky left-0 bg-gray-800/70 backdrop-blur-sm p-2 text-white/80 text-xs font-light">
+                    <tr key={shift} className="border-t border-orange-100">
+                      <td className="sticky left-0 bg-white/90 backdrop-blur-sm p-2 text-orange-700 text-xs font-light">
                         <div className="flex flex-col">
                           <span className="whitespace-nowrap">{shift}</span>
                         </div>
@@ -702,21 +702,21 @@ export default function Schedule() {
                         return (
                           <td 
                             key={day.toString()}
-                            className="border-l border-white/5 p-2 align-top"
+                            className="border-l border-orange-50 p-2 align-top"
                           >
                             <div className="space-y-1.5">
                               {assignedVolunteers.map((volunteerId: string) => (
                                 <div 
                                   key={volunteerId}
-                                  className="flex items-center justify-between bg-blue-500/15 hover:bg-blue-500/25 px-2 py-1 rounded-md text-xs group"
+                                  className="flex items-center justify-between bg-orange-100/80 hover:bg-orange-100 px-2 py-1 rounded-md text-xs group"
                                 >
-                                  <span className="text-blue-100 text-xs truncate max-w-[80px]">
+                                  <span className="text-orange-700 text-xs truncate max-w-[80px]">
                                     {getVolunteerName(volunteerId).split(' ')[0]}
                                   </span>
                                   {(user?.role === 'admin' || volunteerId === user?.id) && (
                                     <button
                                       onClick={() => handleRemoveShift(day, shift, volunteerId)}
-                                      className="text-red-300 opacity-0 group-hover:opacity-100 transition-opacity"
+                                      className="text-red-500 opacity-0 group-hover:opacity-100 transition-opacity"
                                     >
                                       <X size={14} />
                                     </button>
@@ -734,7 +734,7 @@ export default function Schedule() {
                                       volunteerName: ''
                                     });
                                   }}
-                                  className="w-full flex items-center justify-center bg-white/5 hover:bg-white/10 p-1 rounded-md text-white/60 hover:text-white transition-colors"
+                                  className="w-full flex items-center justify-center bg-orange-50 hover:bg-orange-100 p-1 rounded-md text-orange-600 hover:text-orange-700 transition-colors"
                                 >
                                   <Plus size={14} />
                                 </button>
@@ -762,7 +762,7 @@ export default function Schedule() {
                 key={day.toString()}
                 onClick={() => setActiveMobileDay(index)}
                 className={`flex-shrink-0 p-2 rounded-lg text-center min-w-[80px] ${
-                  activeMobileDay === index ? 'bg-blue-500/30 text-white' : 'bg-gray-800/40 text-white/70'
+                  activeMobileDay === index ? 'bg-orange-100 text-orange-700' : 'bg-white/70 text-orange-600'
                 }`}
               >
                 <div className="text-xs font-medium">{format(day, 'EEE')}</div>
@@ -772,8 +772,8 @@ export default function Schedule() {
           </div>
 
           {/* Dia ativo */}
-          <div className="bg-gray-800/50 backdrop-blur-sm rounded-lg flex-1 p-3">
-            <h3 className="text-sm font-medium text-white mb-3">
+          <div className="bg-white/80 backdrop-blur-sm rounded-lg flex-1 p-3 border border-orange-100">
+            <h3 className="text-sm font-medium text-orange-700 mb-3">
               {format(weekDays[activeMobileDay], 'EEEE, MMMM d')}
             </h3>
             
@@ -782,9 +782,9 @@ export default function Schedule() {
                 const assignedVolunteers = getShiftAssignment(weekDays[activeMobileDay], shift);
                 
                 return (
-                  <div key={shift} className="bg-white/5 rounded-lg p-2">
+                  <div key={shift} className="bg-white rounded-lg p-2 border border-orange-50">
                     <div className="flex justify-between items-center mb-1.5">
-                      <span className="text-xs font-medium text-white/80">{shift}</span>
+                      <span className="text-xs font-medium text-orange-700">{shift}</span>
                       {user?.role === 'admin' && (
                         <button
                           onClick={() => {
@@ -795,7 +795,7 @@ export default function Schedule() {
                               volunteerName: ''
                             });
                           }}
-                          className="w-6 h-6 flex items-center justify-center bg-white/10 rounded-full text-white/70"
+                          className="w-6 h-6 flex items-center justify-center bg-orange-50 rounded-full text-orange-600"
                         >
                           <Plus size={14} />
                         </button>
@@ -807,15 +807,15 @@ export default function Schedule() {
                         {assignedVolunteers.map((volunteerId: string) => (
                           <div 
                             key={volunteerId}
-                            className="flex items-center justify-between bg-blue-500/15 px-2.5 py-1.5 rounded-md"
+                            className="flex items-center justify-between bg-orange-100/80 px-2.5 py-1.5 rounded-md"
                           >
-                            <span className="text-blue-100 text-xs">
+                            <span className="text-orange-700 text-xs">
                               {getVolunteerName(volunteerId)}
                             </span>
                             {(user?.role === 'admin' || volunteerId === user?.id) && (
                               <button
                                 onClick={() => handleRemoveShift(weekDays[activeMobileDay], shift, volunteerId)}
-                                className="text-red-300"
+                                className="text-red-500"
                               >
                                 <X size={14} />
                               </button>
@@ -825,7 +825,7 @@ export default function Schedule() {
                       </div>
                     ) : (
                       <div className="text-center py-2">
-                        <p className="text-white/40 text-xs">Sem voluntários</p>
+                        <p className="text-orange-500 text-xs">Sem voluntários</p>
                       </div>
                     )}
                   </div>
