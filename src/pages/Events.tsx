@@ -151,30 +151,30 @@ export default function Events() {
   const getEventStatusColor = (event: Event) => {
     switch (event.status) {
       case 'upcoming':
-        return 'bg-blue-500/20 text-blue-500';
+        return 'bg-orange-500/20 text-orange-500';
       case 'ongoing':
         return 'bg-green-500/20 text-green-500';
       case 'completed':
-        return 'bg-gray-500/20 text-gray-500';
+        return 'bg-orange-300/20 text-orange-400';
       case 'cancelled':
         return 'bg-red-500/20 text-red-500';
       default:
-        return 'bg-gray-500/20 text-gray-500';
+        return 'bg-orange-200/20 text-orange-400';
     }
   };
 
   const getEventStatusIcon = (status: Event['status']) => {
     switch (status) {
       case 'upcoming':
-        return <Clock className="text-blue-500" />;
+        return <Clock className="text-orange-500" />;
       case 'ongoing':
         return <CheckCircle className="text-green-500" />;
       case 'completed':
-        return <CheckCircle className="text-gray-500" />;
+        return <CheckCircle className="text-orange-400" />;
       case 'cancelled':
         return <XCircle className="text-red-500" />;
       default:
-        return <AlertTriangle className="text-yellow-500" />;
+        return <AlertTriangle className="text-orange-500" />;
     }
   };
 
@@ -262,488 +262,364 @@ export default function Events() {
   };
 
   return (
-    <div className="page-container flex flex-col">
-      {/* Header */}
-      <div className="page-header flex flex-wrap items-center justify-between gap-2 p-3 z-10 bg-gray-900/80 backdrop-blur-sm">
-        <h2 className="text-lg xs:text-xl font-extralight text-white">Events</h2>
-        <div className="flex flex-wrap items-center gap-2">
+    <div className="h-full p-4 overflow-auto">
+      <div className="flex justify-between items-center mb-6">
+        <h1 className="text-2xl font-light text-orange-700">Eventos</h1>
+        
+        <div className="flex gap-2">
           {isAdmin && (
             <>
               <button
                 onClick={() => setShowConfirmDeleteAll(true)}
+                className="p-2 bg-red-100 text-red-600 rounded-lg hover:bg-red-200 transition-colors"
                 disabled={isDeletingAll}
-                className="h-9 px-2 xs:px-3 bg-pink-700/50 text-white rounded-lg text-xs flex items-center gap-1.5 hover:bg-pink-700/70 transition-all disabled:opacity-50"
               >
-                {isDeletingAll ? (
-                  <RefreshCw size={16} className="animate-spin" />
-                ) : (
-                  <Trash2 size={16} />
-                )}
-                <span className="hidden xs:inline">Reset</span>
+                {isDeletingAll ? <RefreshCw className="animate-spin" size={20} /> : <Trash2 size={20} />}
               </button>
+              
               <button
                 onClick={handleCleanupEvents}
+                className="p-2 bg-orange-100 text-orange-600 rounded-lg hover:bg-orange-200 transition-colors"
                 disabled={isCleaningUp}
-                className="h-9 px-2 xs:px-3 bg-red-500/50 text-white rounded-lg text-xs flex items-center gap-1.5 hover:bg-red-500/70 transition-all disabled:opacity-50"
               >
-                {isCleaningUp ? (
-                  <RefreshCw size={16} className="animate-spin" />
-                ) : (
-                  <Trash size={16} />
-                )}
-                <span className="hidden xs:inline">Limpar</span>
+                {isCleaningUp ? <RefreshCw className="animate-spin" size={20} /> : <Trash size={20} />}
               </button>
             </>
           )}
-          {isAdmin && (
-            <button
-              onClick={() => {
-                setFormData(initialFormData);
-                setEditingEventId(null);
-                setShowForm(true);
-              }}
-              className="h-9 px-2 xs:px-3 bg-green-500 text-white rounded-lg text-xs flex items-center gap-1.5 hover:bg-green-600 transition-all"
-            >
-              <Plus size={16} />
-              <span className="hidden xs:inline">Add Event</span>
-              <span className="xs:hidden">Add</span>
-            </button>
-          )}
+          
+          <button
+            onClick={() => {
+              setFormData(initialFormData);
+              setEditingEventId(null);
+              setShowForm(true);
+            }}
+            className="bg-orange-600 hover:bg-orange-700 text-white p-2 rounded-lg transition-colors"
+          >
+            <Plus size={20} />
+          </button>
         </div>
       </div>
 
       {/* Events Content */}
-      <div className="page-content bg-gray-800/50 backdrop-blur-sm rounded-lg p-3">
-        {/* Events Grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 xs:gap-4">
-          {sortedEvents.map(event => (
-            <div
-              key={event.id}
-              className="bg-gray-700/50 backdrop-blur-sm rounded-lg border border-white/10 hover:border-white/20 transition-all shadow-sm hover:shadow-md overflow-hidden"
-            >
-              {/* Event Header - improved touch targets and spacing */}
-              <div className="p-3 border-b border-white/10 bg-gray-800/50">
-                <div className="flex items-start justify-between gap-2">
-                  <div className="flex-1 min-w-0">
-                    <h3 className="text-base font-medium text-white mb-2 truncate">{event.title}</h3>
-                    <div className="flex flex-wrap items-center gap-2">
-                      <span className={`text-xs px-2 py-1 rounded-full ${getEventStatusColor(event)} font-normal flex items-center gap-1`}>
-                        {getEventStatusIcon(event.status)}
-                        <span>{event.status}</span>
-                      </span>
-                      <span className="text-xs px-2 py-1 rounded-full bg-gray-600/50 text-gray-300 font-normal">
-                        {event.type}
-                      </span>
-                    </div>
-                  </div>
-                  {isAdmin && (
-                    <div className="flex items-center gap-1.5 shrink-0">
-                      <button
-                        onClick={() => handleEdit(event)}
-                        className="p-2 bg-gray-700/50 hover:bg-blue-500/20 text-blue-400 hover:text-blue-300 rounded-lg transition-colors"
-                      >
-                        <Edit size={16} />
-                      </button>
-                      <button
-                        onClick={() => setShowConfirmDelete(event.id)}
-                        className="p-2 bg-gray-700/50 hover:bg-red-500/20 text-red-400 hover:text-red-300 rounded-lg transition-colors"
-                      >
-                        <Trash2 size={16} />
-                      </button>
-                    </div>
-                  )}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+        {sortedEvents.map(event => (
+          <div
+            key={event.id}
+            className="bg-white/80 backdrop-blur-sm rounded-xl border border-orange-100 hover:shadow-md transition-shadow overflow-hidden"
+          >
+            {/* Event Header */}
+            <div className="p-4 border-b border-orange-100">
+              <div className="flex items-start justify-between gap-2 mb-2">
+                <h3 className="font-medium text-orange-700 line-clamp-2">{event.title}</h3>
+                <span className={`text-xs px-2 py-0.5 rounded-full ${getEventStatusColor(event)}`}>
+                  {event.status === 'upcoming' ? 'Próximo' :
+                   event.status === 'ongoing' ? 'Em andamento' :
+                   event.status === 'completed' ? 'Concluído' : 'Cancelado'}
+                </span>
+              </div>
+              
+              <p className="text-sm text-orange-600 line-clamp-2 mb-3">{event.description}</p>
+              
+              <div className="space-y-1 text-xs text-orange-600">
+                <div className="flex items-center gap-1">
+                  <Calendar size={14} className="text-orange-500" />
+                  <span>{format(new Date(event.startDate), "dd/MM/yyyy 'às' HH:mm")}</span>
+                </div>
+                
+                <div className="flex items-center gap-1">
+                  <MapPin size={14} className="text-orange-500" />
+                  <span>{event.location}</span>
+                </div>
+                
+                <div className="flex items-center gap-1">
+                  <Users size={14} className="text-orange-500" />
+                  <span>
+                    {event.attendees.length} participante{event.attendees.length !== 1 ? 's' : ''}
+                    {event.capacity ? ` / ${event.capacity}` : ''}
+                  </span>
                 </div>
               </div>
-
-              {/* Event Content - better spacing and readability */}
-              <div className="p-3 space-y-3">
-                <p className="text-sm text-gray-300 leading-relaxed line-clamp-3">{event.description}</p>
-
-                <div className="space-y-2.5 text-xs">
-                  <div className="flex items-center gap-2 text-gray-300">
-                    <Calendar size={14} className="text-gray-300 shrink-0" />
-                    <div className="truncate">
-                      <div>{format(parseISO(event.startDate), 'MMM d, yyyy')}</div>
-                      <div className="text-gray-400">{format(parseISO(event.startDate), 'HH:mm')} - {format(parseISO(event.endDate), 'HH:mm')}</div>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-2 text-gray-300">
-                    <MapPin size={14} className="text-gray-300 shrink-0" />
-                    <span className="truncate">{event.location}</span>
-                  </div>
-                  <div className="flex items-center gap-2 text-gray-300">
-                    <Users size={14} className="text-gray-300 shrink-0" />
-                    <span>
-                      {event.attendees.length}{event.capacity ? `/${event.capacity}` : ''} attending
-                    </span>
-                  </div>
-                </div>
-
-                {/* Tags */}
-                {Array.isArray(event.tags) && event.tags.length > 0 && (
-                  <div className="flex flex-wrap gap-1.5">
-                    {event.tags.map(tag => (
-                      <span
-                        key={tag}
-                        className="text-xs px-2 py-1 rounded-full bg-gray-600/50 text-gray-300"
-                      >
-                        {tag}
-                      </span>
-                    ))}
-                  </div>
-                )}
-
-                {/* Attendees - collapsed by default on mobile */}
-                <div className="space-y-1.5">
-                  <div className="flex items-center justify-between">
-                    <h4 className="text-xs font-medium text-white/90">Attendees</h4>
-                  </div>
-                  
-                  <div className="flex items-center flex-wrap gap-1.5">
-                    {event.attendees.length > 0 ? (
-                      event.attendees.slice(0, 3).map(attendeeId => {
-                        const attendee = users.find(u => u.id === attendeeId);
-                        return attendee ? (
-                          <div
-                            key={attendeeId}
-                            className="flex items-center gap-1 text-xs bg-gray-600/50 rounded-full px-2 py-1"
-                          >
-                            <User size={12} className="text-gray-300" />
-                            <span className="text-gray-300">{attendee.name}</span>
-                          </div>
-                        ) : null;
-                      })
-                    ) : (
-                      <span className="text-xs text-gray-400">No attendees yet</span>
-                    )}
-                    
-                    {event.attendees.length > 3 && (
-                      <div className="text-xs bg-gray-600/50 rounded-full px-2 py-1 text-gray-300">
-                        +{event.attendees.length - 3} more
-                      </div>
-                    )}
-                  </div>
-                </div>
-
-                {/* Actions - larger touch targets */}
-                <div className="flex justify-end gap-2 pt-2">
-                  {event.status === 'upcoming' && (
-                    <>
-                      {isAdmin && (
-                        <button
-                          onClick={() => cancelEvent(event.id)}
-                          className="px-3 py-1.5 text-xs bg-red-500/20 border border-red-500/10 text-red-300 rounded-lg hover:bg-red-500/30 transition-colors"
-                        >
-                          Cancel
-                        </button>
-                      )}
-                      {user && (
-                        <button
-                          onClick={() => handleJoinLeave(event)}
-                          disabled={event.capacity !== undefined && event.attendees.length >= event.capacity && !event.attendees.includes(user.id)}
-                          className={`px-3 py-1.5 text-xs rounded-lg transition-colors
-                            ${event.attendees.includes(user.id)
-                              ? 'bg-red-500/20 border border-red-500/10 text-red-300 hover:bg-red-500/30'
-                              : 'bg-green-500 text-white hover:bg-green-600'}`}
-                        >
-                          {event.attendees.includes(user.id) ? 'Leave' : 'Join'}
-                        </button>
-                      )}
-                    </>
-                  )}
-                </div>
-              </div>
-            </div>
-          ))}
-        </div>
-        
-        {/* Empty state */}
-        {sortedEvents.length === 0 && (
-          <div className="flex flex-col items-center justify-center py-12">
-            <div className="w-12 h-12 rounded-full bg-gray-700/50 flex items-center justify-center mb-3">
-              <Calendar size={24} className="text-gray-400" />
-            </div>
-            <p className="text-gray-400 text-sm">No events scheduled yet</p>
-          </div>
-        )}
-      </div>
-
-      {/* Event Form Modal - optimized for mobile */}
-      {showForm && (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-2 overflow-y-auto">
-          <div className="bg-gray-800 rounded-lg w-full max-w-xl my-2 max-h-[90vh] flex flex-col overflow-hidden">
-            <div className="p-3 xs:p-4 border-b border-white/10 flex items-center justify-between shrink-0">
-              <h2 className="text-base xs:text-lg font-medium text-white">
-                {editingEventId ? 'Edit Event' : 'Add Event'}
-              </h2>
-              <button
-                onClick={() => {
-                  setShowForm(false);
-                  setFormData(initialFormData);
-                  setEditingEventId(null);
-                }}
-                className="p-2 text-white/60 hover:text-white rounded-lg hover:bg-white/10"
-              >
-                <X size={18} />
-              </button>
             </div>
             
-            {/* Scrollable form content */}
-            <div className="flex-1 overflow-y-auto content-scrollable p-3 xs:p-4">
-              <form onSubmit={handleSubmit} className="space-y-3">
-                {/* Title field */}
-                <div className="bg-gray-700/50 rounded-lg p-3 border border-white/10">
-                  <label className="block text-sm font-medium text-gray-300 mb-1">
-                    Title
-                  </label>
-                  <input
-                    type="text"
-                    value={formData.title}
-                    onChange={e => setFormData({ ...formData, title: e.target.value })}
-                    className="w-full bg-gray-700/30 border border-white/10 rounded-lg px-3 py-2.5 text-white text-sm"
-                    required
-                  />
+            {/* Event Footer */}
+            <div className="px-4 py-3">
+              {event.tags && event.tags.length > 0 && (
+                <div className="flex flex-wrap gap-1 mb-3">
+                  {event.tags.map((tag, index) => (
+                    <span key={index} className="bg-orange-100 text-orange-600 px-2 py-0.5 rounded-full text-xs">
+                      {tag}
+                    </span>
+                  ))}
                 </div>
+              )}
+              
+              <div className="flex justify-between">
+                {event.status !== 'cancelled' && event.status !== 'completed' ? (
+                  <button
+                    onClick={() => handleJoinLeave(event)}
+                    className={`px-3 py-1.5 rounded-lg text-sm ${
+                      event.attendees.includes(user?.id || '') 
+                        ? 'bg-orange-100 text-orange-600 hover:bg-orange-200' 
+                        : 'bg-orange-600 text-white hover:bg-orange-700'
+                    } transition-colors`}
+                  >
+                    {event.attendees.includes(user?.id || '') ? 'Sair' : 'Participar'}
+                  </button>
+                ) : (
+                  <div></div> 
+                )}
                 
-                {/* Description field */}
-                <div className="bg-gray-700/50 rounded-lg p-3 border border-white/10">
-                  <label className="block text-sm font-medium text-gray-300 mb-1">
-                    Description
-                  </label>
-                  <textarea
-                    value={formData.description}
-                    onChange={e => setFormData({ ...formData, description: e.target.value })}
-                    className="w-full bg-gray-700/30 border border-white/10 rounded-lg px-3 py-2.5 text-white text-sm h-20"
-                    required
-                  />
-                </div>
-                
-                {/* Dates */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  <div className="bg-gray-700/50 rounded-lg p-3 border border-white/10">
-                    <SimpleDateTimePicker
-                      label="Start Date & Time"
-                      value={new Date(formData.startDate)}
-                      onChange={(value) => setFormData({ ...formData, startDate: value ? value.toISOString() : new Date().toISOString() })}
-                      required
-                    />
-                  </div>
-                  
-                  <div className="bg-gray-700/50 rounded-lg p-3 border border-white/10">
-                    <SimpleDateTimePicker
-                      label="End Date & Time"
-                      value={new Date(formData.endDate)}
-                      onChange={(value) => setFormData({ ...formData, endDate: value ? value.toISOString() : new Date().toISOString() })}
-                      required
-                    />
-                  </div>
-                </div>
-                
-                {/* Location field */}
-                <div className="bg-gray-700/50 rounded-lg p-3 border border-white/10">
-                  <label className="block text-sm font-medium text-gray-300 mb-1">
-                    Location
-                  </label>
-                  <input
-                    type="text"
-                    value={formData.location}
-                    onChange={e => setFormData({ ...formData, location: e.target.value })}
-                    className="w-full bg-gray-700/30 border border-white/10 rounded-lg px-3 py-2.5 text-white text-sm"
-                    required
-                  />
-                </div>
-                
-                {/* Type and Capacity */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  <div className="bg-gray-700/50 rounded-lg p-3 border border-white/10">
-                    <label className="block text-sm font-medium text-gray-300 mb-1">
-                      Type
-                    </label>
-                    <select
-                      value={formData.type}
-                      onChange={e => setFormData({ ...formData, type: e.target.value as 'activity' | 'invitation' })}
-                      className="w-full bg-gray-700/30 border border-white/10 rounded-lg px-3 py-2.5 text-white text-sm"
-                    >
-                      <option value="activity">Activity</option>
-                      <option value="invitation">Invitation</option>
-                    </select>
-                  </div>
-                  
-                  <div className="bg-gray-700/50 rounded-lg p-3 border border-white/10">
-                    <label className="block text-sm font-medium text-gray-300 mb-1">
-                      Capacity (optional)
-                    </label>
-                    <input
-                      type="number"
-                      value={formData.capacity || ''}
-                      onChange={e => setFormData({ ...formData, capacity: e.target.value ? parseInt(e.target.value) : undefined })}
-                      className="w-full bg-gray-700/30 border border-white/10 rounded-lg px-3 py-2.5 text-white text-sm"
-                      min="1"
-                    />
-                  </div>
-                </div>
-                
-                {/* Tags field */}
-                <div className="bg-gray-700/50 rounded-lg p-3 border border-white/10">
-                  <label className="block text-sm font-medium text-gray-300 mb-1">
-                    Tags
-                  </label>
-                  <div className="flex flex-wrap gap-1.5 mb-2 max-h-16 overflow-y-auto">
-                    {formData.tags?.map(tag => (
-                      <span
-                        key={tag}
-                        className="text-xs px-2 py-1 rounded-full bg-gray-600/50 text-gray-300 flex items-center gap-1"
-                      >
-                        {tag}
-                        <button
-                          type="button"
-                          onClick={() => setFormData({
-                            ...formData,
-                            tags: formData.tags?.filter(t => t !== tag)
-                          })}
-                          className="hover:text-white p-0.5"
-                        >
-                          <X size={14} />
-                        </button>
-                      </span>
-                    ))}
-                  </div>
+                {isAdmin && (
                   <div className="flex gap-2">
-                    <input
-                      type="text"
-                      value={newTag}
-                      onChange={e => setNewTag(e.target.value)}
-                      placeholder="Add a tag"
-                      className="flex-1 bg-gray-700/30 border border-white/10 rounded-lg px-3 py-2.5 text-white text-sm"
-                      onKeyPress={e => {
-                        if (e.key === 'Enter') {
-                          e.preventDefault();
-                          if (newTag.trim()) {
-                            setFormData({
-                              ...formData,
-                              tags: [...(formData.tags || []), newTag.trim()]
-                            });
-                            setNewTag('');
-                          }
-                        }
-                      }}
-                    />
                     <button
-                      type="button"
-                      onClick={() => {
-                        if (newTag.trim()) {
-                          setFormData({
-                            ...formData,
-                            tags: [...(formData.tags || []), newTag.trim()]
-                          });
-                          setNewTag('');
-                        }
-                      }}
-                      className="px-3 py-2.5 bg-gray-500 text-white rounded-lg transition-colors"
+                      onClick={() => handleEdit(event)}
+                      className="p-1.5 bg-orange-100 text-orange-600 rounded-lg hover:bg-orange-200 transition-colors"
                     >
-                      Add
+                      <Edit size={16} />
+                    </button>
+                    <button
+                      onClick={() => setShowConfirmDelete(event.id)}
+                      className="p-1.5 bg-red-100 text-red-600 rounded-lg hover:bg-red-200 transition-colors"
+                    >
+                      <Trash2 size={16} />
                     </button>
                   </div>
-                </div>
-              </form>
+                )}
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {/* Event Form Modal */}
+      {showForm && (
+        <div className="fixed inset-0 bg-black/20 backdrop-blur-sm z-50 flex items-center justify-center p-4 overflow-y-auto">
+          <div className="bg-white rounded-xl shadow-lg w-full max-w-md">
+            <div className="p-4 border-b border-orange-100">
+              <h3 className="text-lg font-medium text-orange-700">
+                {editingEventId ? 'Editar Evento' : 'Novo Evento'}
+              </h3>
             </div>
             
-            {/* Form actions - fixed at bottom */}
-            <div className="p-3 xs:p-4 border-t border-white/10 shrink-0 bg-gray-800/90 backdrop-blur-md flex justify-end gap-3">
-              <button
-                type="button"
-                onClick={() => {
-                  setShowForm(false);
-                  setFormData(initialFormData);
-                  setEditingEventId(null);
-                }}
-                className="px-4 py-2.5 text-white/60 hover:text-white transition-colors text-sm"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={handleSubmit}
-                className="px-4 py-2.5 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors text-sm font-medium"
-              >
-                {editingEventId ? 'Update Event' : 'Add Event'}
-              </button>
-            </div>
+            <form onSubmit={handleSubmit} className="p-4 space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-orange-600 mb-1">
+                  Título
+                </label>
+                <input
+                  type="text"
+                  value={formData.title}
+                  onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                  className="w-full p-2 border border-orange-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500/50"
+                  required
+                />
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium text-orange-600 mb-1">
+                  Descrição
+                </label>
+                <textarea
+                  value={formData.description}
+                  onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                  className="w-full p-2 border border-orange-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500/50 min-h-[100px]"
+                  required
+                />
+              </div>
+              
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-orange-600 mb-1">
+                    Data Início
+                  </label>
+                  <SimpleDateTimePicker
+                    value={new Date(formData.startDate)}
+                    onChange={(value) => setFormData({ ...formData, startDate: value ? value.toISOString() : new Date().toISOString() })}
+                  />
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium text-orange-600 mb-1">
+                    Data Fim
+                  </label>
+                  <SimpleDateTimePicker
+                    value={new Date(formData.endDate)}
+                    onChange={(value) => setFormData({ ...formData, endDate: value ? value.toISOString() : new Date().toISOString() })}
+                  />
+                </div>
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium text-orange-600 mb-1">
+                  Local
+                </label>
+                <input
+                  type="text"
+                  value={formData.location}
+                  onChange={(e) => setFormData({ ...formData, location: e.target.value })}
+                  className="w-full p-2 border border-orange-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500/50"
+                  required
+                />
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium text-orange-600 mb-1">
+                  Tipo
+                </label>
+                <select
+                  value={formData.type}
+                  onChange={(e) => setFormData({ ...formData, type: e.target.value as 'activity' | 'invitation' })}
+                  className="w-full p-2 border border-orange-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500/50"
+                  required
+                >
+                  <option value="activity">Atividade</option>
+                  <option value="invitation">Convite</option>
+                </select>
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium text-orange-600 mb-1">
+                  Capacidade
+                </label>
+                <input
+                  type="number"
+                  value={formData.capacity || ''}
+                  onChange={(e) => setFormData({ ...formData, capacity: parseInt(e.target.value) || undefined })}
+                  className="w-full p-2 border border-orange-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500/50"
+                  placeholder="Ilimitado se vazio"
+                  min="1"
+                />
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium text-orange-600 mb-1">
+                  Tags
+                </label>
+                <div className="flex items-center space-x-2">
+                  <input
+                    type="text"
+                    value={newTag}
+                    onChange={(e) => setNewTag(e.target.value)}
+                    className="flex-1 p-2 border border-orange-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500/50"
+                    placeholder="Adicionar tag"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (newTag.trim()) {
+                        setFormData({
+                          ...formData,
+                          tags: [...(formData.tags || []), newTag.trim()]
+                        });
+                        setNewTag('');
+                      }
+                    }}
+                    className="p-2 bg-orange-100 text-orange-600 rounded-lg hover:bg-orange-200"
+                  >
+                    <Plus size={20} />
+                  </button>
+                </div>
+                
+                <div className="flex flex-wrap gap-2 mt-2">
+                  {formData.tags?.map((tag, index) => (
+                    <div key={index} className="bg-orange-100 text-orange-600 px-2 py-1 rounded-lg flex items-center">
+                      <span>{tag}</span>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setFormData({
+                            ...formData,
+                            tags: formData.tags?.filter((_, i) => i !== index)
+                          });
+                        }}
+                        className="ml-1 text-orange-600 hover:text-orange-700"
+                      >
+                        <X size={14} />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+              
+              <div className="flex justify-end pt-4 border-t border-orange-100">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowForm(false);
+                    setFormData(initialFormData);
+                    setEditingEventId(null);
+                  }}
+                  className="px-4 py-2 text-orange-600 hover:bg-orange-50 rounded-lg transition-colors mr-2"
+                >
+                  Cancelar
+                </button>
+                <button
+                  type="submit"
+                  className="px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition-colors"
+                >
+                  {editingEventId ? 'Atualizar' : 'Criar'}
+                </button>
+              </div>
+            </form>
           </div>
         </div>
       )}
 
-      {/* Delete Confirmation Modal - mobile optimized */}
+      {/* Confirm Delete Modal */}
       {showConfirmDelete && (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-          <div className="bg-gray-800 rounded-lg p-4 w-full max-w-xs sm:max-w-sm">
-            <div className="flex items-center gap-3 mb-3">
-              <div className="w-10 h-10 rounded-full bg-red-500/20 flex items-center justify-center">
-                <Trash2 size={20} className="text-red-400" />
-              </div>
-              <h2 className="text-lg font-medium text-white">
-                Delete Event
-              </h2>
+        <div className="fixed inset-0 bg-black/20 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-xl shadow-lg w-full max-w-md">
+            <div className="p-4 border-b border-orange-100">
+              <h3 className="text-lg font-medium text-orange-700">Confirmar Exclusão</h3>
             </div>
-            <p className="text-sm text-white/80 mb-5 bg-red-500/10 p-3 rounded-lg border border-red-500/20">
-              Are you sure you want to delete this event? This action cannot be undone.
-            </p>
-            <div className="flex justify-end gap-3">
+            
+            <div className="p-4">
+              <p className="text-orange-600">Tem certeza que deseja excluir este evento? Esta ação não pode ser desfeita.</p>
+            </div>
+            
+            <div className="p-4 flex justify-end border-t border-orange-100">
               <button
                 onClick={() => setShowConfirmDelete(null)}
-                className="px-4 py-2.5 text-white/60 hover:text-white transition-colors text-sm"
+                className="px-4 py-2 text-orange-600 hover:bg-orange-50 rounded-lg transition-colors mr-2"
               >
-                Cancel
+                Cancelar
               </button>
               <button
                 onClick={() => handleDelete(showConfirmDelete)}
-                className="px-4 py-2.5 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors text-sm font-medium"
+                className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
               >
-                Delete
+                Excluir
               </button>
             </div>
           </div>
         </div>
       )}
 
-      {/* Delete All Confirmation Modal - mobile optimized */}
+      {/* Confirm Delete All Modal */}
       {showConfirmDeleteAll && (
-        <div className="fixed inset-0 bg-black/70 backdrop-blur-md flex items-center justify-center z-50 p-4">
-          <div className="bg-gray-800 rounded-lg p-4 w-full max-w-xs sm:max-w-sm border border-pink-500/30">
-            <div className="flex items-center gap-3 mb-3">
-              <div className="w-10 h-10 rounded-full bg-pink-500/20 flex items-center justify-center">
-                <Trash2 size={20} className="text-pink-400" />
-              </div>
-              <h2 className="text-lg font-medium text-white">
-                Reset Events
-              </h2>
+        <div className="fixed inset-0 bg-black/20 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-xl shadow-lg w-full max-w-md">
+            <div className="p-4 border-b border-orange-100">
+              <h3 className="text-lg font-medium text-orange-700">Excluir Todos os Eventos</h3>
             </div>
-            <p className="text-sm text-white/80 mb-5 bg-pink-900/30 p-3 rounded-lg border border-pink-500/20">
-              <span className="font-bold text-pink-300 block mb-1">WARNING:</span>
-              This action will permanently delete ALL events from the system. This cannot be undone.
-            </p>
-            <div className="flex justify-end gap-3">
+            
+            <div className="p-4">
+              <p className="text-orange-600 mb-2">Tem certeza que deseja excluir <strong>TODOS</strong> os eventos?</p>
+              <p className="text-orange-600">Esta ação não pode ser desfeita!</p>
+            </div>
+            
+            <div className="p-4 flex justify-end border-t border-orange-100">
               <button
                 onClick={() => setShowConfirmDeleteAll(false)}
-                className="px-4 py-2.5 text-white/60 hover:text-white transition-colors text-sm"
+                className="px-4 py-2 text-orange-600 hover:bg-orange-50 rounded-lg transition-colors mr-2"
               >
-                Cancel
+                Cancelar
               </button>
               <button
                 onClick={handleDeleteAllEvents}
-                disabled={isDeletingAll}
-                className="px-4 py-2.5 bg-pink-600 text-white rounded-lg hover:bg-pink-700 transition-colors text-sm font-medium flex items-center gap-2"
+                className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
               >
-                {isDeletingAll ? (
-                  <>
-                    <RefreshCw size={14} className="animate-spin" />
-                    Processing...
-                  </>
-                ) : (
-                  <>
-                    <Trash2 size={14} />
-                    Confirm Reset
-                  </>
-                )}
+                Excluir Todos
               </button>
             </div>
           </div>
