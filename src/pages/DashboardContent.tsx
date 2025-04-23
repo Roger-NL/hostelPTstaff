@@ -29,6 +29,16 @@ import { doc, updateDoc, getDoc } from 'firebase/firestore';
 import * as authService from '../services/auth.service';
 import { useAuth } from '../hooks/useAuth';
 
+// Definindo um tipo para o usuário para substituir 'any[]'
+interface UserType {
+  id: string;
+  name: string;
+  email: string;
+  role: string;
+  shifts?: string[];
+  [key: string]: any; // Para compatibilidade com outros campos
+}
+
 export default function DashboardContent() {
   const { user, tasks = [], events = [], messages = [], users = [], schedule = {} as Schedule, setUser } = useStore();
   const { t } = useTranslation();
@@ -127,7 +137,7 @@ export default function DashboardContent() {
   const currentShift = getCurrentShift();
   
   // Função para encontrar o último turno com voluntários independente de quando ocorreu
-  const getLastActiveShift = (): { shift: ShiftTime, date: string, volunteers: any[] } => {
+  const getLastActiveShift = (): { shift: ShiftTime, date: string, volunteers: UserType[] } => {
     const today = new Date();
     const allShifts: ShiftTime[] = ['08:00-11:00', '10:00-13:00', '13:00-16:00', '16:00-19:00', '19:00-22:00'];
     
@@ -149,7 +159,8 @@ export default function DashboardContent() {
             if (volunteerIds.length > 0) {
               const volunteers = volunteerIds
                 .map(id => users.find(u => u.id === id))
-                .filter(Boolean);
+                .filter(Boolean)
+                .map(u => ({ ...u!, role: u!.role || 'volunteer' } as UserType));
               
               if (volunteers.length > 0) {
                 return { shift, date: dateStr, volunteers };
@@ -165,7 +176,8 @@ export default function DashboardContent() {
           if (volunteerIds.length > 0) {
             const volunteers = volunteerIds
               .map(id => users.find(u => u.id === id))
-              .filter(Boolean);
+              .filter(Boolean)
+              .map(u => ({ ...u!, role: u!.role || 'volunteer' } as UserType));
             
             if (volunteers.length > 0) {
               return { shift, date: dateStr, volunteers };
@@ -184,7 +196,7 @@ export default function DashboardContent() {
   };
 
   // Função para encontrar o próximo turno com voluntários
-  const getNextShiftWithVolunteers = (): { shift: ShiftTime, date: string, volunteers: any[] } => {
+  const getNextShiftWithVolunteers = (): { shift: ShiftTime, date: string, volunteers: UserType[] } => {
     const today = new Date();
     const allShifts: ShiftTime[] = ['08:00-11:00', '10:00-13:00', '13:00-16:00', '16:00-19:00', '19:00-22:00'];
     
@@ -206,7 +218,8 @@ export default function DashboardContent() {
             if (volunteerIds.length > 0) {
               const volunteers = volunteerIds
                 .map(id => users.find(u => u.id === id))
-                .filter(Boolean);
+                .filter(Boolean)
+                .map(u => ({ ...u!, role: u!.role || 'volunteer' } as UserType));
               
               if (volunteers.length > 0) {
                 return { shift, date: dateStr, volunteers };
@@ -222,7 +235,8 @@ export default function DashboardContent() {
           if (volunteerIds.length > 0) {
             const volunteers = volunteerIds
               .map(id => users.find(u => u.id === id))
-              .filter(Boolean);
+              .filter(Boolean)
+              .map(u => ({ ...u!, role: u!.role || 'volunteer' } as UserType));
             
             if (volunteers.length > 0) {
               return { shift, date: dateStr, volunteers };
@@ -251,10 +265,8 @@ export default function DashboardContent() {
     // Filtrar voluntários para evitar valores undefined
     const volunteers = volunteerIds
       .map(id => users.find(u => u.id === id))
-      .filter(Boolean); // Remove undefined/null values
-    
-    // Adiciona logs para debug
-    console.log(`Shift ${shift} volunteers:`, volunteers);
+      .filter(Boolean)
+      .map(u => ({ ...u!, role: u!.role || 'volunteer' } as UserType)); // Remove undefined/null values
     
     // Se não houver voluntários, retorna um array vazio (não tentamos mais criar um admin default)
     return volunteers;

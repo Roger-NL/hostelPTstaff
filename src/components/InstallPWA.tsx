@@ -1,20 +1,30 @@
 import React, { useEffect, useState } from 'react';
 import { Download } from 'lucide-react';
 
+// Definição do tipo BeforeInstallPromptEvent que não existe nativamente no TypeScript
+interface BeforeInstallPromptEvent extends Event {
+  readonly platforms: string[];
+  readonly userChoice: Promise<{
+    outcome: 'accepted' | 'dismissed';
+    platform: string;
+  }>;
+  prompt(): Promise<void>;
+}
+
 export default function InstallPWA() {
   const [supportsPWA, setSupportsPWA] = useState(false);
-  const [promptInstall, setPromptInstall] = useState<any>(null);
+  const [promptInstall, setPromptInstall] = useState<BeforeInstallPromptEvent | null>(null);
   const [isIOS] = useState(/iPad|iPhone|iPod/.test(navigator.userAgent));
 
   useEffect(() => {
-    const handler = (e: any) => {
+    const handler = (e: BeforeInstallPromptEvent) => {
       e.preventDefault();
       setPromptInstall(e);
       setSupportsPWA(true);
     };
-    window.addEventListener('beforeinstallprompt', handler);
+    window.addEventListener('beforeinstallprompt', handler as EventListener);
 
-    return () => window.removeEventListener('beforeinstallprompt', handler);
+    return () => window.removeEventListener('beforeinstallprompt', handler as EventListener);
   }, []);
 
   const handleInstallClick = (e: React.MouseEvent<HTMLButtonElement, MouseEvent>) => {

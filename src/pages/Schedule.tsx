@@ -31,12 +31,27 @@ interface ConfirmationModalProps {
   volunteerName: string;
 }
 
+interface ScheduleData {
+  [date: string]: {
+    [shift in ShiftTime]?: string[];
+  };
+}
+
+interface User {
+  id: string;
+  name: string;
+  email: string;
+  role: string;
+  shifts?: string[];
+  [key: string]: any; // Para outros campos que possam existir
+}
+
 interface ScheduleSummaryModalProps {
   isOpen: boolean;
   onClose: () => void;
   weekDays: Date[];
-  schedule: any;
-  users: any[];
+  schedule: ScheduleData;
+  users: User[];
   shifts: ShiftTime[];
 }
 
@@ -90,8 +105,6 @@ function ConfirmationModal({ isOpen, onClose, onConfirm, volunteerName }: Confir
 }
 
 function VolunteerModal({ isOpen, onClose, onSelect, volunteers }: ModalProps) {
-  console.log('VolunteerModal render:', { isOpen, volunteersCount: volunteers.length });
-  
   // Emit event to control sidebar visibility
   useEffect(() => {
     const event = new CustomEvent('modalStateChange', { detail: { isOpen } });
@@ -124,7 +137,6 @@ function VolunteerModal({ isOpen, onClose, onSelect, volunteers }: ModalProps) {
                 <button
                   key={volunteer.id}
                   onClick={() => {
-                    console.log('Selecting volunteer:', volunteer);
                     onSelect(volunteer.id);
                   }}
                   className="w-full p-4 text-left text-orange-700 hover:bg-orange-50 transition-colors flex items-center justify-between"
@@ -141,7 +153,6 @@ function VolunteerModal({ isOpen, onClose, onSelect, volunteers }: ModalProps) {
         <div className="p-4 border-t border-orange-100">
           <button
             onClick={() => {
-              console.log('Closing volunteer modal');
               onClose();
             }}
             className="w-full px-4 py-3 bg-white text-orange-600 rounded-xl hover:bg-orange-50 transition text-sm font-medium border border-orange-100"
@@ -333,8 +344,6 @@ export default function Schedule() {
   const dateOptionsRef = useRef<HTMLDivElement>(null);
   
   const volunteers = users;
-  console.log('Available volunteers:', volunteers);
-  console.log('Modal state:', modalState);
   const weekDays = Array.from({ length: 7 }, (_, i) => addDays(selectedWeek, i));
 
   const handlePreviousWeek = () => {
@@ -371,7 +380,6 @@ export default function Schedule() {
 
   const handleAssignShift = (volunteerId: string) => {
     if (modalState.date && modalState.shift) {
-      console.log('Assigning shift:', { date: modalState.date, shift: modalState.shift, volunteerId });
       const shiftCount = countVolunteerShifts(volunteerId);
       const volunteerName = getVolunteerName(volunteerId);
 
@@ -436,7 +444,6 @@ export default function Schedule() {
   };
 
   const handleCloseModal = () => {
-    console.log('Closing modal');
     setModalState({
       isOpen: false,
       volunteerName: ''
@@ -726,7 +733,6 @@ export default function Schedule() {
                               {user?.role === 'admin' && (
                                 <button
                                   onClick={() => {
-                                    console.log('Opening volunteer modal for:', { date: day, shift });
                                     setModalState({
                                       isOpen: true,
                                       date: day,
@@ -838,7 +844,6 @@ export default function Schedule() {
 
       {/* Debug logs */}
       {(() => {
-        console.log('Rendering modals:', { modalState, confirmationModal });
         return null;
       })()}
 
