@@ -95,6 +95,7 @@ export default function Tasks() {
   const [isLoadingAction, setIsLoadingAction] = useState(false);
   const [showConfirmAllDelete, setShowConfirmAllDelete] = useState(false);
   const [showConfirmCleanup, setShowConfirmCleanup] = useState(false);
+  const [filter, setFilter] = useState<Task['type'] | 'all'>('all');
 
   const isAdmin = user?.role === 'admin';
   const volunteers = users.filter(u => u.role === 'user');
@@ -280,323 +281,114 @@ export default function Tasks() {
     };
 
     return (
-      <div
-        className="bg-gray-800/70 backdrop-blur-sm rounded-lg border border-white/10 hover:border-white/20 transition-all shadow-sm hover:shadow-md cursor-pointer"
-        onClick={() => setSelectedTask(task)}
+      <div 
+        className="bg-white rounded-xl p-3 shadow-sm border border-orange-100 hover:shadow-md transition-shadow"
       >
-        <div className="p-3 border-b border-white/5">
-          <div className="flex items-start justify-between gap-2 mb-2">
-            <h4 className="font-medium text-white text-sm truncate flex-1">
-              {task.title}
-              {task.requirePhoto && (
-                <span className="ml-2 inline-flex items-center" title={t('approvals.photoRequired')}>
-                  <Camera size={14} className="text-amber-400" />
-                </span>
+        <div className="flex justify-between items-start mb-2">
+          <h4 className="font-medium text-orange-700 line-clamp-2">{task.title}</h4>
+          <div className="flex gap-1">
+            <button
+              onClick={() => handleStatusChange(task.id, 
+                task.status === 'todo' ? 'inProgress' : 
+                task.status === 'inProgress' ? 'done' : 'todo'
               )}
-            </h4>
-            <div className="flex items-center gap-1.5 shrink-0">
-              <div className={`text-xs px-2 py-0.5 rounded-full ${getPriorityColor(task.priority)} font-normal`}>
-                {task.priority}
-              </div>
-            </div>
-          </div>
-          
-          <div className="flex flex-wrap items-center justify-between gap-2 text-xs">
-            <div className="relative">
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setShowStatusDropdown(showStatusDropdown === task.id ? null : task.id);
-                }}
-                className="flex items-center gap-1 text-xs px-2 py-1 rounded-md bg-gray-700/50 hover:bg-gray-700"
-              >
-                {getStatusIcon(task.status)}
-                <span className="text-white">{task.status === 'todo' ? t('todo') : task.status === 'inProgress' ? t('inProgress') : t('done')}</span>
-                <ChevronDown size={12} className="text-white/70" />
-              </button>
-              {showStatusDropdown === task.id && (
-                <>
-                  <div 
-                    className="fixed inset-0 z-40"
-                    onClick={() => setShowStatusDropdown(null)}
-                  />
-                  <div 
-                    className="absolute left-0 mt-1 w-40 bg-gray-800 rounded-lg shadow-xl z-50 border border-white/10 overflow-hidden"
-                    onClick={(e) => e.stopPropagation()}
-                  >
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleStatusChange(task.id, 'todo');
-                        setShowStatusDropdown(null);
-                      }}
-                      className="w-full px-3 py-2 text-left text-xs hover:bg-gray-700 text-white flex items-center gap-2"
-                    >
-                      <ClipboardList size={14} className="text-gray-400" />
-                      <span>{t('todo')}</span>
-                    </button>
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleStatusChange(task.id, 'inProgress');
-                        setShowStatusDropdown(null);
-                      }}
-                      className="w-full px-3 py-2 text-left text-xs hover:bg-gray-700 text-white flex items-center gap-2"
-                    >
-                      <Loader size={14} className="text-amber-400" />
-                      <span>{t('inProgress')}</span>
-                    </button>
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        if (task.requirePhoto && (!task.photo || !task.photo.approved)) {
-                          setShowPhotoModal(true);
-                          setShowStatusDropdown(null);
-                        } else {
-                          handleStatusChange(task.id, 'done');
-                          setShowStatusDropdown(null);
-                        }
-                      }}
-                      className="w-full px-3 py-2 text-left text-xs hover:bg-gray-700 text-white flex items-center gap-2"
-                    >
-                      <CheckSquare size={14} className="text-emerald-400" />
-                      <span>{t('done')}</span>
-                    </button>
-                  </div>
-                </>
-              )}
-            </div>
+              className="p-1 text-orange-600 hover:text-orange-700 hover:bg-orange-50 rounded-lg transition-colors"
+              title="Change Status"
+            >
+              {task.status === 'todo' && <Clock size={16} />}
+              {task.status === 'inProgress' && <AlertTriangle size={16} />}
+              {task.status === 'done' && <CheckCircle size={16} />}
+            </button>
             
-            <div className="flex items-center text-amber-400 text-xs font-medium">
-              <Award size={12} className="mr-1" />
-              <span>{task.points}</span>
-            </div>
-            
-            {isAdmin && (
-              <div className="flex gap-1 ml-auto">
+            <Popover>
+              <PopoverTrigger>
                 <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    handleEdit(task);
-                  }}
-                  className="p-1 bg-gray-700/50 hover:bg-blue-500/20 text-blue-400 hover:text-blue-300 rounded transition-colors"
+                  className="p-1 text-orange-600 hover:text-orange-700 hover:bg-orange-50 rounded-lg transition-colors"
+                  title="More Options"
                 >
-                  <Edit size={12} />
+                  <MoreVertical size={16} />
                 </button>
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setShowConfirmDelete(task.id);
-                  }}
-                  className="p-1 bg-gray-700/50 hover:bg-red-500/20 text-red-400 hover:text-red-300 rounded transition-colors"
-                >
-                  <Trash2 size={12} />
-                </button>
-              </div>
-            )}
+              </PopoverTrigger>
+              <PopoverContent className="w-48 rounded-xl border border-orange-100 shadow-lg p-1 bg-white">
+                <div className="flex flex-col divide-y divide-orange-100">
+                  {(isAdmin || task.createdBy === user?.id) && (
+                    <>
+                      <button
+                        onClick={() => handleEdit(task)}
+                        className="flex items-center gap-2 w-full text-left px-3 py-2 hover:bg-orange-50 text-orange-600 text-sm rounded-lg"
+                      >
+                        <Edit size={14} />
+                        <span>{t('tasks.edit')}</span>
+                      </button>
+                      <button
+                        onClick={() => setShowConfirmDelete(task.id)}
+                        className="flex items-center gap-2 w-full text-left px-3 py-2 hover:bg-orange-50 text-red-600 text-sm rounded-lg"
+                      >
+                        <Trash2 size={14} />
+                        <span>{t('tasks.delete')}</span>
+                      </button>
+                    </>
+                  )}
+                </div>
+              </PopoverContent>
+            </Popover>
           </div>
         </div>
         
-        <div className="p-3">
-          <p className="text-xs text-gray-300 mb-2.5 line-clamp-2">
-            {task.description}
-          </p>
-          
-          {Array.isArray(task.tags) && task.tags.length > 0 && (
-            <div className="flex flex-wrap gap-1 mb-2.5">
-              {task.tags.map(tag => (
-                <span
-                  key={tag}
-                  className="text-[10px] px-2 py-0.5 rounded-full bg-gray-700/50 text-gray-300"
-                >
-                  {tag}
-                </span>
-              ))}
-            </div>
+        {task.description && (
+          <p className="text-sm text-orange-600 mb-2 line-clamp-2">{task.description}</p>
+        )}
+        
+        <div className="flex flex-wrap gap-1 mb-2">
+          {task.priority && (
+            <span className={`text-xs px-2 py-0.5 rounded-full ${getPriorityColor(task.priority)}`}>
+              {t(`tasks.priority.${task.priority}`)}
+            </span>
           )}
-          
-          <div className="flex flex-wrap items-center gap-2 text-[10px] text-gray-400">
-            <div className="flex items-center gap-1">
-              <Clock size={10} className="text-gray-300" />
-              <span className="text-gray-300 truncate">
-                {format(new Date(task.dueDate || new Date()), 'MMM d, yyyy')}
-              </span>
-            </div>
-            
-            {Array.isArray(task.assignedTo) && task.assignedTo.length > 0 && (
-              <div className="flex items-center gap-1">
-                <User size={10} className="text-gray-300" />
-                <span className="text-gray-300 truncate max-w-[100px]">
-                  {task.assignedTo.map(id => 
-                    users.find(u => u.id === id)?.name.split(' ')[0]
-                  ).join(', ')}
-                </span>
-              </div>
-            )}
-            
-            {task.status === 'todo' && new Date(task.dueDate || new Date()) < new Date() && (
-              <div className="flex items-center gap-1 text-red-400 ml-auto">
-                <AlertCircle size={10} />
-                <span>Overdue</span>
-              </div>
-            )}
-            
-            <div className="flex items-center gap-2 ml-auto">
-              {Array.isArray(task.comments) && task.comments.length > 0 && (
-                <div className="flex items-center gap-1 text-gray-400">
-                  <MessageSquare size={10} />
-                  <span>{task.comments.length}</span>
-                </div>
-              )}
-              {Array.isArray(task.checklist) && task.checklist.length > 0 && (
-                <div className="flex items-center gap-1 text-emerald-400">
-                  <CheckSquare size={10} />
-                  <span>
-                    {task.checklist.filter(item => item.completed).length}/{task.checklist.length}
-                  </span>
-                </div>
-              )}
-            </div>
-          </div>
+          {task.type && (
+            <span className={`text-xs px-2 py-0.5 rounded-full ${
+              task.type === 'hostel' 
+                ? 'bg-blue-100 text-blue-600' 
+                : 'bg-purple-100 text-purple-600'
+            }`}>
+              {task.type === 'hostel' ? t('tasks.hostel') : t('tasks.personal')}
+            </span>
+          )}
+          {task.isPrivate && (
+            <span className="text-xs px-2 py-0.5 rounded-full bg-red-100 text-red-600">
+              {t('tasks.private')}
+            </span>
+          )}
         </div>
-
-        {task.requirePhoto && task.photo && (
-          <div className="mt-2 text-xs px-3 pb-3">
-            {task.photo.approved === true ? (
-              <span className="flex items-center text-green-400">
-                <CheckCircle size={12} className="mr-1" />
-                {t('approvals.photoApproved')}
-              </span>
-            ) : task.photo.approved === false ? (
-              <span className="flex items-center text-red-400">
-                <XCircle size={12} className="mr-1" />
-                {t('approvals.rejected')}
-              </span>
-            ) : (
-              <span className="flex items-center text-amber-400">
-                <span className="relative flex h-2 w-2 mr-2">
-                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75"></span>
-                  <span className="relative inline-flex rounded-full h-2 w-2 bg-amber-500"></span>
-                </span>
-                {t('approvals.waitingApproval')}
-              </span>
-            )}
-          </div>
-        )}
-
-        {task.requirePhoto && !task.photo && (
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              setShowPhotoModal(true);
-            }}
-            className="mt-2 mx-3 mb-3 w-auto py-1 px-2 text-xs bg-amber-500/20 text-amber-300 rounded-lg hover:bg-amber-500/30 transition-colors flex items-center justify-center"
-          >
-            <Camera size={12} className="mr-1" />
-            {t('approvals.takePhoto')}
-          </button>
-        )}
-
-        {showPhotoModal && (
-          <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4 overflow-y-auto">
-            <div className="bg-gray-800 rounded-xl w-full max-w-md overflow-hidden">
-              <div className="p-4 border-b border-gray-700">
-                <h3 className="text-xl font-medium">{t('approvals.takePhoto')}</h3>
-              </div>
-              
-              <div className="p-4">
-                {isCapturing ? (
-                  <div className="relative w-full aspect-[4/3] bg-black overflow-hidden rounded-lg">
-                    <video 
-                      ref={videoRef} 
-                      autoPlay 
-                      playsInline 
-                      className="absolute inset-0 w-full h-full object-cover"
-                    />
-                  </div>
-                ) : photoUrl ? (
-                  <div className="w-full aspect-[4/3] bg-black overflow-hidden rounded-lg">
-                    <img 
-                      src={photoUrl} 
-                      alt="Capturada" 
-                      className="w-full h-full object-contain"
-                    />
-                  </div>
-                ) : (
-                  <div className="w-full aspect-[4/3] bg-gray-900 rounded-lg flex items-center justify-center">
-                    <button
-                      onClick={startCapture}
-                      className="px-4 py-2 bg-amber-500 text-white rounded-lg hover:bg-amber-600"
-                    >
-                      <Camera className="inline-block mr-2" size={18} />
-                      {t('approvals.takePhoto')}
-                    </button>
-                  </div>
-                )}
-                
-                <canvas ref={canvasRef} className="hidden" />
-              </div>
-              
-              <div className="p-4 border-t border-gray-700 flex justify-between">
-                <button
-                  onClick={cancelCapture}
-                  className="px-4 py-2 bg-gray-700 text-white rounded-lg hover:bg-gray-600"
-                >
-                  {t('cancel')}
-                </button>
-                
-                {isCapturing ? (
-                  <button
-                    onClick={capturePhoto}
-                    className="px-4 py-2 bg-amber-500 text-white rounded-lg hover:bg-amber-600"
-                  >
-                    {t('approvals.takePhoto')}
-                  </button>
-                ) : photoUrl ? (
-                  <button
-                    onClick={submitPhoto}
-                    disabled={uploadingPhoto}
-                    className={`px-4 py-2 rounded-lg ${
-                      uploadingPhoto 
-                        ? 'bg-gray-600 text-gray-400' 
-                        : 'bg-green-500 text-white hover:bg-green-600'
-                    }`}
-                  >
-                    {uploadingPhoto ? t('approvals.uploadingPhoto') : t('send')}
-                  </button>
-                ) : null}
-              </div>
-            </div>
-          </div>
-        )}
       </div>
     );
   };
 
   const TaskColumn = ({ status, title }: { status: Task['status'], title: string }) => {
-    const tasksInColumn = tasks.filter(t => t.status === status);
+    const filteredTasks = tasks.filter(t => 
+      t.status === status && 
+      (filter === 'all' || t.type === filter) &&
+      (isAdmin || !t.isPrivate) && 
+      (!t.assignedTo || t.assignedTo.length === 0 || t.assignedTo.includes(user?.id || ''))
+    );
     
     return (
-      <div className="flex-1 min-w-0 lg:min-w-[280px] bg-gray-700/50 backdrop-blur-sm rounded-lg border border-white/10 flex flex-col overflow-hidden">
-        <div className="flex items-center gap-2 p-3 border-b border-white/10 bg-gray-800/50">
-          <h3 className="text-base font-medium text-white tracking-wide flex items-center gap-2">
-            {status === 'todo' ? (
-              <AlertCircle size={16} className="text-gray-400" />
-            ) : status === 'inProgress' ? (
-              <AlertTriangle size={16} className="text-amber-400" />
-            ) : (
-              <CheckCircle size={16} className="text-emerald-400" />
-            )}
-            {title}
-          </h3>
-          <span className="text-xs text-white/60 font-normal px-2 py-0.5 rounded-full bg-white/10">
-            {tasksInColumn.length}
+      <div className="flex-1 min-w-[300px] bg-white/80 backdrop-blur-sm rounded-xl overflow-hidden flex flex-col border border-orange-100">
+        <div className="p-4 border-b border-orange-100 flex items-center justify-between sticky top-0 bg-white/90 backdrop-blur-sm z-10">
+          <div className="flex items-center gap-2">
+            {status === 'todo' && <Clock className="text-orange-400" size={18} />}
+            {status === 'inProgress' && <AlertTriangle className="text-amber-400" size={18} />}
+            {status === 'done' && <CheckCircle className="text-emerald-400" size={18} />}
+            <h3 className="font-medium text-orange-700">{title}</h3>
+          </div>
+          <span className="bg-orange-100 text-orange-600 text-xs rounded-full px-2 py-0.5">
+            {filteredTasks.length}
           </span>
         </div>
         
         <div className="flex-1 overflow-y-auto content-scrollable p-3 space-y-3">
-          {tasksInColumn.length > 0 ? (
-            tasksInColumn.map((task, index) => (
+          {filteredTasks.length > 0 ? (
+            filteredTasks.map((task, index) => (
               <TaskCard key={task.id} task={task} index={index} />
             ))
           ) : (
@@ -854,109 +646,133 @@ export default function Tasks() {
     );
   };
 
-  return (
-    <div className="page-container flex flex-col">
-      <div className="page-header flex flex-wrap items-center justify-between gap-2 mb-4 py-2 z-10 bg-gray-900/80 backdrop-blur-sm">
-        <h2 className="text-lg xs:text-xl font-extralight text-white">Task Management</h2>
-        <div className="flex items-center gap-2">
-          {isAdmin && (
-            <>
-              <div className="flex-shrink-0 flex items-center gap-2">
-                <button
-                  onClick={() => setShowConfirmCleanup(true)}
-                  className="h-9 px-2.5 xs:px-3 bg-amber-500 text-white rounded-lg xs:rounded-xl shadow-md hover:bg-amber-600 transition-colors flex items-center gap-1.5 text-xs xs:text-sm font-light"
-                  disabled={isLoadingAction}
-                >
-                  <Trash2 size={16} />
-                  <span className="hidden sm:inline">Limpar Tarefas Excluídas</span>
-                  <span className="sm:hidden">Limpar</span>
-                </button>
-                <button
-                  onClick={() => setShowConfirmAllDelete(true)}
-                  className="h-9 px-2.5 xs:px-3 bg-red-500 text-white rounded-lg xs:rounded-xl shadow-md hover:bg-red-600 transition-colors flex items-center gap-1.5 text-xs xs:text-sm font-light"
-                  disabled={isLoadingAction}
-                >
-                  <AlertTriangle size={16} />
-                  <span className="hidden sm:inline">Excluir Todas</span>
-                  <span className="sm:hidden">Excluir</span>
-                </button>
-              </div>
-              <button
-                onClick={() => setShowForm(true)}
-                className="h-9 px-2.5 xs:px-3 bg-green-500 text-white rounded-lg xs:rounded-xl shadow-md hover:bg-green-600 transition-colors flex items-center gap-1.5 text-xs xs:text-sm font-light"
-              >
-                <Plus size={16} />
-                <span className="hidden xs:inline">Add Task</span>
-                <span className="xs:hidden">Add</span>
-              </button>
-            </>
-          )}
-        </div>
-      </div>
+  const filteredTasks = tasks.filter(t => {
+    if (filter === 'all') return true;
+    if (filter === 'hostel' && t.type === 'hostel') return true;
+    if (filter === 'personal' && t.type === 'personal') return true;
+    return false;
+  });
 
-      <div className="page-content bg-gray-800/50 backdrop-blur-sm rounded-lg p-3 xs:p-4 sm:p-6">
-        <div className="flex flex-col lg:flex-row gap-4 h-full">
+  return (
+    <div className="bg-white/90 h-full overflow-hidden relative">
+      <div className="max-w-7xl mx-auto px-3 xs:px-4 py-2 xs:py-3">
+        <div className="flex items-center justify-between">
+          <h1 className="text-2xl font-light text-orange-700">{t('tasks.title')}</h1>
+          <div className="flex items-center gap-2">
+            <div className="bg-white border border-orange-100 rounded-lg overflow-hidden flex">
+              <button
+                onClick={() => setFilter('all')}
+                className={`px-3 py-1.5 text-sm ${
+                  filter === 'all' 
+                    ? 'bg-orange-100 text-orange-700' 
+                    : 'text-orange-600 hover:bg-orange-50'
+                }`}
+              >
+                {t('tasks.allTasks')}
+              </button>
+              <button
+                onClick={() => setFilter('hostel')}
+                className={`px-3 py-1.5 text-sm ${
+                  filter === 'hostel' 
+                    ? 'bg-orange-100 text-orange-700' 
+                    : 'text-orange-600 hover:bg-orange-50'
+                }`}
+              >
+                {t('tasks.hostelTasks')}
+              </button>
+              <button
+                onClick={() => setFilter('personal')}
+                className={`px-3 py-1.5 text-sm ${
+                  filter === 'personal' 
+                    ? 'bg-orange-100 text-orange-700' 
+                    : 'text-orange-600 hover:bg-orange-50'
+                }`}
+              >
+                {t('tasks.personalTasks')}
+              </button>
+            </div>
+            <button
+              onClick={() => setShowForm(true)}
+              className="bg-orange-600 hover:bg-orange-700 text-white p-2 rounded-lg transition-colors"
+            >
+              <Plus size={20} />
+            </button>
+          </div>
+        </div>
+        
+        <div className="text-sm text-orange-600 flex items-center gap-2">
+          <span>{t('tasks.showing')}: {filteredTasks.length} {t('tasks.tasksCount')}</span>
+        </div>
+        
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-3 xs:gap-4 h-[calc(100vh-150px)] overflow-hidden">
           <TaskColumn status="todo" title="To Do" />
           <TaskColumn status="inProgress" title="In Progress" />
           <TaskColumn status="done" title="Done" />
         </div>
       </div>
-
+      
       {showForm && (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-3 xs:p-4 overflow-y-auto">
-          <div className="bg-gray-800 rounded-lg p-4 xs:p-6 w-full max-w-2xl my-4">
-            <div className="flex items-center justify-between mb-4 xs:mb-6">
-              <h2 className="text-lg xs:text-xl font-semibold text-white">
-                {editingTaskId ? 'Edit Task' : 'Add Task'}
-              </h2>
-              <button
-                onClick={() => {
-                  setShowForm(false);
-                  setFormData(initialFormData);
-                  setEditingTaskId(null);
-                }}
-                className="text-white/60 hover:text-white p-1.5 rounded-lg hover:bg-white/10 transition-all"
-              >
-                <X size={18} />
-              </button>
-            </div>
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-2 xs:p-4">
+          <div className="bg-white rounded-lg p-4 xs:p-6 w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+            <h2 className="text-lg xs:text-xl font-semibold text-orange-600 mb-3">
+              {editingTaskId ? 'Edit Task' : 'Add New Task'}
+            </h2>
             
-            <form onSubmit={handleSubmit} className="space-y-4 xs:space-y-5">
-              <div className="grid grid-cols-1 gap-4">
-                <div className="bg-gray-700/50 rounded-lg p-3 xs:p-4 border border-white/10">
-                  <label className="block text-sm font-medium text-gray-300 mb-1">
-                    Title
-                  </label>
-                  <input
-                    type="text"
-                    value={formData.title}
-                    onChange={e => setFormData({ ...formData, title: e.target.value })}
-                    className="w-full bg-gray-700/30 border border-white/10 rounded-lg px-3 py-2 text-white text-sm"
-                    required
-                  />
+            <form onSubmit={handleSubmit} className="space-y-4">
+              <div className="space-y-4">
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 xs:gap-4">
+                  <div className="bg-white rounded-lg p-3 xs:p-4 border border-orange-100 sm:col-span-2">
+                    <label className="block text-sm font-medium text-orange-700 mb-1">
+                      Title
+                    </label>
+                    <input
+                      type="text"
+                      value={formData.title}
+                      onChange={e => setFormData({ ...formData, title: e.target.value })}
+                      className="w-full bg-white border border-orange-100 rounded-lg px-3 py-2 text-orange-800 text-sm focus:outline-none focus:ring-2 focus:ring-orange-400/20"
+                      placeholder="Task title"
+                      required
+                    />
+                  </div>
+                  
+                  <div className="bg-white rounded-lg p-3 xs:p-4 border border-orange-100">
+                    <label className="block text-sm font-medium text-orange-700 mb-1">
+                      Points
+                    </label>
+                    <input
+                      type="number"
+                      min="1"
+                      max="10"
+                      value={formData.points}
+                      onChange={e => setFormData({ ...formData, points: parseInt(e.target.value) })}
+                      className="w-full bg-white border border-orange-100 rounded-lg px-3 py-2 text-orange-800 text-sm focus:outline-none focus:ring-2 focus:ring-orange-400/20"
+                      required
+                    />
+                  </div>
                 </div>
                 
-                <div className="bg-gray-700/50 rounded-lg p-3 xs:p-4 border border-white/10">
-                  <label className="block text-sm font-medium text-gray-300 mb-1">
+                <div className="bg-white rounded-lg p-3 xs:p-4 border border-orange-100">
+                  <label className="block text-sm font-medium text-orange-700 mb-1">
                     Description
                   </label>
                   <textarea
                     value={formData.description}
                     onChange={e => setFormData({ ...formData, description: e.target.value })}
-                    className="w-full bg-gray-700/30 border border-white/10 rounded-lg px-3 py-2 text-white text-sm h-24"
-                    required
-                  />
+                    className="w-full h-24 bg-white border border-orange-100 rounded-lg px-3 py-2 text-orange-800 text-sm focus:outline-none focus:ring-2 focus:ring-orange-400/20"
+                    placeholder="Task description"
+                  ></textarea>
                 </div>
                 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 xs:gap-4">
-                  <div className="bg-gray-700/50 rounded-lg p-3 xs:p-4 border border-white/10">
-                    <label className="block text-sm font-medium text-gray-300 mb-1">
+                  <div className="bg-white rounded-lg p-3 xs:p-4 border border-orange-100">
+                    <label className="block text-sm font-medium text-orange-700 mb-1">
                       Priority
                     </label>
                     <select
                       value={formData.priority}
                       onChange={e => setFormData({ ...formData, priority: e.target.value as Task['priority'] })}
-                      className="w-full bg-gray-700/30 border border-white/10 rounded-lg px-3 py-2 text-white text-sm"
+                      className="w-full bg-white border border-orange-100 rounded-lg px-3 py-2 text-orange-800 text-sm focus:outline-none focus:ring-2 focus:ring-orange-400/20"
+                      required
                     >
                       <option value="low">Low</option>
                       <option value="medium">Medium</option>
@@ -964,72 +780,104 @@ export default function Tasks() {
                     </select>
                   </div>
                   
-                  <div className="bg-gray-700/50 rounded-lg p-3 xs:p-4 border border-white/10">
-                    <label className="block text-sm font-medium text-gray-300 mb-1">
-                      Points
+                  <div className="bg-white rounded-lg p-3 xs:p-4 border border-orange-100">
+                    <label className="block text-sm font-medium text-orange-700 mb-1">
+                      Type
                     </label>
-                    <input
-                      type="number"
-                      value={formData.points}
-                      onChange={e => setFormData({ ...formData, points: parseInt(e.target.value) })}
-                      className="w-full bg-gray-700/30 border border-white/10 rounded-lg px-3 py-2 text-white text-sm"
-                      min="0"
+                    <select
+                      value={formData.type}
+                      onChange={e => setFormData({ ...formData, type: e.target.value as 'hostel' | 'personal' })}
+                      className="w-full bg-white border border-orange-100 rounded-lg px-3 py-2 text-orange-800 text-sm focus:outline-none focus:ring-2 focus:ring-orange-400/20"
                       required
-                    />
+                    >
+                      <option value="hostel">Hostel Task</option>
+                      <option value="personal">Personal Task</option>
+                    </select>
                   </div>
-                </div>
-                
-                <div className="bg-gray-700/50 rounded-lg p-3 xs:p-4 border border-white/10">
-                  <div className="flex items-center justify-between">
-                    <label className="text-sm font-medium text-gray-300">
-                      Foto necessária para conclusão
-                    </label>
-                    <div className="relative inline-block w-10 align-middle select-none">
-                      <input 
-                        type="checkbox" 
-                        id="requirePhoto"
-                        checked={formData.requirePhoto} 
-                        onChange={() => setFormData({ ...formData, requirePhoto: !formData.requirePhoto })}
-                        className="sr-only"
-                      />
-                      <label 
-                        htmlFor="requirePhoto"
-                        className={`block overflow-hidden h-6 rounded-full cursor-pointer ${
-                          formData.requirePhoto ? 'bg-green-500' : 'bg-gray-600'
-                        }`}
-                      >
-                        <span 
-                          className={`block h-6 w-6 rounded-full bg-white transform transition-transform duration-200 ease-in-out ${
-                            formData.requirePhoto ? 'translate-x-4' : 'translate-x-0'
-                          }`}
-                        />
-                      </label>
-                    </div>
-                  </div>
-                  {formData.requirePhoto && (
-                    <p className="text-xs text-amber-400 mt-2">
-                      <AlertTriangle size={12} className="inline mr-1" />
-                      A tarefa só poderá ser concluída se o usuário enviar uma foto tirada pela câmera e esta for aprovada por um administrador.
-                    </p>
-                  )}
                 </div>
                 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 xs:gap-4">
-                  <div className="bg-gray-700/50 rounded-lg p-3 xs:p-4 border border-white/10">
-                    <label className="block text-sm font-medium text-gray-300 mb-1">
+                  <div className="bg-white rounded-lg p-3 xs:p-4 border border-orange-100">
+                    <div className="flex items-center justify-between">
+                      <label className="block text-sm font-medium text-orange-700">
+                        Private Task
+                      </label>
+                      <label className="relative inline-flex items-center cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={!!formData.isPrivate}
+                          onChange={e => setFormData({ ...formData, isPrivate: e.target.checked })}
+                          className="sr-only peer"
+                        />
+                        <div
+                          className={`w-10 h-6 bg-gray-300 rounded-full peer peer-checked:bg-orange-400 
+                          peer-focus:ring-2 peer-focus:ring-orange-300`}
+                        >
+                          <span 
+                            className={`block h-6 w-6 rounded-full bg-white transform transition-transform duration-200 ease-in-out ${
+                              formData.isPrivate ? 'translate-x-4' : 'translate-x-0'
+                            }`}
+                          />
+                        </div>
+                      </label>
+                    </div>
+                    {formData.isPrivate && (
+                      <p className="text-xs text-orange-500 mt-2">
+                        <AlertTriangle size={12} className="inline mr-1" />
+                        Only you will be able to see this task.
+                      </p>
+                    )}
+                  </div>
+                  
+                  <div className="bg-white rounded-lg p-3 xs:p-4 border border-orange-100">
+                    <div className="flex items-center justify-between">
+                      <label className="block text-sm font-medium text-orange-700">
+                        Require Photo
+                      </label>
+                      <label className="relative inline-flex items-center cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={formData.requirePhoto}
+                          onChange={e => setFormData({ ...formData, requirePhoto: e.target.checked })}
+                          className="sr-only peer"
+                        />
+                        <div
+                          className={`w-10 h-6 bg-gray-300 rounded-full peer peer-checked:bg-orange-400 
+                          peer-focus:ring-2 peer-focus:ring-orange-300`}
+                        >
+                          <span 
+                            className={`block h-6 w-6 rounded-full bg-white transform transition-transform duration-200 ease-in-out ${
+                              formData.requirePhoto ? 'translate-x-4' : 'translate-x-0'
+                            }`}
+                          />
+                        </div>
+                      </label>
+                    </div>
+                    {formData.requirePhoto && (
+                      <p className="text-xs text-orange-500 mt-2">
+                        <AlertTriangle size={12} className="inline mr-1" />
+                        A tarefa só poderá ser concluída se o usuário enviar uma foto tirada pela câmera e esta for aprovada por um administrador.
+                      </p>
+                    )}
+                  </div>
+                </div>
+                
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 xs:gap-4">
+                  <div className="bg-white rounded-lg p-3 xs:p-4 border border-orange-100">
+                    <label className="block text-sm font-medium text-orange-700 mb-1">
                       Due Date
                     </label>
                     <input
                       type="date"
                       value={formData.dueDate}
                       onChange={e => setFormData({ ...formData, dueDate: e.target.value })}
-                      className="w-full bg-gray-700/30 border border-white/10 rounded-lg px-3 py-2 text-white text-sm"
+                      className="w-full bg-white border border-orange-100 rounded-lg px-3 py-2 text-orange-800 text-sm focus:outline-none focus:ring-2 focus:ring-orange-400/20"
                       required
                     />
                   </div>
                   
-                  <div className="bg-gray-700/50 rounded-lg p-3 xs:p-4 border border-white/10">
-                    <label className="block text-sm font-medium text-gray-300 mb-1">
+                  <div className="bg-white rounded-lg p-3 xs:p-4 border border-orange-100">
+                    <label className="block text-sm font-medium text-orange-700 mb-1">
                       Assign To
                     </label>
                     <div className="space-y-2">
@@ -1039,18 +887,18 @@ export default function Tasks() {
                           return volunteer ? (
                             <div
                               key={userId}
-                              className="flex items-center gap-2 bg-gray-700/30 rounded-lg p-2"
+                              className="flex items-center gap-2 bg-orange-50 rounded-lg p-2"
                             >
-                              <div className="w-6 h-6 rounded-full bg-gray-500/20 flex items-center justify-center text-gray-400 text-sm font-thin">
+                              <div className="w-6 h-6 rounded-full bg-orange-100 flex items-center justify-center text-orange-700 text-sm">
                                 {volunteer.name[0]}
                               </div>
-                              <span className="text-sm text-white font-thin">{volunteer.name}</span>
+                              <span className="text-sm text-orange-700">{volunteer.name}</span>
                               <button
                                 onClick={() => {
                                   const newAssignedTo = formData.assignedTo?.filter(id => id !== userId) || [];
                                   setFormData({ ...formData, assignedTo: newAssignedTo });
                                 }}
-                                className="text-red-400 hover:text-red-300 p-1"
+                                className="text-red-400 hover:text-red-500 p-1"
                               >
                                 <X size={14} />
                               </button>
@@ -1059,7 +907,7 @@ export default function Tasks() {
                         })}
                       </div>
                       <select
-                        className="w-full bg-gray-700/30 border border-white/10 rounded-lg px-3 sm:px-4 py-2 text-white/90 text-sm sm:text-base font-thin focus:outline-none focus:ring-2 focus:ring-gray-500/30"
+                        className="w-full bg-white border border-orange-100 rounded-lg px-3 sm:px-4 py-2 text-orange-800 text-sm focus:outline-none focus:ring-2 focus:ring-orange-400/20"
                         onChange={(e) => {
                           const userId = e.target.value;
                           if (userId && !formData.assignedTo?.includes(userId)) {
@@ -1083,15 +931,15 @@ export default function Tasks() {
                   </div>
                 </div>
                 
-                <div className="bg-gray-700/50 rounded-lg p-3 xs:p-4 border border-white/10">
-                  <label className="block text-sm font-medium text-gray-300 mb-1">
+                <div className="bg-white rounded-lg p-3 xs:p-4 border border-orange-100">
+                  <label className="block text-sm font-medium text-orange-700 mb-1">
                     Tags
                   </label>
                   <div className="flex flex-wrap gap-2 mb-2 max-h-20 overflow-y-auto">
                     {formData.tags?.map(tag => (
                       <span
                         key={tag}
-                        className="text-xs sm:text-sm px-2 py-1 rounded-full bg-gray-500/20 text-gray-300 flex items-center gap-1"
+                        className="text-xs sm:text-sm px-2 py-1 rounded-full bg-orange-50 text-orange-700 flex items-center gap-1"
                       >
                         {tag}
                         <button
@@ -1099,7 +947,7 @@ export default function Tasks() {
                             ...formData,
                             tags: formData.tags?.filter(t => t !== tag)
                           })}
-                          className="hover:text-gray-300"
+                          className="hover:text-orange-800"
                         >
                           <X size={14} />
                         </button>
@@ -1112,7 +960,7 @@ export default function Tasks() {
                       value={newTag}
                       onChange={e => setNewTag(e.target.value)}
                       placeholder="Add a tag"
-                      className="flex-1 bg-gray-700/30 border border-white/10 rounded-lg px-3 sm:px-4 py-2 text-white/90 text-sm sm:text-base font-thin placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-gray-500/30"
+                      className="flex-1 bg-white border border-orange-100 rounded-lg px-3 sm:px-4 py-2 text-orange-800 text-sm placeholder-orange-300 focus:outline-none focus:ring-2 focus:ring-orange-400/20"
                       onKeyPress={e => {
                         if (e.key === 'Enter') {
                           e.preventDefault();
@@ -1137,7 +985,7 @@ export default function Tasks() {
                           setNewTag('');
                         }
                       }}
-                      className="px-3 sm:px-4 py-2 bg-gray-500/80 hover:bg-gray-500 text-white rounded-lg hover:shadow-lg hover:shadow-gray-500/20 transition-all duration-300 text-sm sm:text-base font-thin"
+                      className="px-3 sm:px-4 py-2 bg-orange-500 hover:bg-orange-600 text-white rounded-lg hover:shadow-lg hover:shadow-orange-500/20 transition-all duration-300 text-sm"
                     >
                       Add
                     </button>
@@ -1153,13 +1001,13 @@ export default function Tasks() {
                     setFormData(initialFormData);
                     setEditingTaskId(null);
                   }}
-                  className="px-3 xs:px-4 py-2 text-white/60 hover:text-white transition-colors text-sm"
+                  className="px-3 xs:px-4 py-2 text-orange-600 hover:text-orange-700 transition-colors text-sm"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  className="px-3 xs:px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors text-sm"
+                  className="px-3 xs:px-4 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition-colors text-sm"
                 >
                   {editingTaskId ? 'Update Task' : 'Add Task'}
                 </button>
@@ -1175,17 +1023,17 @@ export default function Tasks() {
 
       {showConfirmDelete && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-3 xs:p-4">
-          <div className="bg-gray-800 rounded-lg p-4 xs:p-6 w-full max-w-md">
-            <h2 className="text-lg xs:text-xl font-semibold text-white mb-3">
+          <div className="bg-white rounded-lg p-4 xs:p-6 w-full max-w-md">
+            <h2 className="text-lg xs:text-xl font-semibold text-orange-600 mb-3">
               Delete Task
             </h2>
-            <p className="text-sm text-white/80 mb-4 xs:mb-6">
+            <p className="text-sm text-orange-700/80 mb-4 xs:mb-6">
               Are you sure you want to delete this task? This action cannot be undone.
             </p>
             <div className="flex justify-end gap-3">
               <button
                 onClick={() => setShowConfirmDelete(null)}
-                className="px-3 xs:px-4 py-2 text-white/60 hover:text-white transition-colors text-sm"
+                className="px-3 xs:px-4 py-2 text-orange-600 hover:text-orange-700 transition-colors text-sm"
               >
                 Cancel
               </button>
@@ -1202,17 +1050,17 @@ export default function Tasks() {
 
       {showConfirmAllDelete && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-3 xs:p-4">
-          <div className="bg-gray-800 rounded-lg p-4 xs:p-6 w-full max-w-md">
-            <h2 className="text-lg xs:text-xl font-semibold text-white mb-3">
+          <div className="bg-white rounded-lg p-4 xs:p-6 w-full max-w-md">
+            <h2 className="text-lg xs:text-xl font-semibold text-orange-600 mb-3">
               Excluir Todas as Tarefas
             </h2>
-            <p className="text-sm text-white/80 mb-4 xs:mb-6">
+            <p className="text-sm text-orange-700/80 mb-4 xs:mb-6">
               Tem certeza de que deseja excluir <strong>todas</strong> as tarefas? Esta ação não pode ser desfeita.
             </p>
             <div className="flex justify-end gap-3">
               <button
                 onClick={() => setShowConfirmAllDelete(false)}
-                className="px-3 xs:px-4 py-2 text-white/60 hover:text-white transition-colors text-sm"
+                className="px-3 xs:px-4 py-2 text-orange-600 hover:text-orange-700 transition-colors text-sm"
                 disabled={isLoadingAction}
               >
                 Cancelar
@@ -1240,24 +1088,24 @@ export default function Tasks() {
       
       {showConfirmCleanup && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-3 xs:p-4">
-          <div className="bg-gray-800 rounded-lg p-4 xs:p-6 w-full max-w-md">
-            <h2 className="text-lg xs:text-xl font-semibold text-white mb-3">
+          <div className="bg-white rounded-lg p-4 xs:p-6 w-full max-w-md">
+            <h2 className="text-lg xs:text-xl font-semibold text-orange-600 mb-3">
               Limpar Tarefas Excluídas
             </h2>
-            <p className="text-sm text-white/80 mb-4 xs:mb-6">
+            <p className="text-sm text-orange-700/80 mb-4 xs:mb-6">
               Esta ação removerá permanentemente todas as tarefas marcadas como excluídas do banco de dados. Deseja continuar?
             </p>
             <div className="flex justify-end gap-3">
               <button
                 onClick={() => setShowConfirmCleanup(false)}
-                className="px-3 xs:px-4 py-2 text-white/60 hover:text-white transition-colors text-sm"
+                className="px-3 xs:px-4 py-2 text-orange-600 hover:text-orange-700 transition-colors text-sm"
                 disabled={isLoadingAction}
               >
                 Cancelar
               </button>
               <button
                 onClick={handleCleanupDeletedTasks}
-                className="px-3 xs:px-4 py-2 bg-amber-500 text-white rounded-lg hover:bg-amber-600 transition-colors text-sm flex items-center gap-2"
+                className="px-3 xs:px-4 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition-colors text-sm flex items-center gap-2"
                 disabled={isLoadingAction}
               >
                 {isLoadingAction ? (

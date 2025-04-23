@@ -23,8 +23,8 @@ import {
   MessageCircle,
   Menu,
   HomeIcon,
-  ChevronsLeft,
-  ChevronsRight,
+  ChevronLeft,
+  ChevronRight,
   CheckSquare
 } from 'lucide-react';
 import { format } from 'date-fns';
@@ -126,7 +126,7 @@ export default function MainDashboard() {
             onClick={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
             className="text-orange-600 hover:text-orange-700 transition-colors hidden lg:block"
           >
-            <ChevronsLeft size={20} className={`transition-transform duration-300 ${isSidebarCollapsed ? 'rotate-180' : ''}`} />
+            <ChevronLeft size={20} className={`transition-transform duration-300 ${isSidebarCollapsed ? 'rotate-180' : ''}`} />
           </button>
         </div>
 
