@@ -287,24 +287,24 @@ export default function Events() {
             </>
           )}
           
-          <button
-            onClick={() => {
-              setFormData(initialFormData);
-              setEditingEventId(null);
-              setShowForm(true);
-            }}
+            <button
+              onClick={() => {
+                setFormData(initialFormData);
+                setEditingEventId(null);
+                setShowForm(true);
+              }}
             className="bg-orange-600 hover:bg-orange-700 text-white p-2 rounded-lg transition-colors"
-          >
+            >
             <Plus size={20} />
-          </button>
+            </button>
         </div>
       </div>
 
       {/* Events Content */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-        {sortedEvents.map(event => (
-          <div
-            key={event.id}
+          {sortedEvents.map(event => (
+            <div
+              key={event.id}
             className="bg-white/80 backdrop-blur-sm rounded-xl border border-orange-100 hover:shadow-md transition-shadow overflow-hidden"
           >
             {/* Event Header */}
@@ -315,8 +315,8 @@ export default function Events() {
                   {event.status === 'upcoming' ? 'Próximo' :
                    event.status === 'ongoing' ? 'Em andamento' :
                    event.status === 'completed' ? 'Concluído' : 'Cancelado'}
-                </span>
-              </div>
+                      </span>
+                    </div>
               
               <p className="text-sm text-orange-600 line-clamp-2 mb-3">{event.description}</p>
               
@@ -329,30 +329,30 @@ export default function Events() {
                 <div className="flex items-center gap-1">
                   <MapPin size={14} className="text-orange-500" />
                   <span>{event.location}</span>
-                </div>
-                
+              </div>
+
                 <div className="flex items-center gap-1">
                   <Users size={14} className="text-orange-500" />
-                  <span>
+                    <span>
                     {event.attendees.length} participante{event.attendees.length !== 1 ? 's' : ''}
                     {event.capacity ? ` / ${event.capacity}` : ''}
-                  </span>
+                    </span>
                 </div>
-              </div>
-            </div>
-            
+                  </div>
+                </div>
+
             {/* Event Footer */}
             <div className="px-4 py-3">
               {event.tags && event.tags.length > 0 && (
                 <div className="flex flex-wrap gap-1 mb-3">
                   {event.tags.map((tag, index) => (
                     <span key={index} className="bg-orange-100 text-orange-600 px-2 py-0.5 rounded-full text-xs">
-                      {tag}
-                    </span>
-                  ))}
-                </div>
-              )}
-              
+                        {tag}
+                      </span>
+                    ))}
+                  </div>
+                )}
+
               <div className="flex justify-between">
                 {event.status !== 'cancelled' && event.status !== 'completed' ? (
                   <button
@@ -369,22 +369,22 @@ export default function Events() {
                   <div></div> 
                 )}
                 
-                {isAdmin && (
+                      {isAdmin && (
                   <div className="flex gap-2">
-                    <button
+                        <button
                       onClick={() => handleEdit(event)}
                       className="p-1.5 bg-orange-100 text-orange-600 rounded-lg hover:bg-orange-200 transition-colors"
-                    >
+                        >
                       <Edit size={16} />
-                    </button>
-                    <button
+                        </button>
+                        <button
                       onClick={() => setShowConfirmDelete(event.id)}
                       className="p-1.5 bg-red-100 text-red-600 rounded-lg hover:bg-red-200 transition-colors"
                     >
                       <Trash2 size={16} />
-                    </button>
+                        </button>
                   </div>
-                )}
+                  )}
               </div>
             </div>
           </div>
@@ -405,115 +405,115 @@ export default function Events() {
               <div>
                 <label className="block text-sm font-medium text-orange-600 mb-1">
                   Título
-                </label>
-                <input
-                  type="text"
-                  value={formData.title}
+                  </label>
+                  <input
+                    type="text"
+                    value={formData.title}
                   onChange={(e) => setFormData({ ...formData, title: e.target.value })}
                   className="w-full p-2 border border-orange-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500/50"
-                  required
-                />
-              </div>
-              
+                    required
+                  />
+                </div>
+                
               <div>
                 <label className="block text-sm font-medium text-orange-600 mb-1">
                   Descrição
-                </label>
-                <textarea
-                  value={formData.description}
+                  </label>
+                  <textarea
+                    value={formData.description}
                   onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                   className="w-full p-2 border border-orange-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500/50 min-h-[100px]"
-                  required
-                />
-              </div>
-              
+                    required
+                  />
+                </div>
+                
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-orange-600 mb-1">
                     Data Início
                   </label>
-                  <SimpleDateTimePicker
-                    value={new Date(formData.startDate)}
-                    onChange={(value) => setFormData({ ...formData, startDate: value ? value.toISOString() : new Date().toISOString() })}
-                  />
-                </div>
-                
+                    <SimpleDateTimePicker
+                      value={new Date(formData.startDate)}
+                      onChange={(value) => setFormData({ ...formData, startDate: value ? value.toISOString() : new Date().toISOString() })}
+                    />
+                  </div>
+                  
                 <div>
                   <label className="block text-sm font-medium text-orange-600 mb-1">
                     Data Fim
                   </label>
-                  <SimpleDateTimePicker
-                    value={new Date(formData.endDate)}
-                    onChange={(value) => setFormData({ ...formData, endDate: value ? value.toISOString() : new Date().toISOString() })}
-                  />
+                    <SimpleDateTimePicker
+                      value={new Date(formData.endDate)}
+                      onChange={(value) => setFormData({ ...formData, endDate: value ? value.toISOString() : new Date().toISOString() })}
+                    />
+                  </div>
                 </div>
-              </div>
-              
+                
               <div>
                 <label className="block text-sm font-medium text-orange-600 mb-1">
                   Local
-                </label>
-                <input
-                  type="text"
-                  value={formData.location}
+                  </label>
+                  <input
+                    type="text"
+                    value={formData.location}
                   onChange={(e) => setFormData({ ...formData, location: e.target.value })}
                   className="w-full p-2 border border-orange-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500/50"
-                  required
-                />
-              </div>
-              
+                    required
+                  />
+                </div>
+                
               <div>
                 <label className="block text-sm font-medium text-orange-600 mb-1">
                   Tipo
-                </label>
-                <select
-                  value={formData.type}
+                    </label>
+                    <select
+                      value={formData.type}
                   onChange={(e) => setFormData({ ...formData, type: e.target.value as 'activity' | 'invitation' })}
                   className="w-full p-2 border border-orange-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500/50"
                   required
-                >
+                    >
                   <option value="activity">Atividade</option>
                   <option value="invitation">Convite</option>
-                </select>
-              </div>
-              
+                    </select>
+                  </div>
+                  
               <div>
                 <label className="block text-sm font-medium text-orange-600 mb-1">
                   Capacidade
-                </label>
-                <input
-                  type="number"
-                  value={formData.capacity || ''}
+                    </label>
+                    <input
+                      type="number"
+                      value={formData.capacity || ''}
                   onChange={(e) => setFormData({ ...formData, capacity: parseInt(e.target.value) || undefined })}
                   className="w-full p-2 border border-orange-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500/50"
                   placeholder="Ilimitado se vazio"
-                  min="1"
-                />
-              </div>
-              
+                      min="1"
+                    />
+                </div>
+                
               <div>
                 <label className="block text-sm font-medium text-orange-600 mb-1">
-                  Tags
-                </label>
+                    Tags
+                  </label>
                 <div className="flex items-center space-x-2">
-                  <input
-                    type="text"
-                    value={newTag}
+                    <input
+                      type="text"
+                      value={newTag}
                     onChange={(e) => setNewTag(e.target.value)}
                     className="flex-1 p-2 border border-orange-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500/50"
                     placeholder="Adicionar tag"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => {
-                      if (newTag.trim()) {
-                        setFormData({
-                          ...formData,
-                          tags: [...(formData.tags || []), newTag.trim()]
-                        });
-                        setNewTag('');
-                      }
-                    }}
+                    />
+                    <button
+                      type="button"
+                      onClick={() => {
+                        if (newTag.trim()) {
+                          setFormData({
+                            ...formData,
+                            tags: [...(formData.tags || []), newTag.trim()]
+                          });
+                          setNewTag('');
+                        }
+                      }}
                     className="p-2 bg-orange-100 text-orange-600 rounded-lg hover:bg-orange-200"
                   >
                     <Plus size={20} />
@@ -535,31 +535,31 @@ export default function Events() {
                         className="ml-1 text-orange-600 hover:text-orange-700"
                       >
                         <X size={14} />
-                      </button>
-                    </div>
+                    </button>
+                  </div>
                   ))}
                 </div>
-              </div>
-              
+            </div>
+            
               <div className="flex justify-end pt-4 border-t border-orange-100">
-                <button
-                  type="button"
-                  onClick={() => {
-                    setShowForm(false);
-                    setFormData(initialFormData);
-                    setEditingEventId(null);
-                  }}
+              <button
+                type="button"
+                onClick={() => {
+                  setShowForm(false);
+                  setFormData(initialFormData);
+                  setEditingEventId(null);
+                }}
                   className="px-4 py-2 text-orange-600 hover:bg-orange-50 rounded-lg transition-colors mr-2"
-                >
+              >
                   Cancelar
-                </button>
-                <button
+              </button>
+              <button
                   type="submit"
                   className="px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition-colors"
-                >
+              >
                   {editingEventId ? 'Atualizar' : 'Criar'}
-                </button>
-              </div>
+              </button>
+            </div>
             </form>
           </div>
         </div>
@@ -571,7 +571,7 @@ export default function Events() {
           <div className="bg-white rounded-xl shadow-lg w-full max-w-md">
             <div className="p-4 border-b border-orange-100">
               <h3 className="text-lg font-medium text-orange-700">Confirmar Exclusão</h3>
-            </div>
+              </div>
             
             <div className="p-4">
               <p className="text-orange-600">Tem certeza que deseja excluir este evento? Esta ação não pode ser desfeita.</p>
@@ -601,7 +601,7 @@ export default function Events() {
           <div className="bg-white rounded-xl shadow-lg w-full max-w-md">
             <div className="p-4 border-b border-orange-100">
               <h3 className="text-lg font-medium text-orange-700">Excluir Todos os Eventos</h3>
-            </div>
+              </div>
             
             <div className="p-4">
               <p className="text-orange-600 mb-2">Tem certeza que deseja excluir <strong>TODOS</strong> os eventos?</p>

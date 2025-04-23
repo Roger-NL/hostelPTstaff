@@ -189,7 +189,7 @@ export default function Messages() {
         {/* Messages Container */}
         <div 
           ref={messagesContainerRef}
-          className="flex-1 overflow-y-auto mb-4 bg-white backdrop-blur-sm rounded-xl border border-orange-100 p-4"
+          className="flex-1 overflow-y-auto mb-4 bg-white/80 backdrop-blur-sm rounded-xl border border-orange-100 p-4"
         >
           {messages.length === 0 ? (
             <div className="flex items-center justify-center h-full text-orange-400">
@@ -302,7 +302,7 @@ export default function Messages() {
         </div>
 
         {/* Message Form */}
-        <div className="bg-white backdrop-blur-sm rounded-xl border border-orange-100 p-2">
+        <div className="bg-white/80 backdrop-blur-sm rounded-xl border border-orange-100 p-2">
           <form onSubmit={handleSendMessage} className="flex items-center gap-2">
             <button
               type="button"

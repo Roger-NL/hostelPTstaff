@@ -380,7 +380,7 @@ export default function DashboardContent() {
           </div>
         ) : (
           <div className="flex flex-col items-center justify-center py-10 text-center">
-            <div className="w-16 h-16 rounded-full bg-white flex items-center justify-center text-orange-400 mb-4">
+            <div className="w-16 h-16 rounded-full bg-orange-50 flex items-center justify-center text-orange-400 mb-4">
               <Calendar size={24} />
             </div>
             <p className="text-orange-500 font-light">
@@ -415,7 +415,7 @@ export default function DashboardContent() {
             <div className="flex flex-wrap gap-2">
               {lastActiveShiftInfo.volunteers && lastActiveShiftInfo.volunteers.length > 0 ? (
                 lastActiveShiftInfo.volunteers.map(volunteer => volunteer && (
-                  <div key={volunteer.id} className="flex items-center px-2 py-1 rounded-lg bg-white gap-1.5">
+                  <div key={volunteer.id} className="flex items-center px-2 py-1 rounded-lg bg-orange-50 gap-1.5">
                     <div className="w-5 h-5 xs:w-6 xs:h-6 rounded-full bg-gradient-to-br from-orange-400 to-orange-600 flex items-center justify-center text-white text-xs">
                       {volunteer.name[0]}
                     </div>
@@ -445,7 +445,7 @@ export default function DashboardContent() {
               
               <div className="flex flex-wrap gap-2">
                 {currentVolunteers.map(volunteer => volunteer && (
-                  <div key={volunteer.id} className="flex items-center px-2 py-1 rounded-lg bg-white gap-1.5">
+                  <div key={volunteer.id} className="flex items-center px-2 py-1 rounded-lg bg-orange-100 gap-1.5">
                     <div className="w-5 h-5 xs:w-6 xs:h-6 rounded-full bg-orange-500 flex items-center justify-center text-white text-xs">
                       {volunteer.name[0]}
                     </div>
@@ -475,7 +475,7 @@ export default function DashboardContent() {
             <div className="flex flex-wrap gap-2">
               {nextShiftWithVolunteersInfo.volunteers && nextShiftWithVolunteersInfo.volunteers.length > 0 ? (
                 nextShiftWithVolunteersInfo.volunteers.map(volunteer => volunteer && (
-                  <div key={volunteer.id} className="flex items-center px-2 py-1 rounded-lg bg-white gap-1.5">
+                  <div key={volunteer.id} className="flex items-center px-2 py-1 rounded-lg bg-orange-50 gap-1.5">
                     <div className="w-5 h-5 xs:w-6 xs:h-6 rounded-full bg-gradient-to-br from-orange-400 to-orange-600 flex items-center justify-center text-white text-xs">
                       {volunteer.name[0]}
                     </div>
