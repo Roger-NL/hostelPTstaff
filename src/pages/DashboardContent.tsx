@@ -5,7 +5,6 @@ import { format, isToday, isYesterday, addDays, subDays, startOfWeek, parseISO }
 import type { Schedule, ShiftTime } from '../types';
 import {
   Award,
-  TrendingUp,
   User,
   Clock,
   Activity,
@@ -30,46 +29,6 @@ import { doc, updateDoc, getDoc } from 'firebase/firestore';
 import * as authService from '../services/auth.service';
 import { useAuth } from '../hooks/useAuth';
 
-interface DashboardCardProps {
-  title: string;
-  value: number;
-  icon: React.ReactNode;
-  trend?: {
-    value: number;
-    isPositive: boolean;
-  };
-}
-
-function DashboardCard({ title, value, icon, trend }: DashboardCardProps) {
-  // Garantir que o valor seja um número válido
-  const displayValue = isNaN(value) ? 0 : value;
-  const trendValue = trend?.value && !isNaN(trend.value) ? trend.value : 0;
-  
-  return (
-    <div className="group bg-white/90 dark:bg-gray-800/70 backdrop-blur-md rounded-xl p-4 xs:p-5 sm:p-6 transition-all duration-300 hover:shadow-xl border border-gray-200/70 dark:border-gray-700/50 hover:transform hover:scale-[1.02]">
-      <div className="flex items-center justify-between">
-        <div className="w-10 h-10 xs:w-12 xs:h-12 rounded-lg xs:rounded-xl bg-gradient-to-br from-blue-500/20 to-violet-500/20 dark:from-blue-500/30 dark:to-violet-500/30 flex items-center justify-center text-blue-600 transition-all duration-300 group-hover:scale-110 group-hover:bg-gradient-to-br group-hover:from-blue-500 group-hover:to-violet-500 group-hover:text-white">
-          {icon}
-        </div>
-        {trend && (
-          <div className={`flex items-center gap-1 text-xs xs:text-sm ${
-            trend.isPositive ? 'text-emerald-600 dark:text-emerald-500' : 'text-red-600 dark:text-red-500'
-          }`}>
-            <TrendingUp size={14} className={`transition-transform duration-300 ${
-              !trend.isPositive ? 'rotate-180' : ''
-            }`} />
-            <span className="font-medium">{trendValue}%</span>
-          </div>
-        )}
-      </div>
-      <div className="mt-3 xs:mt-4">
-        <h3 className="text-gray-600 dark:text-gray-300 text-xs xs:text-sm font-light">{title}</h3>
-        <p className="text-gray-900 dark:text-white text-xl xs:text-2xl font-extralight mt-1 transition-all duration-300 group-hover:text-blue-600 dark:group-hover:text-blue-400">{displayValue}</p>
-      </div>
-    </div>
-  );
-}
-
 export default function DashboardContent() {
   const { user, tasks = [], events = [], messages = [], users = [], schedule = {} as Schedule, setUser } = useStore();
   const { t } = useTranslation();
@@ -90,14 +49,6 @@ export default function DashboardContent() {
     
     loadUsers();
   }, [loadAllUsers]);
-
-  // Calculate statistics
-  const completedTasks = tasks.filter(t => t.status === 'done' && t.type === 'hostel').length;
-  const totalTasks = tasks.filter(t => t.type === 'hostel').length;
-  const completionRate = totalTasks ? Math.round((completedTasks / totalTasks) * 100) : 0;
-
-  const upcomingEvents = events.filter(e => e.status === 'upcoming').length;
-  const unreadMessages = messages.filter(m => !m.read.includes(user?.id || '')).length;
 
   // Get current weather data (mock data for now)
   const weather = {
@@ -439,43 +390,6 @@ export default function DashboardContent() {
         )}
       </div>
 
-      {/* Welcome section with stats */}
-      <div className="grid grid-cols-2 xs:grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-3 xs:gap-4 sm:gap-6">
-        <DashboardCard 
-          title={t('dashboard.stats.tasks') || "Tasks"} 
-          value={completedTasks} 
-          icon={<>
-            <ClipboardList size={18} className="xs:hidden" />
-            <ClipboardList size={24} className="hidden xs:block" />
-          </>}
-          trend={{ value: completionRate, isPositive: true }}
-        />
-        <DashboardCard 
-          title={t('dashboard.stats.events') || "Events"} 
-          value={upcomingEvents} 
-          icon={<>
-            <PartyPopper size={18} className="xs:hidden" />
-            <PartyPopper size={24} className="hidden xs:block" />
-          </>}
-        />
-        <DashboardCard 
-          title={t('dashboard.stats.messages') || "Messages"} 
-          value={unreadMessages} 
-          icon={<>
-            <MessageCircle size={18} className="xs:hidden" />
-            <MessageCircle size={24} className="hidden xs:block" />
-          </>}
-        />
-        <DashboardCard 
-          title={t('dashboard.stats.points') || "Your Points"} 
-          value={user?.points || 0} 
-          icon={<>
-            <Award size={18} className="xs:hidden" />
-            <Award size={24} className="hidden xs:block" />
-          </>}
-        />
-      </div>
-
       {/* Today's team section - UPDATED */}
       <div className="bg-white/90 dark:bg-gray-800/70 backdrop-blur-md rounded-xl p-4 xs:p-5 sm:p-6 border border-gray-200/70 dark:border-gray-700/50">
         <h2 className="text-lg xs:text-xl font-extralight text-gray-800 dark:text-white mb-3 xs:mb-4 flex items-center gap-2">
@@ -621,74 +535,6 @@ export default function DashboardContent() {
               </div>
               <span className="font-medium text-gray-900 dark:text-white text-xs xs:text-sm">{weather.humidity}%</span>
             </div>
-          </div>
-        </div>
-
-        {/* Tasks */}
-        <div className="bg-white/90 dark:bg-gray-800/70 backdrop-blur-md rounded-xl p-4 xs:p-5 sm:p-6 border border-gray-200/70 dark:border-gray-700/50 lg:col-span-2">
-          <h2 className="text-lg xs:text-xl font-extralight text-gray-800 dark:text-white mb-3 xs:mb-4 flex items-center gap-2">
-            <ClipboardList size={18} className="text-indigo-500 xs:hidden" />
-            <ClipboardList size={20} className="text-indigo-500 hidden xs:block" />
-            {t('dashboard.pendingTasks')}
-          </h2>
-          
-          <div className="space-y-2 xs:space-y-3">
-            {tasks.filter(t => t.status !== 'done' && t.type === 'hostel').slice(0, 5).length > 0 ? (
-              tasks.filter(t => t.status !== 'done' && t.type === 'hostel').slice(0, 5).map(task => (
-                <div 
-                  key={task.id} 
-                  className={`flex items-center justify-between p-2.5 xs:p-3 rounded-lg ${
-                    task.status === 'inProgress'
-                      ? 'bg-amber-100/50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800/20'
-                      : 'bg-gray-100/50 dark:bg-gray-700/20 border border-gray-200 dark:border-gray-700/20'
-                  }`}
-                >
-                  <div className="flex items-center gap-2 flex-1 min-w-0">
-                    <div className={`w-5 h-5 xs:w-6 xs:h-6 rounded-full flex items-center justify-center ${
-                      task.status === 'inProgress'
-                        ? 'bg-amber-500 text-white'
-                        : 'bg-gray-500 text-white'
-                    }`}>
-                      {task.status === 'inProgress'
-                        ? <Activity size={12} className="xs:hidden" />
-                        : <AlertCircle size={12} className="xs:hidden" />
-                      }
-                      {task.status === 'inProgress'
-                        ? <Activity size={14} className="hidden xs:block" />
-                        : <AlertCircle size={14} className="hidden xs:block" />
-                      }
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <h4 className="text-xs xs:text-sm font-medium text-gray-800 dark:text-gray-200 truncate">
-                        {task.title}
-                      </h4>
-                      <p className="text-xxs xs:text-xs font-light text-gray-500 dark:text-gray-400 truncate">
-                        {task.description.length > 40 
-                          ? task.description.substring(0, 40) + '...' 
-                          : task.description}
-                      </p>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-1.5 text-xs font-medium">
-                    <div className="flex items-center gap-1 ml-2 text-amber-500">
-                      <Award size={12} className="xs:hidden" />
-                      <Award size={14} className="hidden xs:block" />
-                      <span className="text-xxs xs:text-xs">{task.points}</span>
-                    </div>
-                  </div>
-                </div>
-              ))
-            ) : (
-              <div className="text-center py-4 xs:py-6">
-                <div className="w-10 h-10 xs:w-12 xs:h-12 mx-auto bg-gray-100 dark:bg-gray-700/30 rounded-full flex items-center justify-center mb-2 xs:mb-3">
-                  <ClipboardList size={18} className="text-gray-400 xs:hidden" />
-                  <ClipboardList size={20} className="text-gray-400 hidden xs:block" />
-                </div>
-                <p className="text-xs xs:text-sm text-gray-500 dark:text-gray-400">
-                  {t('dashboard.noTasks')}
-                </p>
-              </div>
-            )}
           </div>
         </div>
 

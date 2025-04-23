@@ -82,27 +82,17 @@ const AppContent = () => {
   // Manipulador para o botão voltar do navegador mobile
   useEffect(() => {
     const handleBackButton = (event: PopStateEvent) => {
-      // Não desconectar o usuário quando pressionar voltar
-      
-      // Se estiver logado, previne o comportamento padrão
-      if (isAuthenticated) {
+      // Se não estiver logado e estiver na página de login, previne sair da aplicação
+      if (!isAuthenticated && location.pathname === '/login') {
         event.preventDefault();
-        
-        // Verifica se a rota atual é o dashboard
-        if (location.pathname === '/dashboard') {
-          // Se já estiver no dashboard, não faz nada, permanece na página
-          window.history.pushState(null, '', location.pathname);
-        } else {
-          // Se estiver em outra página, volta para o dashboard
-          navigate('/dashboard');
-        }
-      } else {
-        // Se não estiver logado, deixa o comportamento padrão de voltar acontecer
-        if (location.pathname === '/login') {
-          // Se já estiver no login, previne o comportamento de sair da aplicação
-          event.preventDefault();
-          window.history.pushState(null, '', location.pathname);
-        }
+        window.history.pushState(null, '', location.pathname);
+        return;
+      }
+
+      // Se estiver logado, permite navegação normal entre páginas autenticadas
+      if (isAuthenticated) {
+        // Não faz nada, deixa o comportamento padrão de navegação acontecer
+        return;
       }
     };
     

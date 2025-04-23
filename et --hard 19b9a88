@@ -1,0 +1,52 @@
+[33m4a3f972[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmain[m[33m, [m[1;31morigin/main[m[33m, [m[1;31morigin/HEAD[m[33m)[m Atualização de arquivos e melhorias no código
+[33m19b9a88[m Exibir horários dos turnos junto com nomes de voluntários
+[33me63a2d4[m Improve dashboard team display: moved next shift to top, show last active and next scheduled shifts with volunteers
+[33m4e0e24f[m Corrige cadastro de usuários pelo painel de administração
+[33me398159[m Adiciona traduções para mensagens de registro de usuário
+[33m03f8a6b[m Altera horário do primeiro turno de 08:00-10:00 para 08:00-11:00
+[33mb5eaac7[m Corrige tema dark do dashboard
+[33m35c6d34[m Implementa opção de lembrar senha na tela de login
+[33mb8a1078[m Corrige comportamento do botão voltar para não deslogar o usuário
+[33m015b385[m Implementa sistema de adaptação para diferentes dispositivos e navegadores
+[33md027399[m Implementa cadastro igual ao de admin na tela principal e permite cadastro sem estar logado
+[33m5c83421[m Corrige problemas de tipagem e implementa componente Popover
+[33mb5c4feb[m Corrige comportamento de tarefas com foto obrigatória para impedir marcação como concluído sem aprovação
+[33mbe30f12[m Remove menu flutuante e implementa sistema de aprovação de fotos para tarefas
+[33ma898ffe[m Corrige erro de roteamento no App.tsx movendo hooks para componente interno
+[33mb3bb92c[m Implementa botão voltar para home e menu flutuante em todas as páginas
+[33ma413980[m Implementa botão voltar para home e menu flutuante em todas as páginas
+[33m8e107c4[m Implementa funcionalidade de 'Foto necessária' para tarefas
+[33m46d1bae[m Adapta o layout para diferentes dispositivos móveis considerando barras de navegação nativas
+[33m7edc3e7[m Remove botões de tema e idioma da interface após escolha inicial
+[33m8ce91bc[m Adiciona melhorias de formatação para todos os dispositivos e navegadores
+[33m811f8ea[m Remove todas as referências ao email de administrador da documentação
+[33m8992a90[m Remove referência ao email do administrador
+[33m1a97c9b[m Adiciona modal de seleção de idioma na primeira visita
+[33m540a3ad[m Remove dados padrão do sistema (eventos, tarefas e usuários)
+[33mec62998[m Remove botões de tema e idioma da interface principal após login
+[33m4be8759[m Corrige exibição do nome do usuário e status de administrador no perfil
+[33m9279c53[m Corrige erros de build para o Vercel: remove configuração aninhada do CSS, instala terser e simplifica babel
+[33m5b161b8[m Otimiza página de eventos para melhor experiência no celular
+[33m6e165db[m Implementado layout com altura fixa e rolagem apenas nos containers internos
+[33ma27e9d9[m Otimizações de performance para dispositivos móveis: lazy loading, redução de animações e efeitos visuais, virtualização e melhorias de cache
+[33m1de52d7[m Corrigir problema de tarefas e eventos reaparecendo após exclusão
+[33m8dcee49[m Adicionar serviço de tarefas e funções de gerenciamento
+[33m452efe2[m Corrigir problema de persistência de eventos excluídos
+[33m57d1a3e[m Melhorar botão de login rápido e funcionalidade
+[33m1557723[m Corrigir problema com exclusão de eventos
+[33mcb0207e[m Atualização de arquivos
+[33m9476dcd[m Adiciona funcionalidade de escala de lavanderia
+[33mcec2e3b[m Implementação do sistema de mensagens com Firebase
+[33m2d64cff[m Melhoria da interface para dispositivos móveis em Staff, Tasks e Events
+[33m5dbb178[m Finalizar preparativos para novo deploy no Vercel
+[33m0568323[m Preparar versão final para novo deploy no Vercel
+[33m0d8a633[m Adicionar react-hot-toast às dependências
+[33mf85738a[m Trigger Vercel deploy
+[33m754aa1d[m Corrigir registro e login de staff users no painel admin
+[33m6fddcc4[m Corrigir persistência na remoção de voluntários da escala
+[33md4fec19[m Restaurar estilo original da página de login
+[33mcff6871[m Melhorias: tema escuro como padrão e adicionar login rápido com último usuário
+[33m1b72b19[m Remover botão 'Add User' do Dashboard
+[33m5ba2cc3[m Corrigido problemas de resolução da dependência Firebase
+[33m3e42da6[m Corrigido configuração do build para deploy no Vercel
+[33ma4bf335[m Versão inicial do sistema de gerenciamento Hostel PT

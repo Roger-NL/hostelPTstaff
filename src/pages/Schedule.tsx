@@ -2,10 +2,11 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useStore } from '../store/useStore';
 import { format, addDays, startOfWeek, parse, isSameDay } from 'date-fns';
 import { pt } from 'date-fns/locale';
-import { ChevronLeft, ChevronRight, Plus, X, Calendar as CalendarIcon, ChevronDown, Info, FileText } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Plus, X, Calendar as CalendarIcon, ChevronDown, Info, FileText, ArrowLeft } from 'lucide-react';
 import type { ShiftTime } from '../types';
 import SimpleDatePicker from '../components/SimpleDatePicker';
 import { useTranslation } from '../hooks/useTranslation';
+import { useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
 
 const SHIFTS: ShiftTime[] = [
@@ -309,9 +310,11 @@ function ScheduleSummaryModal({ isOpen, onClose, weekDays, schedule, users, shif
 export default function Schedule() {
   const { users, schedule, assignShift, removeShift, user, language } = useStore();
   const { t } = useTranslation();
+  const navigate = useNavigate();
   const [selectedWeek, setSelectedWeek] = useState(startOfWeek(new Date(), { weekStartsOn: 1 }));
   const [datePickerOpen, setDatePickerOpen] = useState(false);
   const [selectedDate, setSelectedDate] = useState(new Date());
+  const [showDateOptions, setShowDateOptions] = useState(false);
   const [modalState, setModalState] = useState<{
     isOpen: boolean;
     date?: Date;
@@ -327,6 +330,7 @@ export default function Schedule() {
     volunteerName: string;
   }>({ isOpen: false, volunteerName: '' });
   const [summaryModalOpen, setSummaryModalOpen] = useState(false);
+  const dateOptionsRef = useRef<HTMLDivElement>(null);
   
   const volunteers = users;
   console.log('Available volunteers:', volunteers);
@@ -520,12 +524,55 @@ export default function Schedule() {
     };
   }, []);
 
+  // Função para ir para hoje
+  const goToToday = () => {
+    const today = new Date();
+    setSelectedWeek(startOfWeek(today, { weekStartsOn: 1 }));
+    setSelectedDate(today);
+    setShowDateOptions(false);
+  };
+
+  // Função para ir para próxima semana
+  const goToNextWeek = () => {
+    setSelectedWeek(prev => addDays(prev, 7));
+    setShowDateOptions(false);
+  };
+
+  // Função para ir para semana anterior
+  const goToPreviousWeek = () => {
+    setSelectedWeek(prev => addDays(prev, -7));
+    setShowDateOptions(false);
+  };
+
+  // Fechar menu de opções de data ao clicar fora
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (dateOptionsRef.current && !dateOptionsRef.current.contains(event.target as Node)) {
+        setShowDateOptions(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
+
   return (
     <div className="h-[calc(100vh-6rem)] flex flex-col">
       {/* Header - Mais compacto e moderno */}
       <div className="flex flex-col gap-1.5 mb-3 px-2">
         <div className="flex items-center justify-between">
-          <h1 className="text-lg xs:text-xl font-extralight text-white">{format(selectedWeek, 'MMMM yyyy')}</h1>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => navigate('/dashboard')}
+              className="w-8 h-8 xs:w-9 xs:h-9 flex items-center justify-center bg-gray-700/50 rounded-full text-white hover:bg-gray-600 transition-colors"
+            >
+              <ArrowLeft size={16} className="xs:hidden" />
+              <ArrowLeft size={18} className="hidden xs:block" />
+            </button>
+            <h1 className="text-lg xs:text-xl font-extralight text-white">{format(selectedWeek, 'MMMM yyyy')}</h1>
+          </div>
           
           <div className="flex items-center gap-1.5 xs:gap-2">
             <button
@@ -535,13 +582,59 @@ export default function Schedule() {
               <FileText size={16} className="xs:hidden" />
               <FileText size={18} className="hidden xs:block" />
             </button>
-            <button
-              onClick={() => setDatePickerOpen(!datePickerOpen)}
-              className="calendar-button w-8 h-8 xs:w-9 xs:h-9 flex items-center justify-center bg-gray-700/50 rounded-full text-white hover:bg-gray-600 transition-colors"
-            >
-              <CalendarIcon size={16} className="xs:hidden" />
-              <CalendarIcon size={18} className="hidden xs:block" />
-            </button>
+            
+            <div className="relative">
+              <button
+                onClick={() => setShowDateOptions(!showDateOptions)}
+                className="calendar-button w-8 h-8 xs:w-9 xs:h-9 flex items-center justify-center bg-gray-700/50 rounded-full text-white hover:bg-gray-600 transition-colors"
+              >
+                <CalendarIcon size={16} className="xs:hidden" />
+                <CalendarIcon size={18} className="hidden xs:block" />
+              </button>
+
+              {/* Menu de opções de data */}
+              {showDateOptions && (
+                <div 
+                  ref={dateOptionsRef}
+                  className="absolute right-0 mt-2 w-48 rounded-xl bg-gray-800 shadow-lg border border-white/10 overflow-hidden z-50"
+                >
+                  <div className="py-1">
+                    <button
+                      onClick={goToToday}
+                      className="w-full px-4 py-2 text-sm text-white hover:bg-gray-700/50 text-left flex items-center gap-2"
+                    >
+                      <CalendarIcon size={14} />
+                      Hoje
+                    </button>
+                    <button
+                      onClick={goToPreviousWeek}
+                      className="w-full px-4 py-2 text-sm text-white hover:bg-gray-700/50 text-left flex items-center gap-2"
+                    >
+                      <ChevronLeft size={14} />
+                      Semana Anterior
+                    </button>
+                    <button
+                      onClick={goToNextWeek}
+                      className="w-full px-4 py-2 text-sm text-white hover:bg-gray-700/50 text-left flex items-center gap-2"
+                    >
+                      <ChevronRight size={14} />
+                      Próxima Semana
+                    </button>
+                    <button
+                      onClick={() => {
+                        setDatePickerOpen(true);
+                        setShowDateOptions(false);
+                      }}
+                      className="w-full px-4 py-2 text-sm text-white hover:bg-gray-700/50 text-left flex items-center gap-2"
+                    >
+                      <CalendarIcon size={14} />
+                      Escolher Data
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+
             <button
               onClick={handlePreviousWeek}
               className="w-8 h-8 xs:w-9 xs:h-9 flex items-center justify-center bg-gray-700/50 rounded-full text-white hover:bg-gray-600 transition-colors"
