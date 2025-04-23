@@ -280,19 +280,19 @@ export default function Tasks() {
       setShowPhotoModal(false);
     };
 
+    const taskClasses = "bg-white p-3 xs:p-4 rounded-lg border border-orange-100 shadow-sm relative mb-3";
+
     return (
-      <div 
-        className="bg-white rounded-xl p-3 shadow-sm border border-blue-100 hover:shadow-md transition-shadow"
-      >
+      <div className={taskClasses}>
         <div className="flex justify-between items-start mb-2">
-          <h4 className="font-medium text-blue-700 line-clamp-2">{task.title}</h4>
+          <h4 className="font-medium text-orange-700 line-clamp-2">{task.title}</h4>
           <div className="flex gap-1">
             <button
               onClick={() => handleStatusChange(task.id, 
                 task.status === 'todo' ? 'inProgress' : 
                 task.status === 'inProgress' ? 'done' : 'todo'
               )}
-              className="p-1 text-blue-600 hover:text-blue-700 hover:bg-blue-50 rounded-lg transition-colors"
+              className="p-1 text-orange-600 hover:text-orange-700 hover:bg-orange-50 rounded-lg transition-colors"
               title="Change Status"
             >
               {task.status === 'todo' && <Clock size={16} />}
@@ -303,26 +303,26 @@ export default function Tasks() {
             <Popover>
               <PopoverTrigger>
                 <button
-                  className="p-1 text-blue-600 hover:text-blue-700 hover:bg-blue-50 rounded-lg transition-colors"
+                  className="p-1 text-orange-600 hover:text-orange-700 hover:bg-orange-50 rounded-lg transition-colors"
                   title="More Options"
                 >
                   <MoreVertical size={16} />
                 </button>
               </PopoverTrigger>
-              <PopoverContent className="w-48 rounded-xl border border-blue-100 shadow-lg p-1 bg-white">
-                <div className="flex flex-col divide-y divide-blue-100">
+              <PopoverContent className="w-48 rounded-xl border border-orange-100 shadow-lg p-1 bg-white">
+                <div className="flex flex-col divide-y divide-orange-100">
                   {(isAdmin || task.createdBy === user?.id) && (
                     <>
                       <button
                         onClick={() => handleEdit(task)}
-                        className="flex items-center gap-2 w-full text-left px-3 py-2 hover:bg-blue-50 text-blue-600 text-sm rounded-lg"
+                        className="flex items-center gap-2 w-full text-left px-3 py-2 hover:bg-orange-50 text-orange-600 text-sm rounded-lg"
                       >
                         <Edit size={14} />
                         <span>{t('tasks.edit')}</span>
                       </button>
                       <button
                         onClick={() => setShowConfirmDelete(task.id)}
-                        className="flex items-center gap-2 w-full text-left px-3 py-2 hover:bg-blue-50 text-red-600 text-sm rounded-lg"
+                        className="flex items-center gap-2 w-full text-left px-3 py-2 hover:bg-orange-50 text-red-600 text-sm rounded-lg"
                       >
                         <Trash2 size={14} />
                         <span>{t('tasks.delete')}</span>
@@ -336,7 +336,7 @@ export default function Tasks() {
         </div>
         
         {task.description && (
-          <p className="text-sm text-blue-600 mb-2 line-clamp-2">{task.description}</p>
+          <p className="text-sm text-orange-600 mb-2 line-clamp-2">{task.description}</p>
         )}
         
         <div className="flex flex-wrap gap-1 mb-2">
@@ -373,15 +373,15 @@ export default function Tasks() {
     );
     
     return (
-      <div className="flex-1 min-w-[300px] bg-white/80 backdrop-blur-sm rounded-xl overflow-hidden flex flex-col border border-blue-100">
-        <div className="p-4 border-b border-blue-100 flex items-center justify-between sticky top-0 bg-white/90 backdrop-blur-sm z-10">
+      <div className="flex-1 min-w-[300px] bg-white/80 backdrop-blur-sm rounded-xl overflow-hidden flex flex-col border border-orange-100">
+        <div className="p-4 border-b border-orange-100 flex items-center justify-between sticky top-0 bg-white/90 backdrop-blur-sm z-10">
           <div className="flex items-center gap-2">
-            {status === 'todo' && <Clock className="text-blue-400" size={18} />}
+            {status === 'todo' && <Clock className="text-orange-400" size={18} />}
             {status === 'inProgress' && <AlertTriangle className="text-amber-400" size={18} />}
             {status === 'done' && <CheckCircle className="text-emerald-400" size={18} />}
-            <h3 className="font-medium text-blue-700">{title}</h3>
+            <h3 className="font-medium text-orange-700">{title}</h3>
           </div>
-          <span className="bg-blue-100 text-blue-600 text-xs rounded-full px-2 py-0.5">
+          <span className="bg-orange-100 text-orange-600 text-xs rounded-full px-2 py-0.5">
             {filteredTasks.length}
           </span>
         </div>
@@ -492,47 +492,47 @@ export default function Tasks() {
 
     return (
       <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 p-4 overflow-y-auto">
-        <div className="bg-gray-800 rounded-xl border border-white/10 w-full max-w-2xl max-h-[90vh] flex flex-col overflow-hidden">
-          <div className="flex items-center justify-between p-4 border-b border-white/10">
+        <div className="bg-white rounded-xl border border-orange-100 w-full max-w-2xl max-h-[90vh] flex flex-col overflow-hidden">
+          <div className="flex items-center justify-between p-4 border-b border-orange-100">
             <div className="flex items-center gap-2">
               <div className={`w-3 h-3 rounded-full ${
                 selectedTask.status === 'todo' ? 'bg-gray-400' :
                 selectedTask.status === 'inProgress' ? 'bg-amber-400' : 'bg-emerald-400'
               }`} />
-              <h3 className="text-lg font-medium text-white">{selectedTask.title}</h3>
+              <h3 className="text-lg font-medium text-orange-700">{selectedTask.title}</h3>
             </div>
             <button
               onClick={() => setSelectedTask(null)}
-              className="text-gray-400 hover:text-white transition-colors"
+              className="text-orange-400 hover:text-orange-600 transition-colors"
             >
               <X size={20} />
             </button>
           </div>
           
           <div className="flex-1 overflow-y-auto p-4 content-scrollable space-y-4">
-            <div className="bg-gray-700/50 rounded-lg p-3 xs:p-4 border border-white/10">
-              <h4 className="text-sm font-medium text-gray-300 mb-2 flex items-center gap-2">
-                <Clock size={16} className="text-amber-400" />
+            <div className="bg-white rounded-lg p-3 xs:p-4 border border-orange-100">
+              <h4 className="text-sm font-medium text-orange-700 mb-2 flex items-center gap-2">
+                <Clock size={16} className="text-orange-600" />
                 {format(new Date(selectedTask.dueDate || new Date()), 'MMM d, yyyy')}
               </h4>
             </div>
             
-            <div className="bg-gray-700/50 rounded-lg p-3 xs:p-4 border border-white/10">
-              <h4 className="text-sm font-medium text-gray-300 mb-2 flex items-center gap-2">
-                <Award size={16} className="text-amber-400" />
+            <div className="bg-white rounded-lg p-3 xs:p-4 border border-orange-100">
+              <h4 className="text-sm font-medium text-orange-700 mb-2 flex items-center gap-2">
+                <Award size={16} className="text-orange-600" />
                 {selectedTask.points} points
               </h4>
             </div>
             
-            <div className="bg-gray-700/50 rounded-lg p-3 xs:p-4 border border-white/10">
-              <h3 className="text-base xs:text-lg font-medium text-white mb-2">Description</h3>
-              <p className="text-sm text-gray-300 leading-relaxed">{selectedTask.description}</p>
+            <div className="bg-white rounded-lg p-3 xs:p-4 border border-orange-100">
+              <h3 className="text-base xs:text-lg font-medium text-orange-700 mb-2">Description</h3>
+              <p className="text-sm text-orange-600 leading-relaxed">{selectedTask.description}</p>
             </div>
             
             {selectedTask.requirePhoto && (
-              <div className="bg-gray-700/30 rounded-lg p-4 border border-white/10">
-                <h4 className="text-sm font-medium text-gray-300 mb-2 flex items-center gap-2">
-                  <Camera size={16} className="text-amber-400" />
+              <div className="bg-white rounded-lg p-4 border border-orange-100">
+                <h4 className="text-sm font-medium text-orange-700 mb-2 flex items-center gap-2">
+                  <Camera size={16} className="text-orange-600" />
                   Foto necessária para conclusão
                 </h4>
                 
@@ -611,7 +611,7 @@ export default function Tasks() {
             )}
           </div>
           
-          <div className="p-4 border-t border-white/10 flex items-center justify-end gap-2">
+          <div className="p-4 border-t border-orange-100 flex items-center justify-end gap-2">
             {selectedTask.status !== 'done' && (
               <button
                 onClick={handleCompleteTask}
@@ -654,18 +654,18 @@ export default function Tasks() {
   });
 
   return (
-    <div className="bg-white/90 h-full overflow-hidden relative">
-      <div className="max-w-7xl mx-auto px-3 xs:px-4 py-2 xs:py-3">
-        <div className="flex items-center justify-between">
-          <h1 className="text-2xl font-light text-blue-700">{t('tasks.title')}</h1>
+    <div className="p-4 flex flex-col">
+      <div className="bg-white backdrop-blur-sm rounded-xl p-4 flex-1 border border-orange-100 shadow-sm">
+        <div className="flex justify-between items-center mb-6">
+          <h1 className="text-2xl font-light text-orange-700">{t('tasks.title')}</h1>
           <div className="flex items-center gap-2">
-            <div className="bg-white border border-blue-100 rounded-lg overflow-hidden flex">
+            <div className="bg-white border border-orange-100 rounded-lg overflow-hidden flex">
               <button
                 onClick={() => setFilter('all')}
                 className={`px-3 py-1.5 text-sm ${
                   filter === 'all' 
-                    ? 'bg-blue-100 text-blue-700' 
-                    : 'text-blue-600 hover:bg-blue-50'
+                    ? 'bg-orange-100 text-orange-700' 
+                    : 'text-orange-600 hover:bg-orange-50'
                 }`}
               >
                 {t('tasks.allTasks')}
@@ -674,8 +674,8 @@ export default function Tasks() {
                 onClick={() => setFilter('hostel')}
                 className={`px-3 py-1.5 text-sm ${
                   filter === 'hostel' 
-                    ? 'bg-blue-100 text-blue-700' 
-                    : 'text-blue-600 hover:bg-blue-50'
+                    ? 'bg-orange-100 text-orange-700' 
+                    : 'text-orange-600 hover:bg-orange-50'
                 }`}
               >
                 {t('tasks.hostelTasks')}
@@ -684,8 +684,8 @@ export default function Tasks() {
                 onClick={() => setFilter('personal')}
                 className={`px-3 py-1.5 text-sm ${
                   filter === 'personal' 
-                    ? 'bg-blue-100 text-blue-700' 
-                    : 'text-blue-600 hover:bg-blue-50'
+                    ? 'bg-orange-100 text-orange-700' 
+                    : 'text-orange-600 hover:bg-orange-50'
                 }`}
               >
                 {t('tasks.personalTasks')}
@@ -693,14 +693,14 @@ export default function Tasks() {
             </div>
             <button
               onClick={() => setShowForm(true)}
-              className="bg-blue-600 hover:bg-blue-700 text-white p-2 rounded-lg transition-colors"
+              className="bg-orange-600 hover:bg-orange-700 text-white p-2 rounded-lg transition-colors"
             >
               <Plus size={20} />
             </button>
           </div>
         </div>
         
-        <div className="text-sm text-blue-600 flex items-center gap-2">
+        <div className="text-sm text-orange-600 flex items-center gap-2">
           <span>{t('tasks.showing')}: {filteredTasks.length} {t('tasks.tasksCount')}</span>
         </div>
         
@@ -714,29 +714,29 @@ export default function Tasks() {
       {showForm && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-2 xs:p-4">
           <div className="bg-white rounded-lg p-4 xs:p-6 w-full max-w-2xl max-h-[90vh] overflow-y-auto">
-            <h2 className="text-lg xs:text-xl font-semibold text-blue-600 mb-3">
+            <h2 className="text-lg xs:text-xl font-semibold text-orange-600 mb-3">
               {editingTaskId ? 'Edit Task' : 'Add New Task'}
             </h2>
             
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="space-y-4">
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 xs:gap-4">
-                  <div className="bg-white rounded-lg p-3 xs:p-4 border border-blue-100 sm:col-span-2">
-                    <label className="block text-sm font-medium text-blue-700 mb-1">
+                  <div className="bg-white rounded-lg p-3 xs:p-4 border border-orange-100 sm:col-span-2">
+                    <label className="block text-sm font-medium text-orange-700 mb-1">
                       Title
                     </label>
                     <input
                       type="text"
                       value={formData.title}
                       onChange={e => setFormData({ ...formData, title: e.target.value })}
-                      className="w-full bg-white border border-blue-100 rounded-lg px-3 py-2 text-blue-800 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400/20"
+                      className="w-full bg-white border border-orange-100 rounded-lg px-3 py-2 text-orange-800 text-sm focus:outline-none focus:ring-2 focus:ring-orange-400/20"
                       placeholder="Task title"
                       required
                     />
                   </div>
                   
-                  <div className="bg-white rounded-lg p-3 xs:p-4 border border-blue-100">
-                    <label className="block text-sm font-medium text-blue-700 mb-1">
+                  <div className="bg-white rounded-lg p-3 xs:p-4 border border-orange-100">
+                    <label className="block text-sm font-medium text-orange-700 mb-1">
                       Points
                     </label>
                     <input
@@ -745,33 +745,33 @@ export default function Tasks() {
                       max="10"
                       value={formData.points}
                       onChange={e => setFormData({ ...formData, points: parseInt(e.target.value) })}
-                      className="w-full bg-white border border-blue-100 rounded-lg px-3 py-2 text-blue-800 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400/20"
+                      className="w-full bg-white border border-orange-100 rounded-lg px-3 py-2 text-orange-800 text-sm focus:outline-none focus:ring-2 focus:ring-orange-400/20"
                       required
                     />
                   </div>
                 </div>
                 
-                <div className="bg-white rounded-lg p-3 xs:p-4 border border-blue-100">
-                  <label className="block text-sm font-medium text-blue-700 mb-1">
+                <div className="bg-white rounded-lg p-3 xs:p-4 border border-orange-100">
+                  <label className="block text-sm font-medium text-orange-700 mb-1">
                     Description
                   </label>
                   <textarea
                     value={formData.description}
                     onChange={e => setFormData({ ...formData, description: e.target.value })}
-                    className="w-full h-24 bg-white border border-blue-100 rounded-lg px-3 py-2 text-blue-800 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400/20"
+                    className="w-full h-24 bg-white border border-orange-100 rounded-lg px-3 py-2 text-orange-800 text-sm focus:outline-none focus:ring-2 focus:ring-orange-400/20"
                     placeholder="Task description"
                   ></textarea>
                 </div>
                 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 xs:gap-4">
-                  <div className="bg-white rounded-lg p-3 xs:p-4 border border-blue-100">
-                    <label className="block text-sm font-medium text-blue-700 mb-1">
+                  <div className="bg-white rounded-lg p-3 xs:p-4 border border-orange-100">
+                    <label className="block text-sm font-medium text-orange-700 mb-1">
                       Priority
                     </label>
                     <select
                       value={formData.priority}
                       onChange={e => setFormData({ ...formData, priority: e.target.value as Task['priority'] })}
-                      className="w-full bg-white border border-blue-100 rounded-lg px-3 py-2 text-blue-800 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400/20"
+                      className="w-full bg-white border border-orange-100 rounded-lg px-3 py-2 text-orange-800 text-sm focus:outline-none focus:ring-2 focus:ring-orange-400/20"
                       required
                     >
                       <option value="low">Low</option>
@@ -780,14 +780,14 @@ export default function Tasks() {
                     </select>
                   </div>
                   
-                  <div className="bg-white rounded-lg p-3 xs:p-4 border border-blue-100">
-                    <label className="block text-sm font-medium text-blue-700 mb-1">
+                  <div className="bg-white rounded-lg p-3 xs:p-4 border border-orange-100">
+                    <label className="block text-sm font-medium text-orange-700 mb-1">
                       Type
                     </label>
                     <select
                       value={formData.type}
                       onChange={e => setFormData({ ...formData, type: e.target.value as 'hostel' | 'personal' })}
-                      className="w-full bg-white border border-blue-100 rounded-lg px-3 py-2 text-blue-800 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400/20"
+                      className="w-full bg-white border border-orange-100 rounded-lg px-3 py-2 text-orange-800 text-sm focus:outline-none focus:ring-2 focus:ring-orange-400/20"
                       required
                     >
                       <option value="hostel">Hostel Task</option>
@@ -797,9 +797,9 @@ export default function Tasks() {
                 </div>
                 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 xs:gap-4">
-                  <div className="bg-white rounded-lg p-3 xs:p-4 border border-blue-100">
+                  <div className="bg-white rounded-lg p-3 xs:p-4 border border-orange-100">
                     <div className="flex items-center justify-between">
-                      <label className="block text-sm font-medium text-blue-700">
+                      <label className="block text-sm font-medium text-orange-700">
                         Private Task
                       </label>
                       <label className="relative inline-flex items-center cursor-pointer">
@@ -810,8 +810,8 @@ export default function Tasks() {
                           className="sr-only peer"
                         />
                         <div
-                          className={`w-10 h-6 bg-gray-300 rounded-full peer peer-checked:bg-blue-400 
-                          peer-focus:ring-2 peer-focus:ring-blue-300`}
+                          className={`w-10 h-6 bg-gray-300 rounded-full peer peer-checked:bg-orange-400 
+                          peer-focus:ring-2 peer-focus:ring-orange-300`}
                         >
                           <span 
                             className={`block h-6 w-6 rounded-full bg-white transform transition-transform duration-200 ease-in-out ${
@@ -822,16 +822,16 @@ export default function Tasks() {
                       </label>
                     </div>
                     {formData.isPrivate && (
-                      <p className="text-xs text-blue-500 mt-2">
+                      <p className="text-xs text-orange-500 mt-2">
                         <AlertTriangle size={12} className="inline mr-1" />
                         Only you will be able to see this task.
                       </p>
                     )}
                   </div>
                   
-                  <div className="bg-white rounded-lg p-3 xs:p-4 border border-blue-100">
+                  <div className="bg-white rounded-lg p-3 xs:p-4 border border-orange-100">
                     <div className="flex items-center justify-between">
-                      <label className="block text-sm font-medium text-blue-700">
+                      <label className="block text-sm font-medium text-orange-700">
                         Require Photo
                       </label>
                       <label className="relative inline-flex items-center cursor-pointer">
@@ -842,8 +842,8 @@ export default function Tasks() {
                           className="sr-only peer"
                         />
                         <div
-                          className={`w-10 h-6 bg-gray-300 rounded-full peer peer-checked:bg-blue-400 
-                          peer-focus:ring-2 peer-focus:ring-blue-300`}
+                          className={`w-10 h-6 bg-gray-300 rounded-full peer peer-checked:bg-orange-400 
+                          peer-focus:ring-2 peer-focus:ring-orange-300`}
                         >
                           <span 
                             className={`block h-6 w-6 rounded-full bg-white transform transition-transform duration-200 ease-in-out ${
@@ -854,7 +854,7 @@ export default function Tasks() {
                       </label>
                     </div>
                     {formData.requirePhoto && (
-                      <p className="text-xs text-blue-500 mt-2">
+                      <p className="text-xs text-orange-500 mt-2">
                         <AlertTriangle size={12} className="inline mr-1" />
                         A tarefa só poderá ser concluída se o usuário enviar uma foto tirada pela câmera e esta for aprovada por um administrador.
                       </p>
@@ -863,21 +863,21 @@ export default function Tasks() {
                 </div>
                 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 xs:gap-4">
-                  <div className="bg-white rounded-lg p-3 xs:p-4 border border-blue-100">
-                    <label className="block text-sm font-medium text-blue-700 mb-1">
+                  <div className="bg-white rounded-lg p-3 xs:p-4 border border-orange-100">
+                    <label className="block text-sm font-medium text-orange-700 mb-1">
                       Due Date
                     </label>
                     <input
                       type="date"
                       value={formData.dueDate}
                       onChange={e => setFormData({ ...formData, dueDate: e.target.value })}
-                      className="w-full bg-white border border-blue-100 rounded-lg px-3 py-2 text-blue-800 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400/20"
+                      className="w-full bg-white border border-orange-100 rounded-lg px-3 py-2 text-orange-800 text-sm focus:outline-none focus:ring-2 focus:ring-orange-400/20"
                       required
                     />
                   </div>
                   
-                  <div className="bg-white rounded-lg p-3 xs:p-4 border border-blue-100">
-                    <label className="block text-sm font-medium text-blue-700 mb-1">
+                  <div className="bg-white rounded-lg p-3 xs:p-4 border border-orange-100">
+                    <label className="block text-sm font-medium text-orange-700 mb-1">
                       Assign To
                     </label>
                     <div className="space-y-2">
@@ -887,12 +887,12 @@ export default function Tasks() {
                           return volunteer ? (
                             <div
                               key={userId}
-                              className="flex items-center gap-2 bg-blue-50 rounded-lg p-2"
+                              className="flex items-center gap-2 bg-orange-50 rounded-lg p-2"
                             >
-                              <div className="w-6 h-6 rounded-full bg-blue-100 flex items-center justify-center text-blue-700 text-sm">
+                              <div className="w-6 h-6 rounded-full bg-orange-100 flex items-center justify-center text-orange-700 text-sm">
                                 {volunteer.name[0]}
                               </div>
-                              <span className="text-sm text-blue-700">{volunteer.name}</span>
+                              <span className="text-sm text-orange-700">{volunteer.name}</span>
                               <button
                                 onClick={() => {
                                   const newAssignedTo = formData.assignedTo?.filter(id => id !== userId) || [];
@@ -907,7 +907,7 @@ export default function Tasks() {
                         })}
                       </div>
                       <select
-                        className="w-full bg-white border border-blue-100 rounded-lg px-3 sm:px-4 py-2 text-blue-800 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400/20"
+                        className="w-full bg-white border border-orange-100 rounded-lg px-3 sm:px-4 py-2 text-orange-800 text-sm focus:outline-none focus:ring-2 focus:ring-orange-400/20"
                         onChange={(e) => {
                           const userId = e.target.value;
                           if (userId && !formData.assignedTo?.includes(userId)) {
@@ -931,15 +931,15 @@ export default function Tasks() {
                   </div>
                 </div>
                 
-                <div className="bg-white rounded-lg p-3 xs:p-4 border border-blue-100">
-                  <label className="block text-sm font-medium text-blue-700 mb-1">
+                <div className="bg-white rounded-lg p-3 xs:p-4 border border-orange-100">
+                  <label className="block text-sm font-medium text-orange-700 mb-1">
                     Tags
                   </label>
                   <div className="flex flex-wrap gap-2 mb-2 max-h-20 overflow-y-auto">
                     {formData.tags?.map(tag => (
                       <span
                         key={tag}
-                        className="text-xs sm:text-sm px-2 py-1 rounded-full bg-blue-50 text-blue-700 flex items-center gap-1"
+                        className="text-xs sm:text-sm px-2 py-1 rounded-full bg-orange-50 text-orange-700 flex items-center gap-1"
                       >
                         {tag}
                         <button
@@ -947,7 +947,7 @@ export default function Tasks() {
                             ...formData,
                             tags: formData.tags?.filter(t => t !== tag)
                           })}
-                          className="hover:text-blue-800"
+                          className="hover:text-orange-800"
                         >
                           <X size={14} />
                         </button>
@@ -960,7 +960,7 @@ export default function Tasks() {
                       value={newTag}
                       onChange={e => setNewTag(e.target.value)}
                       placeholder="Add a tag"
-                      className="flex-1 bg-white border border-blue-100 rounded-lg px-3 sm:px-4 py-2 text-blue-800 text-sm placeholder-blue-300 focus:outline-none focus:ring-2 focus:ring-blue-400/20"
+                      className="flex-1 bg-white border border-orange-100 rounded-lg px-3 sm:px-4 py-2 text-orange-800 text-sm placeholder-orange-300 focus:outline-none focus:ring-2 focus:ring-orange-400/20"
                       onKeyPress={e => {
                         if (e.key === 'Enter') {
                           e.preventDefault();
@@ -985,7 +985,7 @@ export default function Tasks() {
                           setNewTag('');
                         }
                       }}
-                      className="px-3 sm:px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg hover:shadow-lg hover:shadow-blue-500/20 transition-all duration-300 text-sm"
+                      className="px-3 sm:px-4 py-2 bg-orange-500 hover:bg-orange-600 text-white rounded-lg hover:shadow-lg hover:shadow-orange-500/20 transition-all duration-300 text-sm"
                     >
                       Add
                     </button>
@@ -1001,13 +1001,13 @@ export default function Tasks() {
                     setFormData(initialFormData);
                     setEditingTaskId(null);
                   }}
-                  className="px-3 xs:px-4 py-2 text-blue-600 hover:text-blue-700 transition-colors text-sm"
+                  className="px-3 xs:px-4 py-2 text-orange-600 hover:text-orange-700 transition-colors text-sm"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  className="px-3 xs:px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors text-sm"
+                  className="px-3 xs:px-4 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition-colors text-sm"
                 >
                   {editingTaskId ? 'Update Task' : 'Add Task'}
                 </button>
@@ -1024,16 +1024,16 @@ export default function Tasks() {
       {showConfirmDelete && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-3 xs:p-4">
           <div className="bg-white rounded-lg p-4 xs:p-6 w-full max-w-md">
-            <h2 className="text-lg xs:text-xl font-semibold text-blue-600 mb-3">
+            <h2 className="text-lg xs:text-xl font-semibold text-orange-600 mb-3">
               Delete Task
             </h2>
-            <p className="text-sm text-blue-700/80 mb-4 xs:mb-6">
+            <p className="text-sm text-orange-700/80 mb-4 xs:mb-6">
               Are you sure you want to delete this task? This action cannot be undone.
             </p>
             <div className="flex justify-end gap-3">
               <button
                 onClick={() => setShowConfirmDelete(null)}
-                className="px-3 xs:px-4 py-2 text-blue-600 hover:text-blue-700 transition-colors text-sm"
+                className="px-3 xs:px-4 py-2 text-orange-600 hover:text-orange-700 transition-colors text-sm"
               >
                 Cancel
               </button>
@@ -1051,16 +1051,16 @@ export default function Tasks() {
       {showConfirmAllDelete && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-3 xs:p-4">
           <div className="bg-white rounded-lg p-4 xs:p-6 w-full max-w-md">
-            <h2 className="text-lg xs:text-xl font-semibold text-blue-600 mb-3">
+            <h2 className="text-lg xs:text-xl font-semibold text-orange-600 mb-3">
               Excluir Todas as Tarefas
             </h2>
-            <p className="text-sm text-blue-700/80 mb-4 xs:mb-6">
+            <p className="text-sm text-orange-700/80 mb-4 xs:mb-6">
               Tem certeza de que deseja excluir <strong>todas</strong> as tarefas? Esta ação não pode ser desfeita.
             </p>
             <div className="flex justify-end gap-3">
               <button
                 onClick={() => setShowConfirmAllDelete(false)}
-                className="px-3 xs:px-4 py-2 text-blue-600 hover:text-blue-700 transition-colors text-sm"
+                className="px-3 xs:px-4 py-2 text-orange-600 hover:text-orange-700 transition-colors text-sm"
                 disabled={isLoadingAction}
               >
                 Cancelar
@@ -1089,23 +1089,23 @@ export default function Tasks() {
       {showConfirmCleanup && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-3 xs:p-4">
           <div className="bg-white rounded-lg p-4 xs:p-6 w-full max-w-md">
-            <h2 className="text-lg xs:text-xl font-semibold text-blue-600 mb-3">
+            <h2 className="text-lg xs:text-xl font-semibold text-orange-600 mb-3">
               Limpar Tarefas Excluídas
             </h2>
-            <p className="text-sm text-blue-700/80 mb-4 xs:mb-6">
+            <p className="text-sm text-orange-700/80 mb-4 xs:mb-6">
               Esta ação removerá permanentemente todas as tarefas marcadas como excluídas do banco de dados. Deseja continuar?
             </p>
             <div className="flex justify-end gap-3">
               <button
                 onClick={() => setShowConfirmCleanup(false)}
-                className="px-3 xs:px-4 py-2 text-blue-600 hover:text-blue-700 transition-colors text-sm"
+                className="px-3 xs:px-4 py-2 text-orange-600 hover:text-orange-700 transition-colors text-sm"
                 disabled={isLoadingAction}
               >
                 Cancelar
               </button>
               <button
                 onClick={handleCleanupDeletedTasks}
-                className="px-3 xs:px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors text-sm flex items-center gap-2"
+                className="px-3 xs:px-4 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition-colors text-sm flex items-center gap-2"
                 disabled={isLoadingAction}
               >
                 {isLoadingAction ? (

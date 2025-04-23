@@ -171,9 +171,9 @@ export default function Messages() {
 
   return (
     <div className="h-full p-4 flex flex-col">
-      <div className="bg-white backdrop-blur-sm rounded-xl p-4 flex-1 border border-blue-100 shadow-sm overflow-hidden flex flex-col">
+      <div className="bg-white backdrop-blur-sm rounded-xl p-4 flex-1 border border-orange-100 shadow-sm overflow-hidden flex flex-col">
         <div className="flex justify-between items-center mb-6">
-          <h1 className="text-2xl font-light text-blue-700">{t('messages.title')}</h1>
+          <h1 className="text-2xl font-light text-orange-700">{t('messages.title')}</h1>
           
           {user?.role === 'admin' && (
             <button
@@ -189,10 +189,10 @@ export default function Messages() {
         {/* Messages Container */}
         <div 
           ref={messagesContainerRef}
-          className="flex-1 overflow-y-auto mb-4 bg-white/80 backdrop-blur-sm rounded-xl border border-blue-100 p-4"
+          className="flex-1 overflow-y-auto mb-4 bg-white backdrop-blur-sm rounded-xl border border-orange-100 p-4"
         >
           {messages.length === 0 ? (
-            <div className="flex items-center justify-center h-full text-blue-400">
+            <div className="flex items-center justify-center h-full text-orange-400">
               {t('messages.noMessages')}
             </div>
           ) : (
@@ -208,8 +208,8 @@ export default function Messages() {
                     <div
                       className={`rounded-xl p-3 max-w-[85%] break-words shadow-sm ${
                         isOwnMessage
-                          ? 'bg-blue-600 text-white'
-                          : 'bg-white border border-blue-100 text-blue-700'
+                          ? 'bg-orange-600 text-white'
+                          : 'bg-white border border-orange-100 text-orange-700'
                       }`}
                     >
                       {!isOwnMessage && (
@@ -242,7 +242,7 @@ export default function Messages() {
                         
                         <div className="flex items-center gap-1">
                           {message.reactions && Object.keys(message.reactions).length > 0 && (
-                            <div className="flex items-center gap-0.5 text-xs px-1.5 py-0.5 rounded-full bg-blue-100 border border-blue-200">
+                            <div className="flex items-center gap-0.5 text-xs px-1.5 py-0.5 rounded-full bg-orange-100 border border-orange-200">
                               {Object.entries(message.reactions).map(([emoji, users]) => (
                                 <div key={emoji} className="flex items-center">
                                   <span>{emoji}</span>
@@ -254,7 +254,7 @@ export default function Messages() {
                           
                           <button
                             onClick={() => setShowEmojiPicker(showEmojiPicker === message.id ? null : message.id)}
-                            className="p-1 text-blue-400 hover:text-blue-500 transition-colors"
+                            className="p-1 text-orange-400 hover:text-orange-500 transition-colors"
                           >
                             <Smile size={16} />
                           </button>
@@ -262,7 +262,7 @@ export default function Messages() {
                           {isOwnMessage && (
                             <button
                               onClick={() => handleDeleteMessage(message.id)}
-                              className="p-1 text-blue-400 hover:text-blue-500 transition-colors"
+                              className="p-1 text-orange-400 hover:text-orange-500 transition-colors"
                             >
                               <Trash2 size={16} />
                             </button>
@@ -271,7 +271,7 @@ export default function Messages() {
                       </div>
                       
                       {showEmojiPicker === message.id && (
-                        <div className="absolute mt-2 bg-white rounded-lg shadow-lg border border-blue-100 p-1 flex">
+                        <div className="absolute mt-2 bg-white rounded-lg shadow-lg border border-orange-100 p-1 flex">
                           {EMOJI_LIST.map(emoji => (
                             <button
                               key={emoji}
@@ -285,7 +285,7 @@ export default function Messages() {
                                 }
                                 setShowEmojiPicker(null);
                               }}
-                              className="p-1 text-lg hover:bg-blue-50 rounded"
+                              className="p-1 text-lg hover:bg-orange-50 rounded"
                             >
                               {emoji}
                             </button>
@@ -302,12 +302,12 @@ export default function Messages() {
         </div>
 
         {/* Message Form */}
-        <div className="bg-white/80 backdrop-blur-sm rounded-xl border border-blue-100 p-2">
+        <div className="bg-white backdrop-blur-sm rounded-xl border border-orange-100 p-2">
           <form onSubmit={handleSendMessage} className="flex items-center gap-2">
             <button
               type="button"
               onClick={() => fileInputRef.current?.click()}
-              className="p-2 text-blue-600 hover:text-blue-700 hover:bg-blue-50 rounded-lg transition-colors"
+              className="p-2 text-orange-600 hover:text-orange-700 hover:bg-orange-50 rounded-lg transition-colors"
               disabled={loadingImage}
             >
               {loadingImage ? <RefreshCw className="animate-spin" size={20} /> : <Image size={20} />}
@@ -327,13 +327,13 @@ export default function Messages() {
               value={newMessage}
               onChange={(e) => setNewMessage(e.target.value)}
               placeholder={t('messages.typeMessage')}
-              className="flex-1 p-2 bg-transparent text-blue-700 focus:outline-none"
+              className="flex-1 p-2 bg-transparent text-orange-700 focus:outline-none"
               disabled={sendingMessage}
             />
             
             <button
               type="submit"
-              className="p-2 text-blue-600 hover:text-blue-700 hover:bg-blue-50 rounded-lg transition-colors"
+              className="p-2 text-orange-600 hover:text-orange-700 hover:bg-orange-50 rounded-lg transition-colors"
               disabled={!newMessage.trim() || sendingMessage}
             >
               {sendingMessage ? <RefreshCw className="animate-spin" size={20} /> : <Send size={20} />}
@@ -345,19 +345,19 @@ export default function Messages() {
         {showDeleteConfirm && (
           <div className="fixed inset-0 bg-black/20 backdrop-blur-sm z-50 flex items-center justify-center p-4">
             <div className="bg-white rounded-xl shadow-lg w-full max-w-md">
-              <div className="p-4 border-b border-blue-100">
-                <h3 className="text-lg font-medium text-blue-700">{t('messages.clearAllTitle')}</h3>
+              <div className="p-4 border-b border-orange-100">
+                <h3 className="text-lg font-medium text-orange-700">{t('messages.clearAllTitle')}</h3>
               </div>
               
               <div className="p-4">
-                <p className="text-blue-600 mb-2">{t('messages.clearAllConfirm')}</p>
-                <p className="text-blue-600">{t('messages.clearAllWarning')}</p>
+                <p className="text-orange-600 mb-2">{t('messages.clearAllConfirm')}</p>
+                <p className="text-orange-600">{t('messages.clearAllWarning')}</p>
               </div>
               
-              <div className="p-4 flex justify-end border-t border-blue-100">
+              <div className="p-4 flex justify-end border-t border-orange-100">
                 <button
                   onClick={() => setShowDeleteConfirm(false)}
-                  className="px-4 py-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors mr-2"
+                  className="px-4 py-2 text-orange-600 hover:bg-orange-50 rounded-lg transition-colors mr-2"
                 >
                   {t('cancel')}
                 </button>
