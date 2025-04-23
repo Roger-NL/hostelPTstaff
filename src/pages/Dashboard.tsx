@@ -109,22 +109,22 @@ export default function MainDashboard() {
     : baseMenuItems;
 
   return (
-    <div className="flex h-screen bg-orange-50/90 text-gray-800">
+    <div className="flex h-screen bg-white/80 text-orange-600">
       {/* Sidebar */}
       <div
         className={`fixed inset-y-0 left-0 z-30 w-64 transform transition-all duration-300 ease-in-out
           ${isSidebarCollapsed ? '-translate-x-full lg:translate-x-0 lg:w-16' : 'translate-x-0'}
-          bg-white/80 backdrop-blur-xl border-r border-orange-100
+          bg-white backdrop-blur-xl border-r border-orange-100
           ios-safe-top ios-safe-bottom shadow-md`}
       >
         {/* Logo */}
         <div className="p-4 border-b border-orange-100 flex items-center justify-between">
-          <h1 className={`text-xl font-extralight tracking-wider text-blue-600 ${isSidebarCollapsed ? 'lg:hidden' : ''}`}>
+          <h1 className={`text-xl font-extralight tracking-wider text-orange-600 ${isSidebarCollapsed ? 'lg:hidden' : ''}`}>
             Hostel PT Staff
           </h1>
           <button
             onClick={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
-            className="text-orange-400 hover:text-blue-600 transition-colors hidden lg:block"
+            className="text-orange-600 hover:text-orange-700 transition-colors hidden lg:block"
           >
             <ChevronsLeft size={20} className={`transition-transform duration-300 ${isSidebarCollapsed ? 'rotate-180' : ''}`} />
           </button>
@@ -144,15 +144,15 @@ export default function MainDashboard() {
                 }}
                 className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-200
                   ${view === item.view 
-                    ? 'bg-blue-50/80 text-blue-700' 
-                    : 'text-orange-700 hover:text-blue-700 hover:bg-blue-50/50'}`}
+                    ? 'bg-orange-100/70 text-orange-700' 
+                    : 'text-orange-600 hover:text-orange-700 hover:bg-orange-50/50'}`}
               >
-                <item.icon size={18} className={view === item.view ? 'text-blue-600' : 'text-orange-500'} />
+                <item.icon size={18} className="text-orange-600" />
                 <span className={`text-sm font-light ${isSidebarCollapsed ? 'lg:hidden' : ''}`}>
                   {item.label}
                 </span>
                 {item.badge ? (
-                  <span className="ml-auto bg-pink-500/90 text-white text-xs font-medium px-2 py-0.5 rounded-full">
+                  <span className="ml-auto bg-orange-500/90 text-white text-xs font-medium px-2 py-0.5 rounded-full">
                     {item.badge}
                   </span>
                 ) : null}
@@ -164,18 +164,18 @@ export default function MainDashboard() {
         {/* User Profile and Logout */}
         <div className="p-4 border-t border-orange-100">
           <div className="flex items-center gap-3 mb-3">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-500 to-violet-500 flex items-center justify-center text-white font-medium shadow-lg">
+            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-orange-400 to-orange-600 flex items-center justify-center text-white font-medium shadow-lg">
               {user?.name?.[0]?.toUpperCase() || 'U'}
             </div>
             <div className={`flex-1 ${isSidebarCollapsed ? 'lg:hidden' : ''}`}>
-              <h3 className="text-sm font-medium text-gray-900">{user?.name || 'User'}</h3>
+              <h3 className="text-sm font-medium text-orange-700">{user?.name || 'User'}</h3>
               <p className="text-xs text-orange-500 font-light">{getUserRoleText(user?.role)}</p>
             </div>
           </div>
           <InstallPWA />
           <button
             onClick={handleLogout}
-            className={`w-full p-2.5 rounded-lg bg-orange-100/70 hover:bg-orange-200/70 transition-colors text-sm font-light text-orange-800 flex items-center ${
+            className={`w-full p-2.5 rounded-lg bg-orange-100/70 hover:bg-orange-200/70 transition-colors text-sm font-light text-orange-700 flex items-center ${
               isSidebarCollapsed ? 'lg:justify-center' : 'justify-center gap-2'
             }`}
           >
@@ -196,15 +196,15 @@ export default function MainDashboard() {
       {/* Main Content */}
       <div className={`flex-1 flex flex-col min-h-screen ${isSidebarCollapsed ? 'lg:ml-16' : 'lg:ml-64'}`}>
         {/* Top Bar */}
-        <div className="bg-white/70 backdrop-blur-xl border-b border-orange-100 py-3 px-4 flex items-center justify-between ios-safe-top shadow-sm">
+        <div className="bg-white border-b border-orange-100 py-3 px-4 flex items-center justify-between ios-safe-top shadow-sm">
           <div className="flex items-center gap-3">
             <button
               onClick={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
-              className="p-2 rounded-lg text-orange-600 hover:text-blue-600 hover:bg-orange-100/50 lg:hidden"
+              className="p-2 rounded-lg text-orange-600 hover:text-orange-700 hover:bg-orange-100/50 lg:hidden"
             >
               <Menu size={20} />
             </button>
-            <h2 className="text-xl font-medium text-gray-800">
+            <h2 className="text-xl font-medium text-orange-700">
               {view === 'dashboard' ? getGreeting() : t(`${view}.title`)}
             </h2>
           </div>
@@ -216,7 +216,7 @@ export default function MainDashboard() {
         </div>
 
         {/* Page Content */}
-        <div className="flex-1 overflow-auto p-4 ios-safe-bottom bg-orange-50/60 backdrop-blur-sm">
+        <div className="flex-1 overflow-auto p-4 ios-safe-bottom bg-white/80 backdrop-blur-sm">
           {view === 'dashboard' && <DashboardContent />}
           {view === 'schedule' && <Schedule />}
           {view === 'tasks' && <Tasks />}
@@ -224,7 +224,7 @@ export default function MainDashboard() {
           {view === 'events' && <Events />}
           {view === 'messages' && <Messages />}
           {view === 'laundry' && <LaundrySchedule />}
-          {view === 'approvals' && <div className="text-center py-12 text-orange-500">Approvals coming soon</div>}
+          {view === 'approvals' && <div className="text-center py-12 text-orange-600">Approvals coming soon</div>}
         </div>
       </div>
     </div>
