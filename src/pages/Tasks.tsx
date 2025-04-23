@@ -212,6 +212,7 @@ export default function Tasks() {
     const videoRef = useRef<HTMLVideoElement>(null);
     const canvasRef = useRef<HTMLCanvasElement>(null);
     const [uploadingPhoto, setUploadingPhoto] = useState(false);
+    const [showOptions, setShowOptions] = useState(false);
 
     const startCapture = async () => {
       setIsCapturing(true);
@@ -282,81 +283,133 @@ export default function Tasks() {
 
     return (
       <div 
-        className="bg-white rounded-xl p-3 shadow-sm border border-orange-100 hover:shadow-md transition-shadow"
+        className="bg-white rounded-xl p-3 shadow-sm border border-orange-100 hover:shadow-md transition-shadow group"
+        onClick={() => setSelectedTask(task)}
       >
-        <div className="flex justify-between items-start mb-2">
-          <h4 className="font-medium text-orange-700 line-clamp-2">{task.title}</h4>
-          <div className="flex gap-1">
+        <div className="flex justify-between items-start">
+          <div className="flex-1">
+            <h4 className="font-medium text-orange-700 line-clamp-2 group-hover:text-orange-800 transition-colors">{task.title}</h4>
+            
+            {task.description && (
+              <p className="text-sm text-orange-600 my-2 line-clamp-2">{task.description}</p>
+            )}
+          </div>
+
+          <div className="flex gap-1.5 ml-2">
             <button
-              onClick={() => handleStatusChange(task.id, 
-                task.status === 'todo' ? 'inProgress' : 
-                task.status === 'inProgress' ? 'done' : 'todo'
-              )}
-              className="p-1 text-orange-600 hover:text-orange-700 hover:bg-orange-50 rounded-lg transition-colors"
-              title="Change Status"
+              onClick={(e) => {
+                e.stopPropagation();
+                handleStatusChange(task.id, 
+                  task.status === 'todo' ? 'inProgress' : 
+                  task.status === 'inProgress' ? 'done' : 'todo'
+                );
+              }}
+              className="p-1.5 text-orange-600 hover:text-orange-700 hover:bg-orange-50 rounded-lg transition-colors"
+              title={
+                task.status === 'todo' ? t('tasks.moveToProgress') :
+                task.status === 'inProgress' ? t('tasks.moveToComplete') :
+                t('tasks.moveToTodo')
+              }
             >
-              {task.status === 'todo' && <Clock size={16} />}
-              {task.status === 'inProgress' && <AlertTriangle size={16} />}
-              {task.status === 'done' && <CheckCircle size={16} />}
+              {task.status === 'todo' && (
+                <div className="flex items-center justify-center w-5 h-5 rounded-full bg-gray-100">
+                  <Clock size={14} className="text-orange-600" />
+                </div>
+              )}
+              {task.status === 'inProgress' && (
+                <div className="flex items-center justify-center w-5 h-5 rounded-full bg-amber-100">
+                  <AlertTriangle size={14} className="text-amber-600" />
+                </div>
+              )}
+              {task.status === 'done' && (
+                <div className="flex items-center justify-center w-5 h-5 rounded-full bg-emerald-100">
+                  <CheckCircle size={14} className="text-emerald-600" />
+                </div>
+              )}
             </button>
             
-            <Popover>
-              <PopoverTrigger>
-                <button
-                  className="p-1 text-orange-600 hover:text-orange-700 hover:bg-orange-50 rounded-lg transition-colors"
-                  title="More Options"
+            <div className="relative">
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setShowOptions(!showOptions);
+                }}
+                className="p-1.5 text-orange-600 hover:text-orange-700 hover:bg-orange-50 rounded-lg transition-colors"
+                title={t('tasks.options')}
+              >
+                <MoreVertical size={16} />
+              </button>
+              
+              {showOptions && (
+                <div 
+                  className="absolute right-0 mt-1 w-36 rounded-xl bg-white shadow-lg border border-orange-100 overflow-hidden z-50"
+                  onClick={(e) => e.stopPropagation()}
                 >
-                  <MoreVertical size={16} />
-                </button>
-              </PopoverTrigger>
-              <PopoverContent className="w-48 rounded-xl border border-orange-100 shadow-lg p-1 bg-white">
-                <div className="flex flex-col divide-y divide-orange-100">
                   {(isAdmin || task.createdBy === user?.id) && (
-                    <>
+                    <div className="flex flex-col py-1">
                       <button
-                        onClick={() => handleEdit(task)}
-                        className="flex items-center gap-2 w-full text-left px-3 py-2 hover:bg-orange-50 text-orange-600 text-sm rounded-lg"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setShowOptions(false);
+                          handleEdit(task);
+                        }}
+                        className="flex items-center gap-2 w-full text-left px-3 py-2 hover:bg-orange-50 text-orange-600 text-xs"
                       >
                         <Edit size={14} />
                         <span>{t('tasks.edit')}</span>
                       </button>
                       <button
-                        onClick={() => setShowConfirmDelete(task.id)}
-                        className="flex items-center gap-2 w-full text-left px-3 py-2 hover:bg-orange-50 text-red-600 text-sm rounded-lg"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setShowOptions(false);
+                          setShowConfirmDelete(task.id);
+                        }}
+                        className="flex items-center gap-2 w-full text-left px-3 py-2 hover:bg-red-50 text-red-600 text-xs"
                       >
                         <Trash2 size={14} />
                         <span>{t('tasks.delete')}</span>
                       </button>
-                    </>
+                    </div>
                   )}
                 </div>
-              </PopoverContent>
-            </Popover>
+              )}
+            </div>
           </div>
         </div>
         
-        {task.description && (
-          <p className="text-sm text-orange-600 mb-2 line-clamp-2">{task.description}</p>
-        )}
-        
-        <div className="flex flex-wrap gap-1 mb-2">
-          {task.priority && (
-            <span className={`text-xs px-2 py-0.5 rounded-full ${getPriorityColor(task.priority)}`}>
-              {t(`tasks.priority.${task.priority}`)}
-            </span>
-          )}
-          {task.type && (
-            <span className={`text-xs px-2 py-0.5 rounded-full ${
-              task.type === 'hostel' 
-                ? 'bg-blue-100 text-blue-600' 
-                : 'bg-purple-100 text-purple-600'
-            }`}>
-              {task.type === 'hostel' ? t('tasks.hostel') : t('tasks.personal')}
-            </span>
-          )}
-          {task.isPrivate && (
-            <span className="text-xs px-2 py-0.5 rounded-full bg-red-100 text-red-600">
-              {t('tasks.private')}
+        <div className="mt-3 flex items-center justify-between">
+          <div className="flex flex-wrap gap-1">
+            {task.priority && (
+              <span className={`text-xs px-2 py-0.5 rounded-full ${getPriorityColor(task.priority)}`}>
+                {t(`tasks.priority.${task.priority}`)}
+              </span>
+            )}
+            {task.type && (
+              <span className={`text-xs px-2 py-0.5 rounded-full ${
+                task.type === 'hostel' 
+                  ? 'bg-blue-100 text-blue-600' 
+                  : 'bg-purple-100 text-purple-600'
+              }`}>
+                {task.type === 'hostel' ? t('tasks.hostel') : t('tasks.personal')}
+              </span>
+            )}
+            {task.isPrivate && (
+              <span className="text-xs px-2 py-0.5 rounded-full bg-red-100 text-red-600">
+                {t('tasks.private')}
+              </span>
+            )}
+          </div>
+          
+          {task.requirePhoto && (
+            <span className="text-xs flex items-center gap-1 text-orange-500">
+              <Camera size={12} />
+              {task.photo?.approved ? (
+                <span className="text-emerald-500">{t('tasks.photoApproved')}</span>
+              ) : task.photo ? (
+                <span>{t('tasks.photoWaiting')}</span>
+              ) : (
+                <span>{t('tasks.photoRequired')}</span>
+              )}
             </span>
           )}
         </div>
@@ -373,20 +426,43 @@ export default function Tasks() {
     );
     
     return (
-      <div className="flex-1 min-w-[300px] bg-white/80 backdrop-blur-sm rounded-xl overflow-hidden flex flex-col border border-orange-100">
-        <div className="p-4 border-b border-orange-100 flex items-center justify-between sticky top-0 bg-white/90 backdrop-blur-sm z-10">
+      <div className="flex-1 min-w-[300px] bg-white/80 backdrop-blur-sm rounded-xl overflow-hidden flex flex-col border border-orange-100 shadow-sm">
+        <div className="p-3 xs:p-4 border-b border-orange-100 flex items-center justify-between sticky top-0 bg-white/90 backdrop-blur-sm z-10">
           <div className="flex items-center gap-2">
-            {status === 'todo' && <Clock className="text-orange-400" size={18} />}
-            {status === 'inProgress' && <AlertTriangle className="text-amber-400" size={18} />}
-            {status === 'done' && <CheckCircle className="text-emerald-400" size={18} />}
+            {status === 'todo' && (
+              <div className="w-5 h-5 rounded-full bg-gray-100 flex items-center justify-center">
+                <Clock className="text-orange-600" size={14} />
+              </div>
+            )}
+            {status === 'inProgress' && (
+              <div className="w-5 h-5 rounded-full bg-amber-100 flex items-center justify-center">
+                <AlertTriangle className="text-amber-600" size={14} />
+              </div>
+            )}
+            {status === 'done' && (
+              <div className="w-5 h-5 rounded-full bg-emerald-100 flex items-center justify-center">
+                <CheckCircle className="text-emerald-600" size={14} />
+              </div>
+            )}
             <h3 className="font-medium text-orange-700">{title}</h3>
           </div>
-          <span className="bg-orange-100 text-orange-600 text-xs rounded-full px-2 py-0.5">
-            {filteredTasks.length}
-          </span>
+          <div className="flex items-center gap-2">
+            <span className="bg-orange-100 text-orange-600 text-xs rounded-full px-2 py-0.5">
+              {filteredTasks.length}
+            </span>
+            {status === 'todo' && (
+              <button
+                onClick={() => setShowForm(true)}
+                className="bg-orange-50 hover:bg-orange-100 text-orange-600 p-1 rounded-full transition-colors"
+                title={t('tasks.addNewToColumn')}
+              >
+                <Plus size={14} />
+              </button>
+            )}
+          </div>
         </div>
         
-        <div className="flex-1 overflow-y-auto content-scrollable p-3 space-y-3">
+        <div className="flex-1 overflow-y-auto content-scrollable p-3 xs:p-4 space-y-3">
           {filteredTasks.length > 0 ? (
             filteredTasks.map((task, index) => (
               <TaskCard key={task.id} task={task} index={index} />
@@ -394,18 +470,29 @@ export default function Tasks() {
           ) : (
             <div className="flex items-center justify-center h-full p-4">
               <div className="text-center">
-                <div className="w-10 h-10 mx-auto bg-gray-700/50 rounded-full flex items-center justify-center mb-2">
+                <div className="w-12 h-12 mx-auto bg-orange-50 rounded-full flex items-center justify-center mb-3">
                   {status === 'todo' ? (
-                    <AlertCircle size={16} className="text-gray-400" />
+                    <Clock size={18} className="text-orange-400" />
                   ) : status === 'inProgress' ? (
-                    <AlertTriangle size={16} className="text-amber-400" />
+                    <AlertTriangle size={18} className="text-amber-400" />
                   ) : (
-                    <CheckCircle size={16} className="text-emerald-400" />
+                    <CheckCircle size={18} className="text-emerald-400" />
                   )}
                 </div>
-                <p className="text-xs text-gray-400">
-                  No {title.toLowerCase()} tasks
+                <p className="text-xs text-orange-400">
+                  {status === 'todo' ? t('tasks.noTodoTasks') : 
+                   status === 'inProgress' ? t('tasks.noInProgressTasks') : 
+                   t('tasks.noCompletedTasks')}
                 </p>
+                {status === 'todo' && (
+                  <button
+                    onClick={() => setShowForm(true)}
+                    className="mt-3 bg-orange-50 hover:bg-orange-100 text-orange-600 px-3 py-1.5 rounded-lg text-xs flex items-center gap-1.5 mx-auto"
+                  >
+                    <Plus size={14} />
+                    {t('tasks.addNew')}
+                  </button>
+                )}
               </div>
             </div>
           )}
@@ -693,9 +780,10 @@ export default function Tasks() {
             </div>
             <button
               onClick={() => setShowForm(true)}
-              className="bg-orange-600 hover:bg-orange-700 text-white p-2 rounded-lg transition-colors"
+              className="bg-orange-600 hover:bg-orange-700 text-white px-3 py-2 rounded-lg transition-colors flex items-center gap-2 shadow-sm"
             >
-              <Plus size={20} />
+              <Plus size={18} />
+              <span className="hidden xs:inline">{t('tasks.addNew')}</span>
             </button>
           </div>
         </div>
@@ -713,127 +801,183 @@ export default function Tasks() {
       
       {showForm && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-2 xs:p-4">
-          <div className="bg-white rounded-lg p-4 xs:p-6 w-full max-w-2xl max-h-[90vh] overflow-y-auto">
-            <h2 className="text-lg xs:text-xl font-semibold text-orange-600 mb-3">
-              {editingTaskId ? 'Edit Task' : 'Add New Task'}
-            </h2>
+          <div className="bg-white rounded-lg p-4 xs:p-6 w-full max-w-2xl max-h-[90vh] overflow-y-auto content-scrollable">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-lg xs:text-xl font-semibold text-orange-600">
+                {editingTaskId ? t('tasks.editTask') : t('tasks.addNewTask')}
+              </h2>
+              <button 
+                onClick={() => {
+                  setShowForm(false);
+                  setFormData(initialFormData);
+                  setEditingTaskId(null);
+                }}
+                className="text-orange-500 hover:text-orange-700"
+              >
+                <X size={20} />
+              </button>
+            </div>
             
             <form onSubmit={handleSubmit} className="space-y-4">
-              <div className="space-y-4">
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 xs:gap-4">
-                  <div className="bg-white rounded-lg p-3 xs:p-4 border border-orange-100 sm:col-span-2">
-                    <label className="block text-sm font-medium text-orange-700 mb-1">
-                      Title
-                    </label>
-                    <input
-                      type="text"
-                      value={formData.title}
-                      onChange={e => setFormData({ ...formData, title: e.target.value })}
-                      className="w-full bg-white border border-orange-100 rounded-lg px-3 py-2 text-orange-800 text-sm focus:outline-none focus:ring-2 focus:ring-orange-400/20"
-                      placeholder="Task title"
-                      required
-                    />
-                  </div>
-                  
-                  <div className="bg-white rounded-lg p-3 xs:p-4 border border-orange-100">
-                    <label className="block text-sm font-medium text-orange-700 mb-1">
-                      Points
-                    </label>
-                    <input
-                      type="number"
-                      min="1"
-                      max="10"
-                      value={formData.points}
-                      onChange={e => setFormData({ ...formData, points: parseInt(e.target.value) })}
-                      className="w-full bg-white border border-orange-100 rounded-lg px-3 py-2 text-orange-800 text-sm focus:outline-none focus:ring-2 focus:ring-orange-400/20"
-                      required
-                    />
-                  </div>
-                </div>
-                
-                <div className="bg-white rounded-lg p-3 xs:p-4 border border-orange-100">
-                  <label className="block text-sm font-medium text-orange-700 mb-1">
-                    Description
-                  </label>
-                  <textarea
-                    value={formData.description}
-                    onChange={e => setFormData({ ...formData, description: e.target.value })}
-                    className="w-full h-24 bg-white border border-orange-100 rounded-lg px-3 py-2 text-orange-800 text-sm focus:outline-none focus:ring-2 focus:ring-orange-400/20"
-                    placeholder="Task description"
-                  ></textarea>
-                </div>
-                
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 xs:gap-4">
-                  <div className="bg-white rounded-lg p-3 xs:p-4 border border-orange-100">
-                    <label className="block text-sm font-medium text-orange-700 mb-1">
-                      Priority
-                    </label>
-                    <select
-                      value={formData.priority}
-                      onChange={e => setFormData({ ...formData, priority: e.target.value as Task['priority'] })}
-                      className="w-full bg-white border border-orange-100 rounded-lg px-3 py-2 text-orange-800 text-sm focus:outline-none focus:ring-2 focus:ring-orange-400/20"
-                      required
-                    >
-                      <option value="low">Low</option>
-                      <option value="medium">Medium</option>
-                      <option value="high">High</option>
-                    </select>
-                  </div>
-                  
-                  <div className="bg-white rounded-lg p-3 xs:p-4 border border-orange-100">
-                    <label className="block text-sm font-medium text-orange-700 mb-1">
-                      Type
-                    </label>
-                    <select
-                      value={formData.type}
-                      onChange={e => setFormData({ ...formData, type: e.target.value as 'hostel' | 'personal' })}
-                      className="w-full bg-white border border-orange-100 rounded-lg px-3 py-2 text-orange-800 text-sm focus:outline-none focus:ring-2 focus:ring-orange-400/20"
-                      required
-                    >
-                      <option value="hostel">Hostel Task</option>
-                      <option value="personal">Personal Task</option>
-                    </select>
-                  </div>
-                </div>
-                
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 xs:gap-4">
-                  <div className="bg-white rounded-lg p-3 xs:p-4 border border-orange-100">
-                    <div className="flex items-center justify-between">
-                      <label className="block text-sm font-medium text-orange-700">
-                        Private Task
+              <div className="bg-orange-50/50 rounded-lg p-3 xs:p-4 border border-orange-100">
+                <h3 className="text-md font-medium text-orange-700 mb-3 border-b border-orange-100 pb-2">
+                  {t('tasks.basicInfo')}
+                </h3>
+              
+                <div className="space-y-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 xs:gap-4">
+                    <div className="bg-white rounded-lg p-3 xs:p-4 border border-orange-100 sm:col-span-2">
+                      <label className="block text-sm font-medium text-orange-700 mb-1">
+                        {t('tasks.form.title')}
                       </label>
-                      <label className="relative inline-flex items-center cursor-pointer">
-                        <input
-                          type="checkbox"
-                          checked={!!formData.isPrivate}
-                          onChange={e => setFormData({ ...formData, isPrivate: e.target.checked })}
-                          className="sr-only peer"
-                        />
-                        <div
-                          className={`w-10 h-6 bg-gray-300 rounded-full peer peer-checked:bg-orange-400 
-                          peer-focus:ring-2 peer-focus:ring-orange-300`}
-                        >
-                          <span 
-                            className={`block h-6 w-6 rounded-full bg-white transform transition-transform duration-200 ease-in-out ${
-                              formData.isPrivate ? 'translate-x-4' : 'translate-x-0'
-                            }`}
-                          />
-                        </div>
-                      </label>
+                      <input
+                        type="text"
+                        value={formData.title}
+                        onChange={e => setFormData({ ...formData, title: e.target.value })}
+                        className="w-full bg-white border border-orange-100 rounded-lg px-3 py-2 text-orange-800 text-sm focus:outline-none focus:ring-2 focus:ring-orange-400/20"
+                        placeholder={t('tasks.form.titlePlaceholder')}
+                        required
+                      />
                     </div>
-                    {formData.isPrivate && (
-                      <p className="text-xs text-orange-500 mt-2">
-                        <AlertTriangle size={12} className="inline mr-1" />
-                        Only you will be able to see this task.
-                      </p>
-                    )}
+                    
+                    <div className="bg-white rounded-lg p-3 xs:p-4 border border-orange-100">
+                      <label className="block text-sm font-medium text-orange-700 mb-1">
+                        {t('tasks.form.points')}
+                      </label>
+                      <input
+                        type="number"
+                        min="1"
+                        max="10"
+                        value={formData.points}
+                        onChange={e => setFormData({ ...formData, points: parseInt(e.target.value) })}
+                        className="w-full bg-white border border-orange-100 rounded-lg px-3 py-2 text-orange-800 text-sm focus:outline-none focus:ring-2 focus:ring-orange-400/20"
+                        required
+                      />
+                    </div>
                   </div>
                   
                   <div className="bg-white rounded-lg p-3 xs:p-4 border border-orange-100">
-                    <div className="flex items-center justify-between">
-                      <label className="block text-sm font-medium text-orange-700">
-                        Require Photo
+                    <label className="block text-sm font-medium text-orange-700 mb-1">
+                      {t('tasks.form.description')}
+                    </label>
+                    <textarea
+                      value={formData.description}
+                      onChange={e => setFormData({ ...formData, description: e.target.value })}
+                      className="w-full h-24 bg-white border border-orange-100 rounded-lg px-3 py-2 text-orange-800 text-sm focus:outline-none focus:ring-2 focus:ring-orange-400/20"
+                      placeholder={t('tasks.form.descriptionPlaceholder')}
+                    ></textarea>
+                  </div>
+                </div>
+              </div>
+              
+              <div className="bg-orange-50/50 rounded-lg p-3 xs:p-4 border border-orange-100">
+                <h3 className="text-md font-medium text-orange-700 mb-3 border-b border-orange-100 pb-2">
+                  {t('tasks.configuration')}
+                </h3>
+                
+                <div className="space-y-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 xs:gap-4">
+                    <div className="bg-white rounded-lg p-3 xs:p-4 border border-orange-100">
+                      <label className="block text-sm font-medium text-orange-700 mb-1">
+                        {t('tasks.form.priority')}
                       </label>
+                      <select
+                        value={formData.priority}
+                        onChange={e => setFormData({ ...formData, priority: e.target.value as Task['priority'] })}
+                        className="w-full bg-white border border-orange-100 rounded-lg px-3 py-2 text-orange-800 text-sm focus:outline-none focus:ring-2 focus:ring-orange-400/20"
+                        required
+                      >
+                        <option value="low">{t('tasks.priority.low')}</option>
+                        <option value="medium">{t('tasks.priority.medium')}</option>
+                        <option value="high">{t('tasks.priority.high')}</option>
+                      </select>
+                    </div>
+                    
+                    <div className="bg-white rounded-lg p-3 xs:p-4 border border-orange-100">
+                      <label className="block text-sm font-medium text-orange-700 mb-1">
+                        {t('tasks.form.type')}
+                      </label>
+                      <select
+                        value={formData.type}
+                        onChange={e => setFormData({ ...formData, type: e.target.value as 'hostel' | 'personal' })}
+                        className="w-full bg-white border border-orange-100 rounded-lg px-3 py-2 text-orange-800 text-sm focus:outline-none focus:ring-2 focus:ring-orange-400/20"
+                        required
+                      >
+                        <option value="hostel">{t('tasks.hostel')}</option>
+                        <option value="personal">{t('tasks.personal')}</option>
+                      </select>
+                    </div>
+                  </div>
+                  
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 xs:gap-4">
+                    <div className="bg-white rounded-lg p-3 xs:p-4 border border-orange-100">
+                      <label className="block text-sm font-medium text-orange-700 mb-1">
+                        {t('tasks.form.dueDate')}
+                      </label>
+                      <input
+                        type="date"
+                        value={formData.dueDate}
+                        onChange={e => setFormData({ ...formData, dueDate: e.target.value })}
+                        className="w-full bg-white border border-orange-100 rounded-lg px-3 py-2 text-orange-800 text-sm focus:outline-none focus:ring-2 focus:ring-orange-400/20"
+                        required
+                      />
+                    </div>
+                    
+                    <div className="bg-white rounded-lg p-3 xs:p-4 border border-orange-100">
+                      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-2">
+                        <div className="flex items-center gap-2">
+                          <div className={`w-4 h-4 rounded-full ${formData.isPrivate ? 'bg-red-400' : 'bg-green-400'}`}></div>
+                          <label className="block text-sm font-medium text-orange-700">
+                            {t('tasks.form.visibility')}
+                          </label>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <span className="text-xs">{formData.isPrivate ? t('tasks.form.private') : t('tasks.form.public')}</span>
+                          <label className="relative inline-flex items-center cursor-pointer">
+                            <input
+                              type="checkbox"
+                              checked={!!formData.isPrivate}
+                              onChange={e => setFormData({ ...formData, isPrivate: e.target.checked })}
+                              className="sr-only peer"
+                            />
+                            <div
+                              className={`w-10 h-6 bg-gray-300 rounded-full peer peer-checked:bg-orange-400 
+                              peer-focus:ring-2 peer-focus:ring-orange-300`}
+                            >
+                              <span 
+                                className={`block h-6 w-6 rounded-full bg-white transform transition-transform duration-200 ease-in-out ${
+                                  formData.isPrivate ? 'translate-x-4' : 'translate-x-0'
+                                }`}
+                              />
+                            </div>
+                          </label>
+                        </div>
+                      </div>
+                      {formData.isPrivate && (
+                        <p className="text-xs text-orange-500 mt-2">
+                          <AlertTriangle size={12} className="inline mr-1" />
+                          {t('tasks.form.privateHint')}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </div>
+              
+              <div className="bg-orange-50/50 rounded-lg p-3 xs:p-4 border border-orange-100">
+                <h3 className="text-md font-medium text-orange-700 mb-3 border-b border-orange-100 pb-2">
+                  {t('tasks.advancedOptions')}
+                </h3>
+                
+                <div className="space-y-4">
+                  <div className="bg-white rounded-lg p-3 xs:p-4 border border-orange-100">
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-2">
+                      <div className="flex items-center gap-2">
+                        <Camera size={16} className="text-orange-600" />
+                        <label className="block text-sm font-medium text-orange-700">
+                          {t('tasks.form.requirePhoto')}
+                        </label>
+                      </div>
                       <label className="relative inline-flex items-center cursor-pointer">
                         <input
                           type="checkbox"
@@ -856,55 +1000,46 @@ export default function Tasks() {
                     {formData.requirePhoto && (
                       <p className="text-xs text-orange-500 mt-2">
                         <AlertTriangle size={12} className="inline mr-1" />
-                        A tarefa só poderá ser concluída se o usuário enviar uma foto tirada pela câmera e esta for aprovada por um administrador.
+                        {t('tasks.form.requirePhotoHint')}
                       </p>
                     )}
                   </div>
-                </div>
-                
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 xs:gap-4">
-                  <div className="bg-white rounded-lg p-3 xs:p-4 border border-orange-100">
-                    <label className="block text-sm font-medium text-orange-700 mb-1">
-                      Due Date
-                    </label>
-                    <input
-                      type="date"
-                      value={formData.dueDate}
-                      onChange={e => setFormData({ ...formData, dueDate: e.target.value })}
-                      className="w-full bg-white border border-orange-100 rounded-lg px-3 py-2 text-orange-800 text-sm focus:outline-none focus:ring-2 focus:ring-orange-400/20"
-                      required
-                    />
-                  </div>
                   
                   <div className="bg-white rounded-lg p-3 xs:p-4 border border-orange-100">
-                    <label className="block text-sm font-medium text-orange-700 mb-1">
-                      Assign To
+                    <label className="block text-sm font-medium text-orange-700 mb-1 flex items-center gap-2">
+                      <Users size={16} className="text-orange-600" />
+                      {t('tasks.form.assignTo')}
                     </label>
                     <div className="space-y-2">
                       <div className="flex flex-wrap gap-2 mb-2 max-h-20 overflow-y-auto">
-                        {formData.assignedTo?.map(userId => {
-                          const volunteer = volunteers.find(v => v.id === userId);
-                          return volunteer ? (
-                            <div
-                              key={userId}
-                              className="flex items-center gap-2 bg-orange-50 rounded-lg p-2"
-                            >
-                              <div className="w-6 h-6 rounded-full bg-orange-100 flex items-center justify-center text-orange-700 text-sm">
-                                {volunteer.name[0]}
-                              </div>
-                              <span className="text-sm text-orange-700">{volunteer.name}</span>
-                              <button
-                                onClick={() => {
-                                  const newAssignedTo = formData.assignedTo?.filter(id => id !== userId) || [];
-                                  setFormData({ ...formData, assignedTo: newAssignedTo });
-                                }}
-                                className="text-red-400 hover:text-red-500 p-1"
+                        {formData.assignedTo?.length ? (
+                          formData.assignedTo?.map(userId => {
+                            const volunteer = volunteers.find(v => v.id === userId);
+                            return volunteer ? (
+                              <div
+                                key={userId}
+                                className="flex items-center gap-2 bg-orange-50 rounded-lg p-2"
                               >
-                                <X size={14} />
-                              </button>
-                            </div>
-                          ) : null;
-                        })}
+                                <div className="w-6 h-6 rounded-full bg-orange-100 flex items-center justify-center text-orange-700 text-sm">
+                                  {volunteer.name[0]}
+                                </div>
+                                <span className="text-sm text-orange-700">{volunteer.name}</span>
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    const newAssignedTo = formData.assignedTo?.filter(id => id !== userId) || [];
+                                    setFormData({ ...formData, assignedTo: newAssignedTo });
+                                  }}
+                                  className="text-red-400 hover:text-red-500 p-1"
+                                >
+                                  <X size={14} />
+                                </button>
+                              </div>
+                            ) : null;
+                          })
+                        ) : (
+                          <p className="text-xs text-orange-400 italic">{t('tasks.form.noAssignees')}</p>
+                        )}
                       </div>
                       <select
                         className="w-full bg-white border border-orange-100 rounded-lg px-3 sm:px-4 py-2 text-orange-800 text-sm focus:outline-none focus:ring-2 focus:ring-orange-400/20"
@@ -918,7 +1053,7 @@ export default function Tasks() {
                         }}
                         value=""
                       >
-                        <option value="">Add volunteer...</option>
+                        <option value="">{t('tasks.form.addVolunteer')}</option>
                         {volunteers
                           .filter(v => !formData.assignedTo?.includes(v.id))
                           .map(volunteer => (
@@ -929,41 +1064,57 @@ export default function Tasks() {
                       </select>
                     </div>
                   </div>
-                </div>
-                
-                <div className="bg-white rounded-lg p-3 xs:p-4 border border-orange-100">
-                  <label className="block text-sm font-medium text-orange-700 mb-1">
-                    Tags
-                  </label>
-                  <div className="flex flex-wrap gap-2 mb-2 max-h-20 overflow-y-auto">
-                    {formData.tags?.map(tag => (
-                      <span
-                        key={tag}
-                        className="text-xs sm:text-sm px-2 py-1 rounded-full bg-orange-50 text-orange-700 flex items-center gap-1"
-                      >
-                        {tag}
-                        <button
-                          onClick={() => setFormData({
-                            ...formData,
-                            tags: formData.tags?.filter(t => t !== tag)
-                          })}
-                          className="hover:text-orange-800"
+                  
+                  <div className="bg-white rounded-lg p-3 xs:p-4 border border-orange-100">
+                    <label className="block text-sm font-medium text-orange-700 mb-1 flex items-center gap-2">
+                      <Tag size={16} className="text-orange-600" />
+                      {t('tasks.form.tags')}
+                    </label>
+                    <div className="flex flex-wrap gap-2 mb-2 max-h-20 overflow-y-auto">
+                      {formData.tags?.length ? formData.tags?.map(tag => (
+                        <span
+                          key={tag}
+                          className="text-xs sm:text-sm px-2 py-1 rounded-full bg-orange-50 text-orange-700 flex items-center gap-1"
                         >
-                          <X size={14} />
-                        </button>
-                      </span>
-                    ))}
-                  </div>
-                  <div className="flex gap-2">
-                    <input
-                      type="text"
-                      value={newTag}
-                      onChange={e => setNewTag(e.target.value)}
-                      placeholder="Add a tag"
-                      className="flex-1 bg-white border border-orange-100 rounded-lg px-3 sm:px-4 py-2 text-orange-800 text-sm placeholder-orange-300 focus:outline-none focus:ring-2 focus:ring-orange-400/20"
-                      onKeyPress={e => {
-                        if (e.key === 'Enter') {
-                          e.preventDefault();
+                          {tag}
+                          <button
+                            type="button"
+                            onClick={() => setFormData({
+                              ...formData,
+                              tags: formData.tags?.filter(t => t !== tag)
+                            })}
+                            className="hover:text-orange-800"
+                          >
+                            <X size={14} />
+                          </button>
+                        </span>
+                      )) : (
+                        <p className="text-xs text-orange-400 italic">{t('tasks.form.noTags')}</p>
+                      )}
+                    </div>
+                    <div className="flex gap-2">
+                      <input
+                        type="text"
+                        value={newTag}
+                        onChange={e => setNewTag(e.target.value)}
+                        placeholder={t('tasks.form.addTagPlaceholder')}
+                        className="flex-1 bg-white border border-orange-100 rounded-lg px-3 sm:px-4 py-2 text-orange-800 text-sm placeholder-orange-300 focus:outline-none focus:ring-2 focus:ring-orange-400/20"
+                        onKeyPress={e => {
+                          if (e.key === 'Enter') {
+                            e.preventDefault();
+                            if (newTag.trim()) {
+                              setFormData({
+                                ...formData,
+                                tags: [...(formData.tags || []), newTag.trim()]
+                              });
+                              setNewTag('');
+                            }
+                          }
+                        }}
+                      />
+                      <button
+                        type="button"
+                        onClick={() => {
                           if (newTag.trim()) {
                             setFormData({
                               ...formData,
@@ -971,24 +1122,12 @@ export default function Tasks() {
                             });
                             setNewTag('');
                           }
-                        }
-                      }}
-                    />
-                    <button
-                      type="button"
-                      onClick={() => {
-                        if (newTag.trim()) {
-                          setFormData({
-                            ...formData,
-                            tags: [...(formData.tags || []), newTag.trim()]
-                          });
-                          setNewTag('');
-                        }
-                      }}
-                      className="px-3 sm:px-4 py-2 bg-orange-500 hover:bg-orange-600 text-white rounded-lg hover:shadow-lg hover:shadow-orange-500/20 transition-all duration-300 text-sm"
-                    >
-                      Add
-                    </button>
+                        }}
+                        className="px-3 sm:px-4 py-2 bg-orange-500 hover:bg-orange-600 text-white rounded-lg hover:shadow-lg hover:shadow-orange-500/20 transition-all duration-300 text-sm"
+                      >
+                        {t('tasks.form.add')}
+                      </button>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -1001,15 +1140,15 @@ export default function Tasks() {
                     setFormData(initialFormData);
                     setEditingTaskId(null);
                   }}
-                  className="px-3 xs:px-4 py-2 text-orange-600 hover:text-orange-700 transition-colors text-sm"
+                  className="px-3 xs:px-4 py-2 text-orange-600 border border-orange-100 rounded-lg hover:bg-orange-50 transition-colors text-sm"
                 >
-                  Cancel
+                  {t('common.cancel')}
                 </button>
                 <button
                   type="submit"
-                  className="px-3 xs:px-4 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition-colors text-sm"
+                  className="px-3 xs:px-4 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition-colors text-sm shadow-md shadow-orange-400/10"
                 >
-                  {editingTaskId ? 'Update Task' : 'Add Task'}
+                  {editingTaskId ? t('tasks.form.updateTask') : t('tasks.form.createTask')}
                 </button>
               </div>
             </form>
@@ -1023,25 +1162,32 @@ export default function Tasks() {
 
       {showConfirmDelete && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-3 xs:p-4">
-          <div className="bg-white rounded-lg p-4 xs:p-6 w-full max-w-md">
-            <h2 className="text-lg xs:text-xl font-semibold text-orange-600 mb-3">
-              Delete Task
-            </h2>
-            <p className="text-sm text-orange-700/80 mb-4 xs:mb-6">
-              Are you sure you want to delete this task? This action cannot be undone.
+          <div className="bg-white rounded-lg p-4 xs:p-6 w-full max-w-md shadow-xl">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="w-10 h-10 rounded-full bg-red-100 flex items-center justify-center flex-shrink-0">
+                <Trash2 size={20} className="text-red-600" />
+              </div>
+              <h2 className="text-lg xs:text-xl font-medium text-gray-700">
+                {t('tasks.confirmDelete')}
+              </h2>
+            </div>
+            
+            <p className="text-sm text-gray-600 mb-6">
+              {t('tasks.deleteWarning')}
             </p>
+            
             <div className="flex justify-end gap-3">
               <button
                 onClick={() => setShowConfirmDelete(null)}
-                className="px-3 xs:px-4 py-2 text-orange-600 hover:text-orange-700 transition-colors text-sm"
+                className="px-4 py-2.5 border border-gray-200 text-gray-600 hover:text-gray-700 hover:border-gray-300 rounded-lg transition-colors text-sm"
               >
-                Cancel
+                {t('common.cancel')}
               </button>
               <button
                 onClick={() => handleDelete(showConfirmDelete)}
-                className="px-3 xs:px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors text-sm"
+                className="px-4 py-2.5 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors text-sm shadow-sm"
               >
-                Delete
+                {t('tasks.confirmDeleteButton')}
               </button>
             </div>
           </div>
