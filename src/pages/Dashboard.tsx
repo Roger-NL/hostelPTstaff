@@ -25,7 +25,10 @@ import {
   HomeIcon,
   ChevronLeft,
   ChevronRight,
-  CheckSquare
+  CheckSquare,
+  ArrowRightCircle,
+  ChevronsLeft,
+  X
 } from 'lucide-react';
 import { format } from 'date-fns';
 import Schedule from './Schedule';
@@ -36,6 +39,7 @@ import Messages from './Messages';
 import DashboardContent from './DashboardContent';
 import LaundrySchedule from './LaundrySchedule';
 import InstallPWA from '../components/InstallPWA';
+import { Link } from 'react-router-dom';
 
 export default function MainDashboard() {
   const { user, users, tasks, messages, logout } = useStore();
@@ -109,81 +113,83 @@ export default function MainDashboard() {
     : baseMenuItems;
 
   return (
-    <div className="flex h-screen bg-white/80 text-orange-600">
+    <div className="flex h-screen bg-white/80 text-blue-600">
       {/* Sidebar */}
-      <div
-        className={`fixed inset-y-0 left-0 z-30 w-64 transform transition-all duration-300 ease-in-out
-          ${isSidebarCollapsed ? '-translate-x-full lg:translate-x-0 lg:w-16' : 'translate-x-0'}
-          bg-white backdrop-blur-xl border-r border-orange-100
-          ios-safe-top ios-safe-bottom shadow-md`}
+      <aside
+        className={`fixed lg:static inset-y-0 left-0 z-30 w-64 transform transition-transform duration-300 lg:translate-x-0 lg:w-72 xl:w-80 ${
+          isSidebarCollapsed ? '-translate-x-full' : 'translate-x-0'
+        } 
+        bg-white backdrop-blur-xl border-r border-blue-100
+        w-[280px] lg:w-72 xl:w-80`
+        }
       >
-        {/* Logo */}
-        <div className="p-4 border-b border-orange-100 flex items-center justify-between">
-          <h1 className={`text-xl font-extralight tracking-wider text-orange-600 ${isSidebarCollapsed ? 'lg:hidden' : ''}`}>
+        <div className="p-4 border-b border-blue-100 flex items-center justify-between">
+          <h1 className={`text-xl font-extralight tracking-wider text-blue-600 ${isSidebarCollapsed ? 'lg:hidden' : ''}`}>
             Hostel PT Staff
           </h1>
           <button
             onClick={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
-            className="text-orange-600 hover:text-orange-700 transition-colors hidden lg:block"
+            className="text-blue-600 hover:text-blue-700 transition-colors hidden lg:block"
           >
-            <ChevronLeft size={20} className={`transition-transform duration-300 ${isSidebarCollapsed ? 'rotate-180' : ''}`} />
+            {isSidebarCollapsed ? <ArrowRightCircle size={20} /> : <ChevronsLeft size={20} />}
           </button>
         </div>
 
-        {/* Menu */}
-        <div className="py-4 flex-1 overflow-y-auto scrollbar-none">
-          <div className="px-3 space-y-1">
-            {menuItems.map((item) => (
-              <button
-                key={item.view}
-                onClick={() => {
-                  setView(item.view);
-                  if (window.innerWidth < 1024) {
-                    setIsSidebarCollapsed(true);
-                  }
-                }}
-                className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-200
-                  ${view === item.view 
-                    ? 'bg-orange-100/70 text-orange-700' 
-                    : 'text-orange-600 hover:text-orange-700 hover:bg-orange-50/50'}`}
-              >
-                <item.icon size={18} className="text-orange-600" />
-                <span className={`text-sm font-light ${isSidebarCollapsed ? 'lg:hidden' : ''}`}>
-                  {item.label}
-                </span>
-                {item.badge ? (
-                  <span className="ml-auto bg-orange-500/90 text-white text-xs font-medium px-2 py-0.5 rounded-full">
-                    {item.badge}
-                  </span>
-                ) : null}
-              </button>
-            ))}
-          </div>
-        </div>
+        <nav className="p-4">
+          <ul className="space-y-1">
+            {menuItems
+              .map(item => (
+                <li key={item.view}>
+                  <Link
+                    to={item.view}
+                    onClick={() => {
+                      setView(item.view);
+                      if (window.innerWidth < 1024) {
+                        setIsSidebarCollapsed(true);
+                      }
+                    }}
+                    className={`flex items-center gap-3 p-2 rounded-lg transition-colors ${
+                      view === item.view
+                      ? 'bg-blue-100/70 text-blue-700'
+                      : 'text-blue-600 hover:text-blue-700 hover:bg-blue-50/50'}`}
+                  >
+                    <item.icon size={18} className="text-blue-600" />
+                    <span>{item.label}</span>
+                    {item.badge && (
+                      <span className="ml-auto bg-blue-500/90 text-white text-xs font-medium px-2 py-0.5 rounded-full">
+                        {item.badge}
+                      </span>
+                    )}
+                  </Link>
+                </li>
+              ))}
+          </ul>
+        </nav>
 
-        {/* User Profile and Logout */}
-        <div className="p-4 border-t border-orange-100">
-          <div className="flex items-center gap-3 mb-3">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-orange-400 to-orange-600 flex items-center justify-center text-white font-medium shadow-lg">
-              {user?.name?.[0]?.toUpperCase() || 'U'}
+        <div className="p-4 border-t border-blue-100">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-400 to-blue-600 flex items-center justify-center text-white font-medium shadow-lg">
+              {user?.name?.charAt(0) || '?'}
             </div>
-            <div className={`flex-1 ${isSidebarCollapsed ? 'lg:hidden' : ''}`}>
-              <h3 className="text-sm font-medium text-orange-700">{user?.name || 'User'}</h3>
-              <p className="text-xs text-orange-500 font-light">{getUserRoleText(user?.role)}</p>
+            <div>
+              <h3 className="text-sm font-medium text-blue-700">{user?.name || 'User'}</h3>
+              <p className="text-xs text-blue-500 font-light">{getUserRoleText(user?.role)}</p>
             </div>
           </div>
           <InstallPWA />
-          <button
+          <button 
             onClick={handleLogout}
-            className={`w-full p-2.5 rounded-lg bg-orange-100/70 hover:bg-orange-200/70 transition-colors text-sm font-light text-orange-700 flex items-center ${
-              isSidebarCollapsed ? 'lg:justify-center' : 'justify-center gap-2'
-            }`}
+            className={`w-full p-2.5 rounded-lg bg-blue-100/70 hover:bg-blue-200/70 transition-colors text-sm font-light text-blue-700 flex items-center ${
+              isSidebarCollapsed ? 'lg:justify-center' : 'justify-center lg:justify-start'
+            } gap-2 mt-3`}
           >
-            <LogOut size={14} />
-            <span className={isSidebarCollapsed ? 'lg:hidden' : ''}>{t('logout')}</span>
+            <LogOut size={18} />
+            <span>
+              {t('logout')}
+            </span>
           </button>
         </div>
-      </div>
+      </aside>
       
       {/* Mobile sidebar overlay */}
       {!isSidebarCollapsed && (
@@ -196,20 +202,20 @@ export default function MainDashboard() {
       {/* Main Content */}
       <div className={`flex-1 flex flex-col min-h-screen ${isSidebarCollapsed ? 'lg:ml-16' : 'lg:ml-64'}`}>
         {/* Top Bar */}
-        <div className="bg-white border-b border-orange-100 py-3 px-4 flex items-center justify-between ios-safe-top shadow-sm">
+        <div className="bg-white border-b border-blue-100 py-3 px-4 flex items-center justify-between ios-safe-top shadow-sm">
           <div className="flex items-center gap-3">
             <button
               onClick={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
-              className="p-2 rounded-lg text-orange-600 hover:text-orange-700 hover:bg-orange-100/50 lg:hidden"
+              className="p-2 rounded-lg text-blue-600 hover:text-blue-700 hover:bg-blue-100/50 lg:hidden"
             >
               <Menu size={20} />
             </button>
-            <h2 className="text-xl font-medium text-orange-700">
+            <h2 className="text-xl font-medium text-blue-700">
               {view === 'dashboard' ? getGreeting() : t(`${view}.title`)}
             </h2>
           </div>
           <div className="flex items-center gap-2">
-            <span className="text-xs text-orange-500 font-light hidden lg:block">
+            <span className="text-xs text-blue-500 font-light hidden lg:block">
               {format(new Date(), 'PPPP')}
             </span>
           </div>
@@ -224,7 +230,7 @@ export default function MainDashboard() {
           {view === 'events' && <Events />}
           {view === 'messages' && <Messages />}
           {view === 'laundry' && <LaundrySchedule />}
-          {view === 'approvals' && <div className="text-center py-12 text-orange-600">Approvals coming soon</div>}
+          {view === 'approvals' && <div className="text-center py-12 text-blue-600">Approvals coming soon</div>}
         </div>
       </div>
     </div>

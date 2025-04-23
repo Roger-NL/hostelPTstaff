@@ -357,22 +357,22 @@ export default function DashboardContent() {
   return (
     <div className="space-y-6 xs:space-y-8">
       {/* User next shift - MOVED TO TOP */}
-      <div className="bg-white backdrop-blur-md rounded-xl p-4 xs:p-5 sm:p-6 border border-orange-100 shadow-sm">
-        <h2 className="text-lg xs:text-xl font-extralight text-orange-700 mb-3 xs:mb-4 flex items-center gap-2">
-          <Clock size={18} className="text-orange-600 xs:hidden" />
-          <Clock size={20} className="text-orange-600 hidden xs:block" />
+      <div className="bg-white backdrop-blur-sm rounded-xl p-4 xs:p-5 sm:p-6 border border-blue-100 shadow-sm">
+        <h2 className="text-lg xs:text-xl font-extralight text-blue-700 mb-3 xs:mb-4 flex items-center gap-2">
+          <Clock size={18} className="text-blue-600 xs:hidden" />
+          <Clock size={20} className="text-blue-600 hidden xs:block" />
           {t('dashboard.yourNextShift') || "Your Next Shift"}
         </h2>
         
         {userNextShift ? (
           <div className="flex flex-col items-center justify-center py-6 text-center">
-            <div className="w-20 h-20 xs:w-24 xs:h-24 rounded-full bg-gradient-to-br from-orange-400 to-orange-600 flex items-center justify-center text-white mb-4">
+            <div className="w-20 h-20 xs:w-24 xs:h-24 rounded-full bg-gradient-to-br from-blue-400 to-blue-600 flex items-center justify-center text-white mb-4">
               <Calendar size={32} className="xs:hidden" />
               <Calendar size={40} className="hidden xs:block" />
             </div>
-            <h3 className="text-md xs:text-lg font-light text-orange-700">{userNextShift.date}</h3>
-            <p className="text-xl xs:text-2xl font-extralight text-orange-600 mt-2">{userNextShift.shift}</p>
-            <div className="mt-6 px-4 py-2 bg-orange-100 text-orange-700 rounded-lg text-xs xs:text-sm font-light flex items-center gap-2">
+            <h3 className="text-md xs:text-lg font-light text-blue-700">{userNextShift.date}</h3>
+            <p className="text-xl xs:text-2xl font-extralight text-blue-600 mt-2">{userNextShift.shift}</p>
+            <div className="mt-6 px-4 py-2 bg-blue-100 text-blue-700 rounded-lg text-xs xs:text-sm font-light flex items-center gap-2">
               <Shield size={14} className="xs:hidden" />
               <Shield size={16} className="hidden xs:block" />
               <span>{t('dashboard.dutyConfirmed')}</span>
@@ -380,10 +380,10 @@ export default function DashboardContent() {
           </div>
         ) : (
           <div className="flex flex-col items-center justify-center py-10 text-center">
-            <div className="w-16 h-16 rounded-full bg-orange-50 flex items-center justify-center text-orange-400 mb-4">
+            <div className="w-16 h-16 rounded-full bg-blue-50 flex items-center justify-center text-blue-400 mb-4">
               <Calendar size={24} />
             </div>
-            <p className="text-orange-500 font-light">
+            <p className="text-blue-500 font-light">
               {t('dashboard.noUpcomingShifts')}
             </p>
           </div>
@@ -391,10 +391,10 @@ export default function DashboardContent() {
       </div>
 
       {/* Today's team section - UPDATED */}
-      <div className="bg-white backdrop-blur-md rounded-xl p-4 xs:p-5 sm:p-6 border border-orange-100 shadow-sm">
-        <h2 className="text-lg xs:text-xl font-extralight text-orange-700 mb-3 xs:mb-4 flex items-center gap-2">
-          <Users size={18} className="text-orange-600 xs:hidden" />
-          <Users size={20} className="text-orange-600 hidden xs:block" />
+      <div className="bg-white backdrop-blur-sm rounded-xl p-4 xs:p-5 sm:p-6 border border-blue-100 shadow-sm">
+        <h2 className="text-lg xs:text-xl font-extralight text-blue-700 mb-3 xs:mb-4 flex items-center gap-2">
+          <Users size={18} className="text-blue-600 xs:hidden" />
+          <Users size={20} className="text-blue-600 hidden xs:block" />
           {t('dashboard.todayTeam') || "Today's Team"}
         </h2>
         
@@ -402,12 +402,12 @@ export default function DashboardContent() {
           {/* Last active shift with volunteers */}
           <div className="space-y-2 xs:space-y-3">
             <div className="flex items-center justify-between">
-              <h3 className="text-xs xs:text-sm font-medium text-orange-700 flex items-center gap-1.5">
-                <ClockIcon size={14} className="text-orange-600 xs:hidden" />
-                <ClockIcon size={16} className="text-orange-600 hidden xs:block" />
+              <h3 className="text-xs xs:text-sm font-medium text-blue-700 flex items-center gap-1.5">
+                <ClockIcon size={14} className="text-blue-600 xs:hidden" />
+                <ClockIcon size={16} className="text-blue-600 hidden xs:block" />
                 {t('dashboard.lastActiveShift')}
               </h3>
-              <span className="text-xxs xs:text-xs font-light text-orange-500">
+              <span className="text-xxs xs:text-xs font-light text-blue-500">
                 {formatDisplayDate(lastActiveShiftInfo.date)} - {lastActiveShiftInfo.shift}
               </span>
             </div>
@@ -415,18 +415,18 @@ export default function DashboardContent() {
             <div className="flex flex-wrap gap-2">
               {lastActiveShiftInfo.volunteers && lastActiveShiftInfo.volunteers.length > 0 ? (
                 lastActiveShiftInfo.volunteers.map(volunteer => volunteer && (
-                  <div key={volunteer.id} className="flex items-center px-2 py-1 rounded-lg bg-orange-50 gap-1.5">
-                    <div className="w-5 h-5 xs:w-6 xs:h-6 rounded-full bg-gradient-to-br from-orange-400 to-orange-600 flex items-center justify-center text-white text-xs">
+                  <div key={volunteer.id} className="flex items-center px-2 py-1 rounded-lg bg-blue-50 gap-1.5">
+                    <div className="w-5 h-5 xs:w-6 xs:h-6 rounded-full bg-gradient-to-br from-blue-400 to-blue-600 flex items-center justify-center text-white text-xs">
                       {volunteer.name[0]}
                     </div>
-                    <span className="text-xs font-light text-orange-700">
+                    <span className="text-xs font-light text-blue-700">
                       {volunteer.name.split(' ')[0]}
                       {volunteer.id === user?.id && ` (${t('dashboard.you')})`}
                     </span>
                   </div>
                 ))
               ) : (
-                <span className="text-xs text-orange-500">{t('dashboard.noVolunteersAssigned')}</span>
+                <span className="text-xs text-blue-500">{t('dashboard.noVolunteersAssigned')}</span>
               )}
             </div>
           </div>
@@ -435,21 +435,21 @@ export default function DashboardContent() {
           {hasCurrentVolunteers && (
             <div className="space-y-2 xs:space-y-3">
               <div className="flex items-center justify-between">
-                <h3 className="text-xs xs:text-sm font-medium text-orange-700 flex items-center gap-1.5">
-                  <ClockIcon size={14} className="text-orange-600 xs:hidden" />
-                  <ClockIcon size={16} className="text-orange-600 hidden xs:block" />
+                <h3 className="text-xs xs:text-sm font-medium text-blue-700 flex items-center gap-1.5">
+                  <ClockIcon size={14} className="text-blue-600 xs:hidden" />
+                  <ClockIcon size={16} className="text-blue-600 hidden xs:block" />
                   {getShiftName(currentShift)} {/* Current */}
                 </h3>
-                <span className="text-xxs xs:text-xs font-medium text-orange-600">{currentShift}</span>
+                <span className="text-xxs xs:text-xs font-medium text-blue-600">{currentShift}</span>
               </div>
               
               <div className="flex flex-wrap gap-2">
                 {currentVolunteers.map(volunteer => volunteer && (
-                  <div key={volunteer.id} className="flex items-center px-2 py-1 rounded-lg bg-orange-100 gap-1.5">
-                    <div className="w-5 h-5 xs:w-6 xs:h-6 rounded-full bg-orange-500 flex items-center justify-center text-white text-xs">
+                  <div key={volunteer.id} className="flex items-center px-2 py-1 rounded-lg bg-blue-100 gap-1.5">
+                    <div className="w-5 h-5 xs:w-6 xs:h-6 rounded-full bg-blue-500 flex items-center justify-center text-white text-xs">
                       {volunteer.name[0]}
                     </div>
-                    <span className="text-xs font-medium text-orange-700">
+                    <span className="text-xs font-medium text-blue-700">
                       {volunteer.name.split(' ')[0]}
                       {volunteer.id === user?.id && ` (${t('dashboard.you')})`}
                     </span>
@@ -462,12 +462,12 @@ export default function DashboardContent() {
           {/* Next shift with volunteers */}
           <div className="space-y-2 xs:space-y-3">
             <div className="flex items-center justify-between">
-              <h3 className="text-xs xs:text-sm font-medium text-orange-700 flex items-center gap-1.5">
-                <ClockIcon size={14} className="text-orange-600 xs:hidden" />
-                <ClockIcon size={16} className="text-orange-600 hidden xs:block" />
+              <h3 className="text-xs xs:text-sm font-medium text-blue-700 flex items-center gap-1.5">
+                <ClockIcon size={14} className="text-blue-600 xs:hidden" />
+                <ClockIcon size={16} className="text-blue-600 hidden xs:block" />
                 {t('dashboard.nextShiftWithVolunteers')}
               </h3>
-              <span className="text-xxs xs:text-xs font-light text-orange-500">
+              <span className="text-xxs xs:text-xs font-light text-blue-500">
                 {formatDisplayDate(nextShiftWithVolunteersInfo.date)} - {nextShiftWithVolunteersInfo.shift}
               </span>
             </div>
@@ -475,18 +475,18 @@ export default function DashboardContent() {
             <div className="flex flex-wrap gap-2">
               {nextShiftWithVolunteersInfo.volunteers && nextShiftWithVolunteersInfo.volunteers.length > 0 ? (
                 nextShiftWithVolunteersInfo.volunteers.map(volunteer => volunteer && (
-                  <div key={volunteer.id} className="flex items-center px-2 py-1 rounded-lg bg-orange-50 gap-1.5">
-                    <div className="w-5 h-5 xs:w-6 xs:h-6 rounded-full bg-gradient-to-br from-orange-400 to-orange-600 flex items-center justify-center text-white text-xs">
+                  <div key={volunteer.id} className="flex items-center px-2 py-1 rounded-lg bg-blue-50 gap-1.5">
+                    <div className="w-5 h-5 xs:w-6 xs:h-6 rounded-full bg-gradient-to-br from-blue-400 to-blue-600 flex items-center justify-center text-white text-xs">
                       {volunteer.name[0]}
                     </div>
-                    <span className="text-xs font-light text-orange-700">
+                    <span className="text-xs font-light text-blue-700">
                       {volunteer.name.split(' ')[0]}
                       {volunteer.id === user?.id && ` (${t('dashboard.you')})`}
                     </span>
                   </div>
                 ))
               ) : (
-                <span className="text-xs text-orange-500">{t('dashboard.noVolunteersAssigned')}</span>
+                <span className="text-xs text-blue-500">{t('dashboard.noVolunteersAssigned')}</span>
               )}
             </div>
           </div>
@@ -496,84 +496,84 @@ export default function DashboardContent() {
       {/* Weather and Other sections */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 xs:gap-6">
         {/* Weather section */}
-        <div className="bg-white backdrop-blur-md rounded-xl p-4 xs:p-5 sm:p-6 border border-orange-100 shadow-sm lg:col-span-1">
-          <h2 className="text-lg xs:text-xl font-extralight text-orange-700 mb-3 xs:mb-4 flex items-center gap-2">
-            <Sun size={18} className="text-orange-600 xs:hidden" />
-            <Sun size={20} className="text-orange-600 hidden xs:block" />
+        <div className="bg-white backdrop-blur-sm rounded-xl p-4 xs:p-5 sm:p-6 border border-blue-100 shadow-sm lg:col-span-1">
+          <h2 className="text-lg xs:text-xl font-extralight text-blue-700 mb-3 xs:mb-4 flex items-center gap-2">
+            <Sun size={18} className="text-blue-600 xs:hidden" />
+            <Sun size={20} className="text-blue-600 hidden xs:block" />
             {t('dashboard.weather.title') || "Beach Conditions"}
           </h2>
           <div className="space-y-3 xs:space-y-4">
-            <div className="flex items-center justify-between px-3 xs:px-4 py-2 rounded-lg bg-orange-50 border border-orange-100">
+            <div className="flex items-center justify-between px-3 xs:px-4 py-2 rounded-lg bg-white border border-blue-100">
               <div className="flex items-center gap-1.5 xs:gap-2">
-                <Thermometer size={16} className="text-orange-600 xs:hidden" />
-                <Thermometer size={18} className="text-orange-600 hidden xs:block" />
-                <span className="text-orange-700 font-light text-xs xs:text-sm">{t('dashboard.weather.temperature') || "Temperature"}</span>
+                <Thermometer size={16} className="text-blue-600 xs:hidden" />
+                <Thermometer size={18} className="text-blue-600 hidden xs:block" />
+                <span className="text-blue-700 font-light text-xs xs:text-sm">{t('dashboard.weather.temperature') || "Temperature"}</span>
               </div>
-              <span className="font-medium text-orange-700 text-xs xs:text-sm">{weather.temperature}°C</span>
+              <span className="font-medium text-blue-700 text-xs xs:text-sm">{weather.temperature}°C</span>
             </div>
-            <div className="flex items-center justify-between px-3 xs:px-4 py-2 rounded-lg bg-orange-50 border border-orange-100">
+            <div className="flex items-center justify-between px-3 xs:px-4 py-2 rounded-lg bg-white border border-blue-100">
               <div className="flex items-center gap-1.5 xs:gap-2">
-                <Wind size={16} className="text-orange-600 xs:hidden" />
-                <Wind size={18} className="text-orange-600 hidden xs:block" />
-                <span className="text-orange-700 font-light text-xs xs:text-sm">{t('dashboard.weather.windSpeed') || "Wind Speed"}</span>
+                <Wind size={16} className="text-blue-600 xs:hidden" />
+                <Wind size={18} className="text-blue-600 hidden xs:block" />
+                <span className="text-blue-700 font-light text-xs xs:text-sm">{t('dashboard.weather.windSpeed') || "Wind Speed"}</span>
               </div>
-              <span className="font-medium text-orange-700 text-xs xs:text-sm">{weather.windSpeed} km/h</span>
+              <span className="font-medium text-blue-700 text-xs xs:text-sm">{weather.windSpeed} km/h</span>
             </div>
-            <div className="flex items-center justify-between px-3 xs:px-4 py-2 rounded-lg bg-orange-50 border border-orange-100">
+            <div className="flex items-center justify-between px-3 xs:px-4 py-2 rounded-lg bg-white border border-blue-100">
               <div className="flex items-center gap-1.5 xs:gap-2">
-                <Waves size={16} className="text-orange-600 xs:hidden" />
-                <Waves size={18} className="text-orange-600 hidden xs:block" />
-                <span className="text-orange-700 font-light text-xs xs:text-sm">{t('dashboard.weather.waveHeight') || "Wave Height"}</span>
+                <Waves size={16} className="text-blue-600 xs:hidden" />
+                <Waves size={18} className="text-blue-600 hidden xs:block" />
+                <span className="text-blue-700 font-light text-xs xs:text-sm">{t('dashboard.weather.waveHeight') || "Wave Height"}</span>
               </div>
-              <span className="font-medium text-orange-700 text-xs xs:text-sm">{weather.waveHeight}m</span>
+              <span className="font-medium text-blue-700 text-xs xs:text-sm">{weather.waveHeight}m</span>
             </div>
-            <div className="flex items-center justify-between px-3 xs:px-4 py-2 rounded-lg bg-orange-50 border border-orange-100">
+            <div className="flex items-center justify-between px-3 xs:px-4 py-2 rounded-lg bg-white border border-blue-100">
               <div className="flex items-center gap-1.5 xs:gap-2">
-                <CloudRain size={16} className="text-orange-600 xs:hidden" />
-                <CloudRain size={18} className="text-orange-600 hidden xs:block" />
-                <span className="text-orange-700 font-light text-xs xs:text-sm">{t('dashboard.weather.humidity') || "Humidity"}</span>
+                <CloudRain size={16} className="text-blue-600 xs:hidden" />
+                <CloudRain size={18} className="text-blue-600 hidden xs:block" />
+                <span className="text-blue-700 font-light text-xs xs:text-sm">{t('dashboard.weather.humidity') || "Humidity"}</span>
               </div>
-              <span className="font-medium text-orange-700 text-xs xs:text-sm">{weather.humidity}%</span>
+              <span className="font-medium text-blue-700 text-xs xs:text-sm">{weather.humidity}%</span>
             </div>
           </div>
         </div>
 
         {/* User Schedule */}
-        <div className="bg-white backdrop-blur-md rounded-xl p-4 xs:p-5 sm:p-6 border border-orange-100 shadow-sm md:col-span-3">
-          <h2 className="text-lg xs:text-xl font-extralight text-orange-700 mb-3 xs:mb-4 flex items-center gap-2">
-            <Calendar size={18} className="text-orange-600 xs:hidden" />
-            <Calendar size={20} className="text-orange-600 hidden xs:block" />
+        <div className="bg-white backdrop-blur-sm rounded-xl p-4 xs:p-5 sm:p-6 border border-blue-100 shadow-sm md:col-span-3">
+          <h2 className="text-lg xs:text-xl font-extralight text-blue-700 mb-3 xs:mb-4 flex items-center gap-2">
+            <Calendar size={18} className="text-blue-600 xs:hidden" />
+            <Calendar size={20} className="text-blue-600 hidden xs:block" />
             {t('dashboard.yourSchedule')}
           </h2>
           
           <div className="space-y-4">
-            <div className="p-3 xs:p-4 rounded-lg bg-orange-50 border border-orange-100 space-y-3">
-              <h3 className="text-sm xs:text-base font-medium text-orange-700">
+            <div className="p-3 xs:p-4 rounded-lg bg-white border border-blue-100 space-y-3">
+              <h3 className="text-sm xs:text-base font-medium text-blue-700">
                 {t('dashboard.nextShiftSimple')}
               </h3>
               
               {userNextShift ? (
                 <div className="space-y-2">
                   <div className="flex items-center gap-2">
-                    <Calendar size={14} className="text-orange-600 xs:hidden" />
-                    <Calendar size={16} className="text-orange-600 hidden xs:block" />
-                    <span className="text-xs xs:text-sm text-orange-700">{userNextShift.date}</span>
+                    <Calendar size={14} className="text-blue-600 xs:hidden" />
+                    <Calendar size={16} className="text-blue-600 hidden xs:block" />
+                    <span className="text-xs xs:text-sm text-blue-700">{userNextShift.date}</span>
                   </div>
                   <div className="flex items-center gap-2">
-                    <Clock size={14} className="text-orange-600 xs:hidden" />
-                    <Clock size={16} className="text-orange-600 hidden xs:block" />
-                    <span className="text-xs xs:text-sm text-orange-700">{userNextShift.shift} ({getShiftName(userNextShift.shift as ShiftTime)})</span>
+                    <Clock size={14} className="text-blue-600 xs:hidden" />
+                    <Clock size={16} className="text-blue-600 hidden xs:block" />
+                    <span className="text-xs xs:text-sm text-blue-700">{userNextShift.shift} ({getShiftName(userNextShift.shift as ShiftTime)})</span>
                   </div>
                 </div>
               ) : (
-                <p className="text-xs xs:text-sm text-orange-600 font-light">
+                <p className="text-xs xs:text-sm text-blue-600 font-light">
                   {t('dashboard.noUpcomingShifts')}
                 </p>
               )}
             </div>
             
             <div>
-              <h3 className="text-xs xs:text-sm font-medium text-orange-700 mb-2">
+              <h3 className="text-xs xs:text-sm font-medium text-blue-700 mb-2">
                 {t('dashboard.daysOff')}
               </h3>
               
@@ -582,13 +582,13 @@ export default function DashboardContent() {
                   daysOff.map((day, index) => (
                     <div 
                       key={index}
-                      className="px-3 py-1 rounded-full bg-orange-50 text-xxs xs:text-xs font-light text-orange-700 border border-orange-100"
+                      className="px-3 py-1 rounded-full bg-white text-xxs xs:text-xs font-light text-blue-700 border border-blue-100"
                     >
                       {format(day, 'EEE, dd MMM')}
                     </div>
                   ))
                 ) : (
-                  <p className="text-xs text-orange-600 font-light">
+                  <p className="text-xs text-blue-600 font-light">
                     {t('dashboard.noDaysOff')}
                   </p>
                 )}
