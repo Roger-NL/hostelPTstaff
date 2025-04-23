@@ -35,6 +35,7 @@ import Events from './Events';
 import Messages from './Messages';
 import DashboardContent from './DashboardContent';
 import LaundrySchedule from './LaundrySchedule';
+import InstallPWA from '../components/InstallPWA';
 
 export default function MainDashboard() {
   const { user, users, tasks, messages, logout } = useStore();
@@ -160,8 +161,9 @@ export default function MainDashboard() {
           </div>
         </div>
 
-        {/* User Profile */}
-        <div className="p-3 m-3 rounded-xl bg-white/5">
+        {/* User Profile and Logout */}
+        <div className="p-4 border-t border-white/10">
+          <InstallPWA />
           <div className="flex items-center gap-3 mb-3">
             <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-500 to-violet-500 flex items-center justify-center text-white font-medium shadow-lg">
               {user?.name?.[0]?.toUpperCase() || 'U'}
