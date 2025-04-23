@@ -163,7 +163,6 @@ export default function MainDashboard() {
 
         {/* User Profile and Logout */}
         <div className="p-4 border-t border-white/10">
-          <InstallPWA />
           <div className="flex items-center gap-3 mb-3">
             <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-500 to-violet-500 flex items-center justify-center text-white font-medium shadow-lg">
               {user?.name?.[0]?.toUpperCase() || 'U'}
@@ -173,6 +172,7 @@ export default function MainDashboard() {
               <p className="text-xs text-gray-400 font-light">{getUserRoleText(user?.role)}</p>
             </div>
           </div>
+          <InstallPWA />
           <button
             onClick={handleLogout}
             className={`w-full p-2.5 rounded-lg bg-white/5 hover:bg-white/10 transition-colors text-sm font-light flex items-center ${

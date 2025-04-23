@@ -4,6 +4,7 @@ import { Download } from 'lucide-react';
 export default function InstallPWA() {
   const [supportsPWA, setSupportsPWA] = useState(false);
   const [promptInstall, setPromptInstall] = useState<any>(null);
+  const [isIOS] = useState(/iPad|iPhone|iPod/.test(navigator.userAgent));
 
   useEffect(() => {
     const handler = (e: any) => {
@@ -19,11 +20,8 @@ export default function InstallPWA() {
   const handleInstallClick = (e: React.MouseEvent<HTMLButtonElement, MouseEvent>) => {
     e.preventDefault();
     if (!promptInstall) {
-      // Se não temos o prompt, significa que o app já está instalado ou
-      // estamos no iOS, então vamos mostrar instruções manuais
-      const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
       if (isIOS) {
-        alert('Para instalar o app:\n1. Toque no botão de compartilhar\n2. Role para baixo e toque em "Adicionar à Tela de Início"');
+        alert('Para instalar o app:\n1. Toque no botão de compartilhar (ícone de compartilhamento)\n2. Role para baixo e toque em "Adicionar à Tela de Início"');
       } else {
         alert('O app já está instalado ou seu navegador não suporta a instalação.');
       }
@@ -32,17 +30,17 @@ export default function InstallPWA() {
     promptInstall.prompt();
   };
 
-  // Se o dispositivo não suporta PWA e não é iOS, não mostramos o botão
-  if (!supportsPWA && !/iPad|iPhone|iPod/.test(navigator.userAgent)) {
+  // Sempre mostra o botão em iOS, ou quando suporta PWA
+  if (!supportsPWA && !isIOS) {
     return null;
   }
 
   return (
     <button
       onClick={handleInstallClick}
-      className="flex items-center gap-3 px-4 py-3 text-gray-400 hover:text-white transition-colors w-full"
+      className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-200 bg-blue-500/20 hover:bg-blue-500/30 text-blue-400 hover:text-blue-300 mb-3"
     >
-      <Download size={20} />
+      <Download size={18} />
       <span className="text-sm font-light">Instalar App</span>
     </button>
   );
