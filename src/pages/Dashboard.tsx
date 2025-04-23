@@ -109,22 +109,22 @@ export default function MainDashboard() {
     : baseMenuItems;
 
   return (
-    <div className="flex h-screen bg-gray-900 text-white">
+    <div className="flex h-screen bg-gray-50 text-gray-800">
       {/* Sidebar */}
       <div
         className={`fixed inset-y-0 left-0 z-30 w-64 transform transition-all duration-300 ease-in-out
           ${isSidebarCollapsed ? '-translate-x-full lg:translate-x-0 lg:w-16' : 'translate-x-0'}
-          bg-gray-800/90 backdrop-blur-xl border-r border-white/10
-          ios-safe-top ios-safe-bottom`}
+          bg-white backdrop-blur-xl border-r border-gray-200
+          ios-safe-top ios-safe-bottom shadow-md`}
       >
         {/* Logo */}
-        <div className="p-4 border-b border-white/10 flex items-center justify-between">
-          <h1 className={`text-xl font-extralight tracking-wider ${isSidebarCollapsed ? 'lg:hidden' : ''}`}>
+        <div className="p-4 border-b border-gray-200 flex items-center justify-between">
+          <h1 className={`text-xl font-extralight tracking-wider text-blue-600 ${isSidebarCollapsed ? 'lg:hidden' : ''}`}>
             Hostel PT Staff
           </h1>
           <button
             onClick={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
-            className="text-gray-400 hover:text-white transition-colors hidden lg:block"
+            className="text-gray-500 hover:text-blue-600 transition-colors hidden lg:block"
           >
             <ChevronsLeft size={20} className={`transition-transform duration-300 ${isSidebarCollapsed ? 'rotate-180' : ''}`} />
           </button>
@@ -144,10 +144,10 @@ export default function MainDashboard() {
                 }}
                 className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-200
                   ${view === item.view 
-                    ? 'bg-white/10 text-white' 
-                    : 'text-gray-400 hover:text-white hover:bg-white/5'}`}
+                    ? 'bg-blue-50 text-blue-700' 
+                    : 'text-gray-600 hover:text-blue-700 hover:bg-blue-50/50'}`}
               >
-                <item.icon size={18} className={view === item.view ? 'text-blue-400' : ''} />
+                <item.icon size={18} className={view === item.view ? 'text-blue-600' : ''} />
                 <span className={`text-sm font-light ${isSidebarCollapsed ? 'lg:hidden' : ''}`}>
                   {item.label}
                 </span>
@@ -162,20 +162,20 @@ export default function MainDashboard() {
         </div>
 
         {/* User Profile and Logout */}
-        <div className="p-4 border-t border-white/10">
+        <div className="p-4 border-t border-gray-200">
           <div className="flex items-center gap-3 mb-3">
             <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-500 to-violet-500 flex items-center justify-center text-white font-medium shadow-lg">
               {user?.name?.[0]?.toUpperCase() || 'U'}
             </div>
             <div className={`flex-1 ${isSidebarCollapsed ? 'lg:hidden' : ''}`}>
-              <h3 className="text-sm font-medium">{user?.name || 'User'}</h3>
-              <p className="text-xs text-gray-400 font-light">{getUserRoleText(user?.role)}</p>
+              <h3 className="text-sm font-medium text-gray-900">{user?.name || 'User'}</h3>
+              <p className="text-xs text-gray-500 font-light">{getUserRoleText(user?.role)}</p>
             </div>
           </div>
           <InstallPWA />
           <button
             onClick={handleLogout}
-            className={`w-full p-2.5 rounded-lg bg-white/5 hover:bg-white/10 transition-colors text-sm font-light flex items-center ${
+            className={`w-full p-2.5 rounded-lg bg-gray-100 hover:bg-gray-200 transition-colors text-sm font-light text-gray-700 flex items-center ${
               isSidebarCollapsed ? 'lg:justify-center' : 'justify-center gap-2'
             }`}
           >
@@ -188,7 +188,7 @@ export default function MainDashboard() {
       {/* Mobile sidebar overlay */}
       {!isSidebarCollapsed && (
         <div
-          className="fixed inset-0 bg-black/60 backdrop-blur-sm z-20 lg:hidden"
+          className="fixed inset-0 bg-black/20 backdrop-blur-sm z-20 lg:hidden"
           onClick={() => setIsSidebarCollapsed(true)}
         />
       )}
@@ -196,26 +196,27 @@ export default function MainDashboard() {
       {/* Main Content */}
       <div className={`flex-1 flex flex-col min-h-screen ${isSidebarCollapsed ? 'lg:ml-16' : 'lg:ml-64'}`}>
         {/* Top Bar */}
-        <div className="bg-gray-800/90 backdrop-blur-xl border-b border-white/10 py-3 px-4 flex items-center justify-between ios-safe-top">
+        <div className="bg-white border-b border-gray-200 py-3 px-4 flex items-center justify-between ios-safe-top shadow-sm">
           <div className="flex items-center gap-3">
             <button
               onClick={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
-              className="w-10 h-10 flex items-center justify-center rounded-xl bg-white/5 hover:bg-white/10 transition-colors lg:hidden"
+              className="p-2 rounded-lg text-gray-600 hover:text-blue-600 hover:bg-gray-100 lg:hidden"
             >
               <Menu size={20} />
             </button>
-            <h2 className="text-lg font-light">{menuItems.find((item) => item.view === view)?.label}</h2>
+            <h2 className="text-xl font-medium text-gray-800">
+              {view === 'dashboard' ? getGreeting() : t(`${view}.title`)}
+            </h2>
           </div>
-          <div className="flex items-center gap-3">
-            <div className="hidden md:flex items-center gap-2 px-4 py-2 rounded-xl bg-white/5 text-sm font-light">
-              <User size={16} className="text-blue-400" />
-              <span>{getGreeting()}</span>
-            </div>
+          <div className="flex items-center gap-2">
+            <span className="text-xs text-gray-500 font-light hidden lg:block">
+              {format(new Date(), 'PPPP')}
+            </span>
           </div>
         </div>
 
-        {/* Content */}
-        <div className="flex-1 overflow-auto p-4 ios-safe-bottom">
+        {/* Page Content */}
+        <div className="flex-1 overflow-auto p-4 ios-safe-bottom bg-gray-50">
           {view === 'dashboard' && <DashboardContent />}
           {view === 'schedule' && <Schedule />}
           {view === 'tasks' && <Tasks />}
@@ -223,16 +224,7 @@ export default function MainDashboard() {
           {view === 'events' && <Events />}
           {view === 'messages' && <Messages />}
           {view === 'laundry' && <LaundrySchedule />}
-          {view === 'approvals' && user?.role === 'admin' && (
-            <div className="space-y-6">
-              <h2 className="text-xl font-light">{t('approvals.photoApprovals')}</h2>
-              <div className="bg-gray-800/90 backdrop-blur-xl rounded-xl p-6 border border-white/10">
-                <p className="text-center text-gray-400 py-8">
-                  {t('approvals.noPhotosPending')}
-                </p>
-              </div>
-            </div>
-          )}
+          {view === 'approvals' && <div className="text-center py-12 text-gray-500">Approvals coming soon</div>}
         </div>
       </div>
     </div>
