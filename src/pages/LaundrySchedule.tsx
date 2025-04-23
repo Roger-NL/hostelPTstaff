@@ -167,32 +167,32 @@ export default function LaundrySchedule() {
     <div className="w-full h-full relative overflow-auto">
       {loading ? (
         <div className="flex items-center justify-center h-64">
-          <Loader2 className="animate-spin text-blue-500" size={32} />
-          <span className="ml-2 text-gray-600 dark:text-gray-300">{t('common.loading')}</span>
+          <Loader2 className="animate-spin text-orange-500" size={32} />
+          <span className="ml-2 text-orange-600">{t('common.loading')}</span>
         </div>
       ) : (
         <div className="space-y-4">
           {/* Controlador de data */}
           <div className="flex flex-wrap justify-between items-center mb-4 gap-2">
-            <h2 className="text-lg font-medium text-gray-700 dark:text-gray-200">
+            <h2 className="text-lg font-medium text-orange-700">
               {t('laundry.title')}
             </h2>
             <div className="flex space-x-2">
               <button
                 onClick={() => setSelectedDate(new Date())}
-                className="px-3 py-1.5 bg-white/90 dark:bg-gray-700/90 rounded-lg text-sm shadow hover:bg-white dark:hover:bg-gray-700 transition-colors"
+                className="px-3 py-1.5 bg-white rounded-lg text-sm shadow-sm hover:bg-orange-50 text-orange-600 hover:text-orange-700 border border-orange-100 transition-colors"
               >
                 {t('common.today')}
               </button>
               <button
                 onClick={() => setSelectedDate(addDays(selectedDate, -7))}
-                className="px-3 py-1.5 bg-white/90 dark:bg-gray-700/90 rounded-lg text-sm shadow hover:bg-white dark:hover:bg-gray-700 transition-colors"
+                className="px-3 py-1.5 bg-white rounded-lg text-sm shadow-sm hover:bg-orange-50 text-orange-600 hover:text-orange-700 border border-orange-100 transition-colors"
               >
                 {t('common.previousWeek')}
               </button>
               <button
                 onClick={() => setSelectedDate(addDays(selectedDate, 7))}
-                className="px-3 py-1.5 bg-white/90 dark:bg-gray-700/90 rounded-lg text-sm shadow hover:bg-white dark:hover:bg-gray-700 transition-colors"
+                className="px-3 py-1.5 bg-white rounded-lg text-sm shadow-sm hover:bg-orange-50 text-orange-600 hover:text-orange-700 border border-orange-100 transition-colors"
               >
                 {t('common.nextWeek')}
               </button>
@@ -200,15 +200,15 @@ export default function LaundrySchedule() {
           </div>
 
           {/* Tabela de escala */}
-          <div className="overflow-x-auto border border-gray-200 dark:border-gray-700 rounded-xl shadow-lg">
-            <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
-              <thead className="bg-gray-50 dark:bg-gray-800">
+          <div className="overflow-x-auto border border-orange-100 rounded-xl shadow-lg">
+            <table className="min-w-full divide-y divide-orange-100">
+              <thead className="bg-white">
                 <tr>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                  <th className="px-4 py-3 text-left text-xs font-medium text-orange-600 uppercase tracking-wider">
                     {t('laundry.slots.header')}
                   </th>
                   {generateDates().map((date) => (
-                    <th key={date.toString()} className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                    <th key={date.toString()} className="px-4 py-3 text-left text-xs font-medium text-orange-600 uppercase tracking-wider">
                       <div className="flex flex-col">
                         <span>{format(date, 'EEEE', { locale: dateLocale })}</span>
                         <span className="font-semibold">{format(date, 'dd/MM', { locale: dateLocale })}</span>
@@ -217,10 +217,10 @@ export default function LaundrySchedule() {
                   ))}
                 </tr>
               </thead>
-              <tbody className="bg-white divide-y divide-gray-200 dark:bg-gray-800/50 dark:divide-gray-700">
+              <tbody className="bg-white/90 divide-y divide-orange-100">
                 {['morning', 'afternoon', 'evening'].map((slot) => (
-                  <tr key={slot} className="divide-x divide-gray-200 dark:divide-gray-700">
-                    <td className="px-4 py-4 whitespace-nowrap font-medium text-gray-700 dark:text-gray-300">
+                  <tr key={slot} className="divide-x divide-orange-100">
+                    <td className="px-4 py-4 whitespace-nowrap font-medium text-orange-700">
                       {t(`laundry.slots.${slot}`)}
                     </td>
                     {generateDates().map((date) => {
@@ -230,32 +230,29 @@ export default function LaundrySchedule() {
                       return (
                         <td key={`${dateKey}-${slot}`} className="px-4 py-4 text-sm">
                           {slotData ? (
-                            <div className={`rounded-lg p-2 ${slotData.isStaff ? 'bg-blue-100 dark:bg-blue-900/30' : 'bg-green-100 dark:bg-green-900/30'}`}>
+                            <div className={`rounded-lg p-2 ${slotData.isStaff ? 'bg-orange-50 border border-orange-200' : 'bg-white border border-orange-100'}`}>
                               <div className="flex justify-between items-center">
-                                <span className="font-medium truncate max-w-[120px]" title={slotData.name}>
+                                <span className="font-medium truncate max-w-[120px] text-orange-700" title={slotData.name}>
                                   {slotData.name}
                                 </span>
                                 <button
                                   onClick={() => handleRemoveReservation(dateKey, slot, slotData.name)}
-                                  className="text-red-500 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300"
+                                  className="text-red-500 hover:text-red-600"
                                   title={t('common.remove')}
                                 >
                                   <Trash2 size={16} />
                                 </button>
                               </div>
-                              <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                              <div className="text-xs text-orange-500 mt-1">
                                 {slotData.isStaff ? t('laundry.staff') : t('laundry.guest')}
                               </div>
                             </div>
                           ) : (
                             <button
                               onClick={() => openAddModal(dateKey, slot as 'morning' | 'afternoon' | 'evening')}
-                              className="w-full h-full flex items-center justify-center p-2 rounded-lg border border-dashed border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700/30 transition-colors group"
+                              className="w-full h-16 flex items-center justify-center text-orange-500 hover:text-orange-600 rounded-lg border border-dashed border-orange-200 hover:border-orange-300 bg-transparent hover:bg-orange-50/50 transition-colors"
                             >
-                              <PlusCircle size={16} className="text-gray-400 group-hover:text-blue-500 transition-colors" />
-                              <span className="ml-1 text-gray-400 group-hover:text-blue-500 transition-colors">
-                                {t('laundry.add')}
-                              </span>
+                              <PlusCircle size={20} />
                             </button>
                           )}
                         </td>
@@ -283,108 +280,86 @@ export default function LaundrySchedule() {
 
       {/* Modal para adicionar reserva */}
       {showModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
-          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-xl p-6 w-full max-w-md relative border border-gray-200 dark:border-gray-700">
-            <button
-              onClick={() => setShowModal(false)}
-              className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200"
-            >
-              <X size={20} />
-            </button>
-            
-            <h3 className="text-lg font-medium text-gray-800 dark:text-gray-200 mb-4">
-              {t('laundry.addReservation')}
-            </h3>
-            
-            <div className="space-y-4">
-              <div>
-                <label htmlFor="name" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                  {t('laundry.guestName')}
-                </label>
-                <input
-                  type="text"
-                  id="name"
-                  value={modalState.name}
-                  onChange={(e) => setModalState({...modalState, name: e.target.value})}
-                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-700 dark:text-gray-200 dark:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  placeholder={t('laundry.guestNamePlaceholder')}
-                />
-              </div>
-              
-              <div className="flex items-center">
-                <input
-                  type="checkbox"
-                  id="isStaff"
-                  checked={modalState.isStaff}
-                  onChange={(e) => setModalState({...modalState, isStaff: e.target.checked})}
-                  className="w-4 h-4 text-blue-600 rounded focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600"
-                />
-                <label htmlFor="isStaff" className="ml-2 text-sm text-gray-700 dark:text-gray-300">
-                  {t('laundry.isStaff')}
-                </label>
-              </div>
-              
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                  {t('laundry.slot')}
-                </label>
-                <div className="grid grid-cols-3 gap-2">
-                  {['morning', 'afternoon', 'evening'].map((slot) => (
-                    <button
-                      key={slot}
-                      type="button"
-                      onClick={() => setModalState({...modalState, slot: slot as 'morning' | 'afternoon' | 'evening'})}
-                      className={`p-2 text-sm rounded-lg transition-colors
-                        ${modalState.slot === slot 
-                          ? 'bg-blue-100 dark:bg-blue-800/40 text-blue-700 dark:text-blue-300 border-2 border-blue-500' 
-                          : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600 border-2 border-transparent'}`}
-                    >
-                      {t(`laundry.slots.${slot}`)}
-                    </button>
-                  ))}
-                </div>
-              </div>
-              
-              <div className="text-sm text-gray-500 dark:text-gray-400 flex items-start gap-2">
-                <AlertCircle size={16} className="shrink-0 mt-0.5" />
-                <span>
-                  {t('laundry.reservationSummary')}
-                  <br />
-                  <span className="font-medium">
-                    {format(parse(modalState.date, 'yyyy-MM-dd', new Date()), 'EEEE, dd/MM', { locale: dateLocale })} - {t(`laundry.slots.${modalState.slot}`)}
-                  </span>
-                </span>
-              </div>
-              
-              <div className="flex justify-end gap-3 mt-6">
-                <button
+        <div className="fixed inset-0 z-50 overflow-y-auto">
+          <div className="flex items-center justify-center min-h-screen p-4">
+            <div className="fixed inset-0 bg-black/20 backdrop-blur-sm" onClick={() => setShowModal(false)}></div>
+            <div className="relative bg-white rounded-xl shadow-lg w-full max-w-md mx-auto p-6 border border-orange-100">
+              <div className="flex justify-between items-center mb-4">
+                <h3 className="text-lg font-medium text-orange-700">
+                  {t('laundry.addReservation')}
+                </h3>
+                <button 
                   onClick={() => setShowModal(false)}
-                  className="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+                  className="text-orange-500 hover:text-orange-600"
                 >
-                  {t('common.cancel')}
+                  <X size={20} />
                 </button>
-                <button
-                  onClick={handleAddReservation}
-                  disabled={saving || !modalState.name.trim()}
-                  className={`px-4 py-2 rounded-lg text-white transition-colors flex items-center
-                    ${saving 
-                      ? 'bg-blue-400 dark:bg-blue-500 cursor-not-allowed' 
-                      : !modalState.name.trim()
-                        ? 'bg-blue-300 dark:bg-blue-600 cursor-not-allowed'
-                        : 'bg-blue-500 hover:bg-blue-600 dark:bg-blue-600 dark:hover:bg-blue-700'}`}
-                >
-                  {saving ? (
-                    <>
-                      <Loader2 size={16} className="animate-spin mr-2" />
-                      {t('common.saving')}
-                    </>
-                  ) : (
-                    <>
-                      <Save size={16} className="mr-2" />
-                      {t('common.save')}
-                    </>
-                  )}
-                </button>
+              </div>
+              
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-orange-600 mb-1">
+                    {t('laundry.date')}
+                  </label>
+                  <div className="text-orange-700 font-medium">
+                    {format(parse(modalState.date, 'yyyy-MM-dd', new Date()), 'PPPP', { locale: dateLocale })}
+                  </div>
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium text-orange-600 mb-1">
+                    {t('laundry.slot')}
+                  </label>
+                  <div className="text-orange-700 font-medium">
+                    {t(`laundry.slots.${modalState.slot}`)}
+                  </div>
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium text-orange-600 mb-1">
+                    {t('laundry.name')}
+                  </label>
+                  <input 
+                    type="text"
+                    value={modalState.name}
+                    onChange={(e) => setModalState({ ...modalState, name: e.target.value })}
+                    className="w-full p-2 border border-orange-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500/50 text-orange-700"
+                    placeholder={t('laundry.namePlaceholder')}
+                  />
+                </div>
+                
+                <div className="flex items-center">
+                  <input
+                    type="checkbox"
+                    id="isStaff"
+                    checked={modalState.isStaff}
+                    onChange={(e) => setModalState({ ...modalState, isStaff: e.target.checked })}
+                    className="w-4 h-4 text-orange-600 border-orange-300 rounded focus:ring-orange-500"
+                  />
+                  <label htmlFor="isStaff" className="ml-2 text-sm text-orange-600">
+                    {t('laundry.isStaff')}
+                  </label>
+                </div>
+                
+                <div className="flex justify-end pt-2">
+                  <button
+                    onClick={() => setShowModal(false)}
+                    className="px-4 py-2 text-sm rounded-lg mr-2 bg-white border border-orange-200 text-orange-600 hover:bg-orange-50"
+                  >
+                    {t('common.cancel')}
+                  </button>
+                  <button
+                    onClick={handleAddReservation}
+                    disabled={saving}
+                    className="px-4 py-2 text-sm rounded-lg bg-orange-600 text-white hover:bg-orange-700 flex items-center justify-center min-w-[80px]"
+                  >
+                    {saving ? (
+                      <Loader2 size={16} className="animate-spin" />
+                    ) : (
+                      t('common.save')
+                    )}
+                  </button>
+                </div>
               </div>
             </div>
           </div>
