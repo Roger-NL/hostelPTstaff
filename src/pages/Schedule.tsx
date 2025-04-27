@@ -10,10 +10,8 @@ import { useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
 
 const SHIFTS: ShiftTime[] = [
-  '08:00-11:00',
-  '10:00-13:00',
-  '13:00-16:00',
-  '16:00-19:00',
+  '09:00-12:00',
+  '14:00-17:00',
   '19:00-22:00'
 ];
 

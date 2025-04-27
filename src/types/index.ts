@@ -64,7 +64,7 @@ export interface Message {
   updatedAt: string;
 }
 
-export type ShiftTime = '08:00-11:00' | '10:00-13:00' | '13:00-16:00' | '16:00-19:00' | '19:00-22:00';
+export type ShiftTime = '09:00-12:00' | '14:00-17:00' | '19:00-22:00';
 
 export interface Schedule {
   [date: string]: {

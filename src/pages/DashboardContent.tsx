@@ -80,7 +80,7 @@ export default function DashboardContent() {
   const getUserNextShift = () => {
     if (!user?.id) return null;
     
-    const allShifts: ShiftTime[] = ['08:00-11:00', '10:00-13:00', '13:00-16:00', '16:00-19:00', '19:00-22:00'];
+    const allShifts: ShiftTime[] = ['09:00-12:00', '14:00-17:00', '19:00-22:00'];
     const now = new Date();
     const currentHour = now.getHours();
     
@@ -124,14 +124,12 @@ export default function DashboardContent() {
     const hour = new Date().getHours();
     const minute = new Date().getMinutes();
     
-    if (hour >= 8 && hour < 11) return '08:00-11:00';
-    if (hour >= 11 && hour < 13) return '10:00-13:00';
-    if (hour >= 13 && hour < 16) return '13:00-16:00';
-    if (hour >= 16 && hour < 19) return '16:00-19:00';
+    if (hour >= 9 && hour < 12) return '09:00-12:00';
+    if (hour >= 14 && hour < 17) return '14:00-17:00';
     if (hour >= 19 && hour < 22) return '19:00-22:00';
     
-    // Default to morning shift during the night
-    return '08:00-11:00';
+    // Default to morning shift during other hours
+    return '09:00-12:00';
   };
 
   const currentShift = getCurrentShift();
@@ -139,7 +137,7 @@ export default function DashboardContent() {
   // Função para encontrar o último turno com voluntários independente de quando ocorreu
   const getLastActiveShift = (): { shift: ShiftTime, date: string, volunteers: UserType[] } => {
     const today = new Date();
-    const allShifts: ShiftTime[] = ['08:00-11:00', '10:00-13:00', '13:00-16:00', '16:00-19:00', '19:00-22:00'];
+    const allShifts: ShiftTime[] = ['09:00-12:00', '14:00-17:00', '19:00-22:00'];
     
     // Procura pelos últimos 30 dias para encontrar turnos com voluntários
     for (let day = 0; day <= 30; day++) {
@@ -189,7 +187,7 @@ export default function DashboardContent() {
     
     // Se não encontrou nenhum, retorna um valor padrão
     return { 
-      shift: '08:00-11:00', 
+      shift: '09:00-12:00', 
       date: format(today, 'yyyy-MM-dd'), 
       volunteers: [] 
     };
@@ -198,7 +196,7 @@ export default function DashboardContent() {
   // Função para encontrar o próximo turno com voluntários
   const getNextShiftWithVolunteers = (): { shift: ShiftTime, date: string, volunteers: UserType[] } => {
     const today = new Date();
-    const allShifts: ShiftTime[] = ['08:00-11:00', '10:00-13:00', '13:00-16:00', '16:00-19:00', '19:00-22:00'];
+    const allShifts: ShiftTime[] = ['09:00-12:00', '14:00-17:00', '19:00-22:00'];
     
     // Procura pelos próximos 30 dias para encontrar turnos com voluntários
     for (let day = 0; day < 30; day++) {
@@ -248,7 +246,7 @@ export default function DashboardContent() {
     
     // Se não encontrou nenhum, retorna um valor padrão
     return { 
-      shift: '08:00-11:00', 
+      shift: '09:00-12:00', 
       date: format(addDays(today, 1), 'yyyy-MM-dd'), 
       volunteers: [] 
     };
@@ -313,11 +311,9 @@ export default function DashboardContent() {
   // Get shift name based on the time range
   const getShiftName = (shift: ShiftTime): string => {
     switch(shift) {
-      case '08:00-11:00': return t('schedule.shifts.morning');
-      case '10:00-13:00': return t('schedule.shifts.midMorning');
-      case '13:00-16:00': return t('schedule.shifts.afternoon');
-      case '16:00-19:00': return t('schedule.shifts.evening');
-      case '19:00-22:00': return t('schedule.shifts.night');
+      case '09:00-12:00': return t('schedule.shifts.morning');
+      case '14:00-17:00': return t('schedule.shifts.midMorning');
+      case '19:00-22:00': return t('schedule.shifts.evening');
       default: return shift;
     }
   };
