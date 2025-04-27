@@ -25,7 +25,8 @@ import {
   HomeIcon,
   ChevronLeft,
   ChevronRight,
-  CheckSquare
+  CheckSquare,
+  ChevronLeft as ChevronsLeft
 } from 'lucide-react';
 import { format } from 'date-fns';
 import Schedule from './Schedule';
@@ -109,22 +110,22 @@ export default function MainDashboard() {
     : baseMenuItems;
 
   return (
-    <div className="flex h-screen bg-white/80 text-orange-600">
+    <div className="flex h-screen bg-gray-900 text-gray-100">
       {/* Sidebar */}
       <div
         className={`fixed inset-y-0 left-0 z-30 w-64 transform transition-all duration-300 ease-in-out
           ${isSidebarCollapsed ? '-translate-x-full lg:translate-x-0 lg:w-16' : 'translate-x-0'}
-          bg-white backdrop-blur-xl border-r border-orange-100
+          bg-gray-800 backdrop-blur-xl border-r border-gray-700
           ios-safe-top ios-safe-bottom shadow-md`}
       >
         {/* Logo */}
-        <div className="p-4 border-b border-orange-100 flex items-center justify-between">
-          <h1 className={`text-xl font-extralight tracking-wider text-orange-600 ${isSidebarCollapsed ? 'lg:hidden' : ''}`}>
-            Hostel PT Staff
+        <div className="p-4 border-b border-gray-700 flex items-center justify-between">
+          <h1 className={`text-xl font-extralight tracking-wider text-blue-400 ${isSidebarCollapsed ? 'lg:hidden' : ''}`}>
+            Carcavelos Summer Beach Staff
           </h1>
           <button
             onClick={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
-            className="text-orange-600 hover:text-orange-700 transition-colors hidden lg:block"
+            className="text-gray-400 hover:text-gray-200 transition-colors hidden lg:block"
           >
             <ChevronLeft size={20} className={`transition-transform duration-300 ${isSidebarCollapsed ? 'rotate-180' : ''}`} />
           </button>
@@ -144,10 +145,10 @@ export default function MainDashboard() {
                 }}
                 className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-200
                   ${view === item.view 
-                    ? 'bg-orange-100/70 text-orange-700' 
-                    : 'text-orange-600 hover:text-orange-700 hover:bg-orange-50/50'}`}
+                    ? 'bg-blue-900/70 text-blue-300' 
+                    : 'text-gray-300 hover:text-blue-300 hover:bg-gray-700/50'}`}
               >
-                <item.icon size={18} className="text-orange-600" />
+                <item.icon size={18} className={view === item.view ? "text-blue-300" : "text-gray-400"} />
                 <span className={`text-sm font-light ${isSidebarCollapsed ? 'lg:hidden' : ''}`}>
                   {item.label}
                 </span>
@@ -162,20 +163,20 @@ export default function MainDashboard() {
         </div>
 
         {/* User Profile and Logout */}
-        <div className="p-4 border-t border-orange-100">
+        <div className="p-4 border-t border-gray-700">
           <div className="flex items-center gap-3 mb-3">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-orange-400 to-orange-600 flex items-center justify-center text-white font-medium shadow-lg">
+            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-600 to-blue-900 flex items-center justify-center text-white font-medium shadow-lg">
               {user?.name?.[0]?.toUpperCase() || 'U'}
             </div>
             <div className={`flex-1 ${isSidebarCollapsed ? 'lg:hidden' : ''}`}>
-              <h3 className="text-sm font-medium text-orange-700">{user?.name || 'User'}</h3>
-              <p className="text-xs text-orange-500 font-light">{getUserRoleText(user?.role)}</p>
+              <h3 className="text-sm font-medium text-blue-300">{user?.name || 'User'}</h3>
+              <p className="text-xs text-gray-400 font-light">{getUserRoleText(user?.role)}</p>
             </div>
           </div>
           <InstallPWA />
           <button
             onClick={handleLogout}
-            className={`w-full p-2.5 rounded-lg bg-orange-100/70 hover:bg-orange-200/70 transition-colors text-sm font-light text-orange-700 flex items-center ${
+            className={`w-full p-2.5 rounded-lg bg-gray-700/70 hover:bg-gray-600/70 transition-colors text-sm font-light text-gray-200 flex items-center ${
               isSidebarCollapsed ? 'lg:justify-center' : 'justify-center gap-2'
             }`}
           >
@@ -188,7 +189,7 @@ export default function MainDashboard() {
       {/* Mobile sidebar overlay */}
       {!isSidebarCollapsed && (
         <div
-          className="fixed inset-0 bg-black/10 backdrop-blur-sm z-20 lg:hidden"
+          className="fixed inset-0 bg-black/70 backdrop-blur-sm z-20 lg:hidden"
           onClick={() => setIsSidebarCollapsed(true)}
         />
       )}
@@ -196,27 +197,27 @@ export default function MainDashboard() {
       {/* Main Content */}
       <div className={`flex-1 flex flex-col min-h-screen ${isSidebarCollapsed ? 'lg:ml-16' : 'lg:ml-64'}`}>
         {/* Top Bar */}
-        <div className="bg-white border-b border-orange-100 py-3 px-4 flex items-center justify-between ios-safe-top shadow-sm">
+        <div className="bg-gray-800 border-b border-gray-700 py-3 px-4 flex items-center justify-between ios-safe-top shadow-sm">
           <div className="flex items-center gap-3">
             <button
               onClick={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
-              className="p-2 rounded-lg text-orange-600 hover:text-orange-700 hover:bg-orange-100/50 lg:hidden"
+              className="p-2 rounded-lg text-gray-400 hover:text-gray-200 hover:bg-gray-700/50 lg:hidden"
             >
               <Menu size={20} />
             </button>
-            <h2 className="text-xl font-medium text-orange-700">
+            <h2 className="text-xl font-medium text-blue-300">
               {view === 'dashboard' ? getGreeting() : t(`${view}.title`)}
             </h2>
           </div>
           <div className="flex items-center gap-2">
-            <span className="text-xs text-orange-500 font-light hidden lg:block">
+            <span className="text-xs text-gray-400 font-light hidden lg:block">
               {format(new Date(), 'PPPP')}
             </span>
           </div>
         </div>
 
         {/* Page Content */}
-        <div className="flex-1 overflow-auto p-4 ios-safe-bottom bg-white/80 backdrop-blur-sm">
+        <div className="flex-1 overflow-auto p-4 ios-safe-bottom bg-gray-900 backdrop-blur-sm">
           {view === 'dashboard' && <DashboardContent />}
           {view === 'schedule' && <Schedule />}
           {view === 'tasks' && <Tasks />}
@@ -224,7 +225,7 @@ export default function MainDashboard() {
           {view === 'events' && <Events />}
           {view === 'messages' && <Messages />}
           {view === 'laundry' && <LaundrySchedule />}
-          {view === 'approvals' && <div className="text-center py-12 text-orange-600">Approvals coming soon</div>}
+          {view === 'approvals' && <div className="text-center py-12 text-blue-300">Approvals coming soon</div>}
         </div>
       </div>
     </div>

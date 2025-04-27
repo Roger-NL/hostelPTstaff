@@ -150,25 +150,38 @@ const AppContent = () => {
       <AdminInitializer masterEmail="" />
       <Toaster
         position="top-center"
+        reverseOrder={false}
+        gutter={8}
+        containerClassName=""
+        containerStyle={{}}
         toastOptions={{
-          className: 'text-sm font-light',
+          className: '',
+          duration: 3000,
           style: {
-            background: theme === 'dark' ? '#1f2937' : 'white',
-            color: theme === 'dark' ? 'white' : '#1f2937',
+            background: '#fff',
+            color: '#4B5563',
             borderRadius: '0.5rem',
-            border: '1px solid',
-            borderColor: theme === 'dark' ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)',
+            fontSize: '0.875rem',
+            boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)',
+            border: '1px solid #DBEAFE'
           },
           success: {
-            icon: '✅',
-            duration: 3000,
+            iconTheme: {
+              primary: '#2563EB',
+              secondary: '#fff',
+            },
+            style: {
+              border: '1px solid #DBEAFE',
+            },
           },
           error: {
-            icon: '❌',
-            duration: 4000,
-          },
-          loading: {
-            icon: '⏳',
+            iconTheme: {
+              primary: '#EF4444',
+              secondary: '#fff',
+            },
+            style: {
+              border: '1px solid #FEE2E2',
+            },
           },
         }}
       />

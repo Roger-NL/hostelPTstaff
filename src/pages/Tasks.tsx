@@ -24,7 +24,12 @@ import {
   CheckSquare,
   XCircle,
   ClipboardList,
-  Loader
+  Loader,
+  ArrowRightCircle,
+  Filter,
+  Play,
+  Check,
+  Settings
 } from 'lucide-react';
 import { format } from 'date-fns';
 import type { Task, TaskComment, TaskChecklistItem, User as UserType } from '../types';
@@ -96,6 +101,10 @@ export default function Tasks() {
   const [showConfirmAllDelete, setShowConfirmAllDelete] = useState(false);
   const [showConfirmCleanup, setShowConfirmCleanup] = useState(false);
   const [filter, setFilter] = useState<Task['type'] | 'all'>('all');
+  const [showFilterMenu, setShowFilterMenu] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
+  const [showAdminMenu, setShowAdminMenu] = useState(false);
+  const [activeColumn, setActiveColumn] = useState<Task['status']>('todo');
 
   const isAdmin = user?.role === 'admin';
   const volunteers = users.filter(u => u.role === 'user');
@@ -108,6 +117,17 @@ export default function Tasks() {
       }
     }
   }, [tasks, selectedTask?.id]);
+
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+    
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
 
   const handleStatusChange = (taskId: string, newStatus: Task['status']) => {
     const task = tasks.find(t => t.id === taskId);
@@ -205,214 +225,288 @@ export default function Tasks() {
   };
 
   const TaskCard = ({ task, index }: { task: Task; index: number }) => {
-    const { t } = useTranslation();
-    const [showPhotoModal, setShowPhotoModal] = useState(false);
     const [isCapturing, setIsCapturing] = useState(false);
-    const [photoUrl, setPhotoUrl] = useState('');
+    const [isSubmitting, setIsSubmitting] = useState(false);
+    const [showOptions, setShowOptions] = useState(false);
+    const buttonRef = useRef<HTMLDivElement>(null);
+    const optionsRef = useRef<HTMLDivElement>(null);
     const videoRef = useRef<HTMLVideoElement>(null);
     const canvasRef = useRef<HTMLCanvasElement>(null);
-    const [uploadingPhoto, setUploadingPhoto] = useState(false);
-    const [showOptions, setShowOptions] = useState(false);
-
+    const stream = useRef<MediaStream | null>(null);
+    
     const startCapture = async () => {
-      setIsCapturing(true);
       try {
-        const stream = await navigator.mediaDevices.getUserMedia({ 
-          video: { facingMode: 'environment' } 
-        });
+        setIsCapturing(true);
+        const constraints = {
+          video: { facingMode: 'environment' }
+        };
+        
+        const mediaStream = await navigator.mediaDevices.getUserMedia(constraints);
+        stream.current = mediaStream;
+        
         if (videoRef.current) {
-          videoRef.current.srcObject = stream;
+          videoRef.current.srcObject = mediaStream;
+          videoRef.current.play();
         }
-      } catch (err) {
-        console.error('Erro ao acessar a câmera:', err);
+      } catch (error) {
+        console.error('Error accessing camera:', error);
         setIsCapturing(false);
       }
     };
-
+    
     const capturePhoto = () => {
-      const video = videoRef.current;
-      const canvas = canvasRef.current;
-      if (video && canvas) {
+      if (videoRef.current && canvasRef.current) {
+        const canvas = canvasRef.current;
+        const video = videoRef.current;
+        
+        canvas.width = video.videoWidth;
+        canvas.height = video.videoHeight;
+        
         const context = canvas.getContext('2d');
         if (context) {
-          canvas.width = video.videoWidth;
-          canvas.height = video.videoHeight;
           context.drawImage(video, 0, 0, canvas.width, canvas.height);
+          const photoData = canvas.toDataURL('image/jpeg');
           
-          const photo = canvas.toDataURL('image/jpeg');
-          setPhotoUrl(photo);
-          
-          const stream = video.srcObject as MediaStream;
-          if (stream) {
-            const tracks = stream.getTracks();
-            tracks.forEach((track: MediaStreamTrack) => track.stop());
+          if (stream.current) {
+            stream.current.getTracks().forEach(track => track.stop());
+            stream.current = null;
           }
+          
           setIsCapturing(false);
+          submitPhoto(photoData);
         }
       }
     };
-
-    const submitPhoto = async () => {
-      if (!photoUrl || !user) return;
+    
+    const submitPhoto = async (photoData?: string) => {
+      if (!photoData) return;
       
-      setUploadingPhoto(true);
       try {
-        await uploadTaskPhoto(task.id, photoUrl, user.id);
-        toast.success(t('approvals.photoUploaded'));
-        setShowPhotoModal(false);
-      } catch (err) {
-        console.error('Erro ao enviar foto:', err);
-        toast.error(t('error.general'));
-      } finally {
-        setUploadingPhoto(false);
+        setIsSubmitting(true);
+        await uploadTaskPhoto(task.id, photoData, user?.id || '');
+        setIsSubmitting(false);
+      } catch (error) {
+        console.error('Error uploading photo:', error);
+        setIsSubmitting(false);
       }
     };
-
+    
     const cancelCapture = () => {
-      if (isCapturing && videoRef.current) {
-        const stream = videoRef.current.srcObject as MediaStream;
-        if (stream) {
-          const tracks = stream.getTracks();
-          tracks.forEach((track: MediaStreamTrack) => track.stop());
-        }
+      if (stream.current) {
+        stream.current.getTracks().forEach(track => track.stop());
+        stream.current = null;
       }
+      
       setIsCapturing(false);
-      setPhotoUrl('');
-      setShowPhotoModal(false);
     };
-
+    
+    useEffect(() => {
+      const handleClickOutside = (event: MouseEvent) => {
+        if (optionsRef.current && !optionsRef.current.contains(event.target as Node) &&
+            buttonRef.current && !buttonRef.current.contains(event.target as Node)) {
+          setShowOptions(false);
+        }
+      };
+      
+      document.addEventListener('mousedown', handleClickOutside);
+      return () => {
+        document.removeEventListener('mousedown', handleClickOutside);
+      };
+    }, []);
+    
     return (
       <div 
-        className="bg-white rounded-xl p-3 shadow-sm border border-orange-100 hover:shadow-md transition-shadow group"
-        onClick={() => setSelectedTask(task)}
+        className="group relative bg-gray-900 rounded-xl p-3 border border-gray-700 hover:border-gray-600 hover:shadow-lg transition-all duration-300 animate-fadeIn"
+        style={{ animationDelay: `${index * 50}ms` }}
       >
-        <div className="flex justify-between items-start">
-          <div className="flex-1">
-            <h4 className="font-medium text-orange-700 line-clamp-2 group-hover:text-orange-800 transition-colors">{task.title}</h4>
+        {isCapturing && (
+          <div className="absolute inset-0 bg-black z-50 flex flex-col items-center justify-center rounded-xl animate-fadeIn">
+            <video ref={videoRef} className="w-full h-auto rounded-lg" playsInline muted />
+            <canvas ref={canvasRef} className="hidden" />
             
-            {task.description && (
-              <p className="text-sm text-orange-600 my-2 line-clamp-2">{task.description}</p>
-            )}
+            <div className="absolute bottom-4 w-full flex items-center justify-center space-x-4">
+              <button
+                onClick={cancelCapture}
+                className="bg-red-600 hover:bg-red-700 text-white p-3 rounded-full transition-colors"
+              >
+                <X size={24} />
+              </button>
+              <button
+                onClick={capturePhoto}
+                className="bg-blue-600 hover:bg-blue-700 text-white p-4 rounded-full transition-colors"
+              >
+                <Camera size={28} />
+              </button>
+            </div>
           </div>
-
-          <div className="flex gap-1.5 ml-2">
-            <button
+        )}
+        
+        {isSubmitting && (
+          <div className="absolute inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center rounded-xl animate-fadeIn">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-white"></div>
+          </div>
+        )}
+        
+        <div 
+          className="flex items-center justify-between mb-3"
+          onClick={() => setSelectedTask(task)}
+        >
+          <div className="flex items-center space-x-2">
+            <div className={`w-2.5 h-2.5 rounded-full ${
+              task.priority === 'high' ? 'bg-orange-500' :
+              task.priority === 'medium' ? 'bg-blue-500' : 'bg-gray-400'
+            }`} />
+            <span className={`text-xs font-medium ${
+              task.status === 'done' ? 'line-through text-gray-500' : 'text-gray-300'
+            }`}>
+              {task.type === 'hostel' ? t('tasks.hostel') : t('tasks.personal')}
+            </span>
+          </div>
+          <div className="flex items-center space-x-1.5">
+            {task.requirePhoto && (
+              <div className={`p-1 rounded-full ${
+                task.photo?.approved ? 'bg-green-500/20 text-green-400' : 
+                task.photo ? 'bg-amber-500/20 text-amber-400' : 'bg-blue-500/20 text-blue-400'
+              }`}>
+                <Camera size={14} />
+              </div>
+            )}
+            <div 
+              ref={buttonRef}
+              className="relative cursor-pointer p-1 rounded-full hover:bg-gray-700 text-gray-400 hover:text-white transition-colors"
               onClick={(e) => {
                 e.stopPropagation();
-                handleStatusChange(task.id, 
-                  task.status === 'todo' ? 'inProgress' : 
-                  task.status === 'inProgress' ? 'done' : 'todo'
-                );
+                setShowOptions(!showOptions);
               }}
-              className="p-1.5 text-orange-600 hover:text-orange-700 hover:bg-orange-50 rounded-lg transition-colors"
-              title={
-                task.status === 'todo' ? t('tasks.moveToProgress') :
-                task.status === 'inProgress' ? t('tasks.moveToComplete') :
-                t('tasks.moveToTodo')
-              }
             >
-              {task.status === 'todo' && (
-                <div className="flex items-center justify-center w-5 h-5 rounded-full bg-gray-100">
-                  <Clock size={14} className="text-orange-600" />
-                </div>
-              )}
-              {task.status === 'inProgress' && (
-                <div className="flex items-center justify-center w-5 h-5 rounded-full bg-amber-100">
-                  <AlertTriangle size={14} className="text-amber-600" />
-                </div>
-              )}
-              {task.status === 'done' && (
-                <div className="flex items-center justify-center w-5 h-5 rounded-full bg-emerald-100">
-                  <CheckCircle size={14} className="text-emerald-600" />
-                </div>
-              )}
-            </button>
-            
-            <div className="relative">
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setShowOptions(!showOptions);
-                }}
-                className="p-1.5 text-orange-600 hover:text-orange-700 hover:bg-orange-50 rounded-lg transition-colors"
-                title={t('tasks.options')}
-              >
-                <MoreVertical size={16} />
-              </button>
-              
-              {showOptions && (
-                <div 
-                  className="absolute right-0 mt-1 w-36 rounded-xl bg-white shadow-lg border border-orange-100 overflow-hidden z-50"
-                  onClick={(e) => e.stopPropagation()}
-                >
-                  {(isAdmin || task.createdBy === user?.id) && (
-                    <div className="flex flex-col py-1">
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setShowOptions(false);
-                          handleEdit(task);
-                        }}
-                        className="flex items-center gap-2 w-full text-left px-3 py-2 hover:bg-orange-50 text-orange-600 text-xs"
-                      >
-                        <Edit size={14} />
-                        <span>{t('tasks.edit')}</span>
-                      </button>
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setShowOptions(false);
-                          setShowConfirmDelete(task.id);
-                        }}
-                        className="flex items-center gap-2 w-full text-left px-3 py-2 hover:bg-red-50 text-red-600 text-xs"
-                      >
-                        <Trash2 size={14} />
-                        <span>{t('tasks.delete')}</span>
-                      </button>
-                    </div>
-                  )}
-                </div>
-              )}
+              <MoreVertical size={16} />
             </div>
           </div>
         </div>
         
-        <div className="mt-3 flex items-center justify-between">
-          <div className="flex flex-wrap gap-1">
-            {task.priority && (
-              <span className={`text-xs px-2 py-0.5 rounded-full ${getPriorityColor(task.priority)}`}>
-                {t(`tasks.priority.${task.priority}`)}
-              </span>
-            )}
-            {task.type && (
-              <span className={`text-xs px-2 py-0.5 rounded-full ${
-                task.type === 'hostel' 
-                  ? 'bg-blue-100 text-blue-600' 
-                  : 'bg-purple-100 text-purple-600'
-              }`}>
-                {task.type === 'hostel' ? t('tasks.hostel') : t('tasks.personal')}
-              </span>
-            )}
-            {task.isPrivate && (
-              <span className="text-xs px-2 py-0.5 rounded-full bg-red-100 text-red-600">
-                {t('tasks.private')}
-              </span>
+        <div 
+          className="mb-3 cursor-pointer" 
+          onClick={() => setSelectedTask(task)}
+        >
+          <h3 className={`font-medium text-sm ${
+            task.status === 'done' ? 'line-through text-gray-500' : 'text-white'
+          }`}>
+            {task.title}
+          </h3>
+          {task.description && task.description.length > 0 && (
+            <p className={`text-xs mt-1 line-clamp-2 ${
+              task.status === 'done' ? 'text-gray-600' : 'text-gray-400'
+            }`}>
+              {task.description}
+            </p>
+          )}
+        </div>
+        
+        <div className="flex items-center justify-between">
+          <div className="flex items-center space-x-1.5">
+            <div className="bg-gray-800 px-2 py-0.5 rounded-full flex items-center text-blue-300 gap-1">
+              <Award size={12} />
+              <span className="text-xs font-medium">{task.points}</span>
+            </div>
+            {task.dueDate && (
+              <div className="bg-gray-800 px-2 py-0.5 rounded-full flex items-center text-orange-300 gap-1">
+                <Clock size={12} />
+                <span className="text-xs">
+                  {format(new Date(task.dueDate), 'MMM d')}
+                </span>
+              </div>
             )}
           </div>
           
-          {task.requirePhoto && (
-            <span className="text-xs flex items-center gap-1 text-orange-500">
-              <Camera size={12} />
-              {task.photo?.approved ? (
-                <span className="text-emerald-500">{t('tasks.photoApproved')}</span>
-              ) : task.photo ? (
-                <span>{t('tasks.photoWaiting')}</span>
+          {task.status !== 'done' && (
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                handleStatusChange(task.id, task.status === 'todo' ? 'inProgress' : 'done');
+              }}
+              className={`p-1.5 rounded-full transition-all ${
+                task.status === 'todo'
+                  ? 'bg-blue-600/20 text-blue-400 hover:bg-blue-600/30'
+                  : 'bg-green-600/20 text-green-400 hover:bg-green-600/30'
+              }`}
+            >
+              {task.status === 'todo' ? (
+                <Play size={14} />
               ) : (
-                <span>{t('tasks.photoRequired')}</span>
+                <Check size={14} />
               )}
-            </span>
+            </button>
           )}
         </div>
+        
+        {showOptions && (
+          <div
+            ref={optionsRef}
+            className="absolute top-8 right-3 z-20 bg-gray-800 border border-gray-700 rounded-lg shadow-xl py-1 min-w-[150px] animate-fadeIn"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {task.status !== 'done' && (
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleStatusChange(task.id, task.status === 'todo' ? 'inProgress' : 'done');
+                  setShowOptions(false);
+                }}
+                className="w-full text-left px-3 py-2 text-sm hover:bg-gray-700 transition-colors flex items-center gap-2"
+              >
+                {task.status === 'todo' ? (
+                  <>
+                    <Play size={14} className="text-blue-400" />
+                    <span>{t('tasks.startTask')}</span>
+                  </>
+                ) : (
+                  <>
+                    <Check size={14} className="text-green-400" />
+                    <span>{t('tasks.completeTask')}</span>
+                  </>
+                )}
+              </button>
+            )}
+            
+            {task.requirePhoto && task.status !== 'done' && !task.photo && (
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  startCapture();
+                  setShowOptions(false);
+                }}
+                className="w-full text-left px-3 py-2 text-sm hover:bg-gray-700 transition-colors flex items-center gap-2"
+              >
+                <Camera size={14} className="text-blue-400" />
+                <span>{t('tasks.capturePhoto')}</span>
+              </button>
+            )}
+            
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                handleEdit(task);
+                setShowOptions(false);
+              }}
+              className="w-full text-left px-3 py-2 text-sm hover:bg-gray-700 transition-colors flex items-center gap-2"
+            >
+              <Edit size={14} className="text-amber-400" />
+              <span>{t('common.edit')}</span>
+            </button>
+            
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                handleDelete(task.id);
+                setShowOptions(false);
+              }}
+              className="w-full text-left px-3 py-2 text-sm hover:bg-gray-700 transition-colors flex items-center gap-2"
+            >
+              <Trash2 size={14} className="text-red-400" />
+              <span>{t('common.delete')}</span>
+            </button>
+          </div>
+        )}
       </div>
     );
   };
@@ -426,34 +520,34 @@ export default function Tasks() {
     );
     
     return (
-      <div className="flex-1 min-w-[300px] bg-white/80 backdrop-blur-sm rounded-xl overflow-hidden flex flex-col border border-orange-100 shadow-sm">
-        <div className="p-3 xs:p-4 border-b border-orange-100 flex items-center justify-between sticky top-0 bg-white/90 backdrop-blur-sm z-10">
+      <div className="flex-1 min-w-0 md:min-w-[250px] bg-gray-900/90 backdrop-blur-md rounded-xl overflow-hidden flex flex-col border border-gray-700 shadow-lg">
+        <div className="p-3 xs:p-4 border-b border-gray-700/80 flex items-center justify-between sticky top-0 bg-gray-900/95 backdrop-blur-lg z-10">
           <div className="flex items-center gap-2">
             {status === 'todo' && (
-              <div className="w-5 h-5 rounded-full bg-gray-100 flex items-center justify-center">
-                <Clock className="text-orange-600" size={14} />
+              <div className="w-6 h-6 rounded-full bg-gray-800 flex items-center justify-center">
+                <Clock className="text-blue-400" size={14} />
               </div>
             )}
             {status === 'inProgress' && (
-              <div className="w-5 h-5 rounded-full bg-amber-100 flex items-center justify-center">
-                <AlertTriangle className="text-amber-600" size={14} />
+              <div className="w-6 h-6 rounded-full bg-gray-800 flex items-center justify-center">
+                <ArrowRightCircle className="text-orange-400" size={14} />
               </div>
             )}
             {status === 'done' && (
-              <div className="w-5 h-5 rounded-full bg-emerald-100 flex items-center justify-center">
-                <CheckCircle className="text-emerald-600" size={14} />
+              <div className="w-6 h-6 rounded-full bg-gray-800 flex items-center justify-center">
+                <CheckCircle className="text-green-400" size={14} />
               </div>
             )}
-            <h3 className="font-medium text-orange-700">{title}</h3>
+            <h3 className="font-medium text-white">{title}</h3>
           </div>
           <div className="flex items-center gap-2">
-            <span className="bg-orange-100 text-orange-600 text-xs rounded-full px-2 py-0.5">
+            <span className="bg-gray-800 text-blue-300 text-xs rounded-full px-2.5 py-1 font-medium">
               {filteredTasks.length}
             </span>
             {status === 'todo' && (
               <button
                 onClick={() => setShowForm(true)}
-                className="bg-orange-50 hover:bg-orange-100 text-orange-600 p-1 rounded-full transition-colors"
+                className="bg-blue-600 hover:bg-blue-700 text-white p-1.5 rounded-full transition-colors"
                 title={t('tasks.addNewToColumn')}
               >
                 <Plus size={14} />
@@ -462,7 +556,7 @@ export default function Tasks() {
           </div>
         </div>
         
-        <div className="flex-1 overflow-y-auto content-scrollable p-3 xs:p-4 space-y-3">
+        <div className="flex-1 overflow-y-auto scrollbar-thin scrollbar-thumb-gray-600 scrollbar-track-transparent p-3 xs:p-4 space-y-3 overscroll-contain -webkit-overflow-scrolling-touch">
           {filteredTasks.length > 0 ? (
             filteredTasks.map((task, index) => (
               <TaskCard key={task.id} task={task} index={index} />
@@ -470,16 +564,16 @@ export default function Tasks() {
           ) : (
             <div className="flex items-center justify-center h-full p-4">
               <div className="text-center">
-                <div className="w-12 h-12 mx-auto bg-orange-50 rounded-full flex items-center justify-center mb-3">
+                <div className="w-16 h-16 mx-auto bg-gray-800 rounded-full flex items-center justify-center mb-4">
                   {status === 'todo' ? (
-                    <Clock size={18} className="text-orange-400" />
+                    <Clock size={20} className="text-blue-400" />
                   ) : status === 'inProgress' ? (
-                    <AlertTriangle size={18} className="text-amber-400" />
+                    <ArrowRightCircle size={20} className="text-orange-400" />
                   ) : (
-                    <CheckCircle size={18} className="text-emerald-400" />
+                    <CheckCircle size={20} className="text-green-400" />
                   )}
                 </div>
-                <p className="text-xs text-orange-400">
+                <p className="text-sm text-gray-400 mb-1">
                   {status === 'todo' ? t('tasks.noTodoTasks') : 
                    status === 'inProgress' ? t('tasks.noInProgressTasks') : 
                    t('tasks.noCompletedTasks')}
@@ -487,9 +581,9 @@ export default function Tasks() {
                 {status === 'todo' && (
                   <button
                     onClick={() => setShowForm(true)}
-                    className="mt-3 bg-orange-50 hover:bg-orange-100 text-orange-600 px-3 py-1.5 rounded-lg text-xs flex items-center gap-1.5 mx-auto"
+                    className="mt-4 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm flex items-center gap-2 mx-auto transition-colors"
                   >
-                    <Plus size={14} />
+                    <Plus size={16} />
                     {t('tasks.addNew')}
                   </button>
                 )}
@@ -578,9 +672,9 @@ export default function Tasks() {
     };
 
     return (
-      <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 p-4 overflow-y-auto">
-        <div className="bg-gray-800 rounded-xl border border-white/10 w-full max-w-2xl max-h-[90vh] flex flex-col overflow-hidden">
-          <div className="flex items-center justify-between p-4 border-b border-white/10">
+      <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 p-2 xs:p-4 overflow-y-auto overscroll-contain -webkit-overflow-scrolling-touch">
+        <div className="bg-gray-800 rounded-xl border border-gray-700 w-full max-w-2xl max-h-[90vh] md:max-h-[80vh] flex flex-col overflow-hidden">
+          <div className="flex items-center justify-between p-4 border-b border-gray-700">
             <div className="flex items-center gap-2">
               <div className={`w-3 h-3 rounded-full ${
                 selectedTask.status === 'todo' ? 'bg-gray-400' :
@@ -596,28 +690,28 @@ export default function Tasks() {
             </button>
           </div>
           
-          <div className="flex-1 overflow-y-auto p-4 content-scrollable space-y-4">
-            <div className="bg-gray-700/50 rounded-lg p-3 xs:p-4 border border-white/10">
+          <div className="flex-1 overflow-y-auto scrollbar-thin scrollbar-thumb-gray-600 scrollbar-track-transparent p-3 xs:p-4 content-scrollable space-y-3 overscroll-contain -webkit-overflow-scrolling-touch">
+            <div className="bg-gray-700 rounded-lg p-3 xs:p-4 border border-gray-600">
               <h4 className="text-sm font-medium text-gray-300 mb-2 flex items-center gap-2">
                 <Clock size={16} className="text-amber-400" />
                 {format(new Date(selectedTask.dueDate || new Date()), 'MMM d, yyyy')}
               </h4>
             </div>
             
-            <div className="bg-gray-700/50 rounded-lg p-3 xs:p-4 border border-white/10">
+            <div className="bg-gray-700 rounded-lg p-3 xs:p-4 border border-gray-600">
               <h4 className="text-sm font-medium text-gray-300 mb-2 flex items-center gap-2">
                 <Award size={16} className="text-amber-400" />
                 {selectedTask.points} points
               </h4>
             </div>
             
-            <div className="bg-gray-700/50 rounded-lg p-3 xs:p-4 border border-white/10">
+            <div className="bg-gray-700 rounded-lg p-3 xs:p-4 border border-gray-600">
               <h3 className="text-base xs:text-lg font-medium text-white mb-2">Description</h3>
               <p className="text-sm text-gray-300 leading-relaxed">{selectedTask.description}</p>
             </div>
             
             {selectedTask.requirePhoto && (
-              <div className="bg-gray-700/30 rounded-lg p-4 border border-white/10">
+              <div className="bg-gray-700/30 rounded-lg p-4 border border-gray-600">
                 <h4 className="text-sm font-medium text-gray-300 mb-2 flex items-center gap-2">
                   <Camera size={16} className="text-amber-400" />
                   Foto necessária para conclusão
@@ -698,14 +792,14 @@ export default function Tasks() {
             )}
           </div>
           
-          <div className="p-4 border-t border-white/10 flex items-center justify-end gap-2">
+          <div className="p-3 xs:p-4 border-t border-gray-700 flex flex-wrap xs:flex-nowrap items-center justify-end gap-2">
             {selectedTask.status !== 'done' && (
               <button
                 onClick={handleCompleteTask}
                 disabled={!canCompleteTask()}
-                className={`px-4 py-2 rounded-lg text-white ${
+                className={`w-full xs:w-auto px-4 py-2.5 rounded-lg text-white mb-2 xs:mb-0 ${
                   canCompleteTask() 
-                    ? 'bg-green-500 hover:bg-green-600' 
+                    ? 'bg-green-500 hover:bg-green-600 active:bg-green-700' 
                     : 'bg-gray-600 cursor-not-allowed'
                 }`}
               >
@@ -715,18 +809,20 @@ export default function Tasks() {
                 }
               </button>
             )}
-            <button
-              onClick={handleEdit.bind(null, selectedTask)}
-              className="px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg"
-            >
-              Editar
-            </button>
-            <button
-              onClick={() => setShowConfirmDelete(selectedTask.id)}
-              className="px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded-lg"
-            >
-              Excluir
-            </button>
+            <div className="flex gap-2 w-full xs:w-auto">
+              <button
+                onClick={handleEdit.bind(null, selectedTask)}
+                className="flex-1 xs:flex-initial px-4 py-2.5 bg-blue-700 hover:bg-blue-800 active:bg-blue-900 text-white rounded-lg"
+              >
+                Editar
+              </button>
+              <button
+                onClick={() => setShowConfirmDelete(selectedTask.id)}
+                className="flex-1 xs:flex-initial px-4 py-2.5 bg-red-500 hover:bg-red-600 active:bg-red-700 text-white rounded-lg"
+              >
+                Excluir
+              </button>
+            </div>
           </div>
         </div>
       </div>
@@ -740,168 +836,267 @@ export default function Tasks() {
     return false;
   });
 
-  return (
-    <div className="bg-white/90 h-full overflow-hidden relative">
-      <div className="max-w-7xl mx-auto px-3 xs:px-4 py-2 xs:py-3">
-        <div className="flex items-center justify-between">
-          <h1 className="text-2xl font-light text-orange-700">{t('tasks.title')}</h1>
-          <div className="flex items-center gap-2">
-            <div className="bg-white border border-orange-100 rounded-lg overflow-hidden flex">
-              <button
-                onClick={() => setFilter('all')}
-                className={`px-3 py-1.5 text-sm ${
-                  filter === 'all' 
-                    ? 'bg-orange-100 text-orange-700' 
-                    : 'text-orange-600 hover:bg-orange-50'
-                }`}
-              >
-                {t('tasks.allTasks')}
-              </button>
-              <button
-                onClick={() => setFilter('hostel')}
-                className={`px-3 py-1.5 text-sm ${
-                  filter === 'hostel' 
-                    ? 'bg-orange-100 text-orange-700' 
-                    : 'text-orange-600 hover:bg-orange-50'
-                }`}
-              >
-                {t('tasks.hostelTasks')}
-              </button>
-              <button
-                onClick={() => setFilter('personal')}
-                className={`px-3 py-1.5 text-sm ${
-                  filter === 'personal' 
-                    ? 'bg-orange-100 text-orange-700' 
-                    : 'text-orange-600 hover:bg-orange-50'
-                }`}
-              >
-                {t('tasks.personalTasks')}
-              </button>
+  const TasksPage: React.FC = () => {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-gray-950 to-gray-900 text-white flex flex-col">
+        <div className="p-4 pb-0 sm:p-6 sm:pb-0">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+            <div>
+              <h1 className="text-2xl sm:text-3xl font-bold mb-1">{t('tasks.tasks')}</h1>
+              <p className="text-gray-400 text-sm">{t('tasks.manageYourTasks')}</p>
             </div>
+            
+            <div className="flex flex-wrap items-center gap-3">
+              <div className="flex bg-gray-800 rounded-lg p-1">
+                <button
+                  onClick={() => setFilter('all')}
+                  className={`px-3 py-1.5 rounded-md text-sm transition-colors ${
+                    filter === 'all'
+                      ? 'bg-blue-600 text-white'
+                      : 'text-gray-300 hover:bg-gray-700'
+                  }`}
+                >
+                  {t('tasks.all')}
+                </button>
+                <button
+                  onClick={() => setFilter('hostel')}
+                  className={`px-3 py-1.5 rounded-md text-sm transition-colors ${
+                    filter === 'hostel'
+                      ? 'bg-blue-600 text-white'
+                      : 'text-gray-300 hover:bg-gray-700'
+                  }`}
+                >
+                  {t('tasks.hostel')}
+                </button>
+                <button
+                  onClick={() => setFilter('personal')}
+                  className={`px-3 py-1.5 rounded-md text-sm transition-colors ${
+                    filter === 'personal'
+                      ? 'bg-blue-600 text-white'
+                      : 'text-gray-300 hover:bg-gray-700'
+                  }`}
+                >
+                  {t('tasks.personal')}
+                </button>
+              </div>
+              
+              <button
+                onClick={() => setShowForm(true)}
+                className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm flex items-center gap-2 transition-colors"
+              >
+                <Plus size={16} />
+                {t('tasks.addNew')}
+              </button>
+              
+              {isAdmin && (
+                <div className="relative">
+                  <button
+                    onClick={() => setShowAdminMenu(!showAdminMenu)}
+                    className="bg-gray-800 hover:bg-gray-700 text-gray-300 px-3 py-2 rounded-lg text-sm flex items-center gap-2 transition-colors"
+                  >
+                    <Settings size={16} />
+                    <span className="hidden sm:inline">{t('common.manage')}</span>
+                  </button>
+                  
+                  {showAdminMenu && (
+                    <div className="absolute right-0 top-full mt-2 bg-gray-800 rounded-lg shadow-xl border border-gray-700 py-1 w-48 z-20">
+                      <button
+                        onClick={() => {
+                          handleDeleteAllTasks();
+                          setShowAdminMenu(false);
+                        }}
+                        className="w-full text-left px-3 py-2 text-sm hover:bg-gray-700 transition-colors flex items-center gap-2 text-red-400"
+                      >
+                        <Trash2 size={14} />
+                        <span>{t('tasks.deleteAll')}</span>
+                      </button>
+                      <button
+                        onClick={() => {
+                          handleCleanupDeletedTasks();
+                          setShowAdminMenu(false);
+                        }}
+                        className="w-full text-left px-3 py-2 text-sm hover:bg-gray-700 transition-colors flex items-center gap-2 text-orange-400"
+                      >
+                        <Trash2 size={14} />
+                        <span>{t('tasks.cleanup')}</span>
+                      </button>
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+        
+        {/* Mobile Column Navigation */}
+        <div className="md:hidden overflow-x-auto whitespace-nowrap p-2 pb-0">
+          <div className="flex space-x-2">
             <button
-              onClick={() => setShowForm(true)}
-              className="bg-orange-600 hover:bg-orange-700 text-white px-3 py-2 rounded-lg transition-colors flex items-center gap-2 shadow-sm"
+              onClick={() => {
+                setActiveColumn('todo');
+                document.getElementById('todo-column')?.scrollIntoView({ behavior: 'smooth' });
+              }}
+              className={`px-4 py-2 rounded-lg text-sm ${
+                activeColumn === 'todo'
+                  ? 'bg-blue-600 text-white'
+                  : 'bg-gray-800 text-gray-300'
+              }`}
             >
-              <Plus size={18} />
-              <span className="hidden xs:inline">{t('tasks.addNew')}</span>
+              <div className="flex items-center gap-2">
+                <Clock size={14} />
+                <span>{t('tasks.todo')}</span>
+              </div>
+            </button>
+            <button
+              onClick={() => {
+                setActiveColumn('inProgress');
+                document.getElementById('inProgress-column')?.scrollIntoView({ behavior: 'smooth' });
+              }}
+              className={`px-4 py-2 rounded-lg text-sm ${
+                activeColumn === 'inProgress'
+                  ? 'bg-blue-600 text-white'
+                  : 'bg-gray-800 text-gray-300'
+              }`}
+            >
+              <div className="flex items-center gap-2">
+                <ArrowRightCircle size={14} />
+                <span>{t('tasks.inProgress')}</span>
+              </div>
+            </button>
+            <button
+              onClick={() => {
+                setActiveColumn('done');
+                document.getElementById('done-column')?.scrollIntoView({ behavior: 'smooth' });
+              }}
+              className={`px-4 py-2 rounded-lg text-sm ${
+                activeColumn === 'done'
+                  ? 'bg-blue-600 text-white'
+                  : 'bg-gray-800 text-gray-300'
+              }`}
+            >
+              <div className="flex items-center gap-2">
+                <CheckCircle size={14} />
+                <span>{t('tasks.done')}</span>
+              </div>
             </button>
           </div>
         </div>
         
-        <div className="text-sm text-orange-600 flex items-center gap-2">
-          <span>{t('tasks.showing')}: {filteredTasks.length} {t('tasks.tasksCount')}</span>
+        <div className="flex-1 p-4 sm:p-6 pt-2 overflow-x-auto scrollbar-thin scrollbar-thumb-gray-700">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6 min-h-[70vh] pb-4 md:pb-6 md:h-full">
+            <div id="todo-column" className="md:h-full snap-start md:snap-align-none">
+              <TaskColumn status="todo" title={t('tasks.todo')} />
+            </div>
+            <div id="inProgress-column" className="md:h-full snap-start md:snap-align-none">
+              <TaskColumn status="inProgress" title={t('tasks.inProgress')} />
+            </div>
+            <div id="done-column" className="md:h-full snap-start md:snap-align-none">
+              <TaskColumn status="done" title={t('tasks.done')} />
+            </div>
+          </div>
         </div>
         
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-3 xs:gap-4 h-[calc(100vh-150px)] overflow-hidden">
-          <TaskColumn status="todo" title="To Do" />
-          <TaskColumn status="inProgress" title="In Progress" />
-          <TaskColumn status="done" title="Done" />
-        </div>
-      </div>
-      
-      {showForm && (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-2 xs:p-4">
-          <div className="bg-white rounded-lg p-4 xs:p-6 w-full max-w-2xl max-h-[90vh] overflow-y-auto content-scrollable">
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-lg xs:text-xl font-semibold text-orange-600">
-                {editingTaskId ? t('tasks.editTask') : t('tasks.addNewTask')}
-              </h2>
-              <button 
-                onClick={() => {
-                  setShowForm(false);
-                  setFormData(initialFormData);
-                  setEditingTaskId(null);
-                }}
-                className="text-orange-500 hover:text-orange-700"
-              >
-                <X size={20} />
-              </button>
-            </div>
-            
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <div className="bg-orange-50/50 rounded-lg p-3 xs:p-4 border border-orange-100">
-                <h3 className="text-md font-medium text-orange-700 mb-3 border-b border-orange-100 pb-2">
-                  {t('tasks.basicInfo')}
-                </h3>
-              
-                <div className="space-y-4">
-                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 xs:gap-4">
-                    <div className="bg-white rounded-lg p-3 xs:p-4 border border-orange-100 sm:col-span-2">
-                      <label className="block text-sm font-medium text-orange-700 mb-1">
-                        {t('tasks.form.title')}
-                      </label>
-                      <input
-                        type="text"
-                        value={formData.title}
-                        onChange={e => setFormData({ ...formData, title: e.target.value })}
-                        className="w-full bg-white border border-orange-100 rounded-lg px-3 py-2 text-orange-800 text-sm focus:outline-none focus:ring-2 focus:ring-orange-400/20"
-                        placeholder={t('tasks.form.titlePlaceholder')}
-                        required
-                      />
-                    </div>
-                    
-                    <div className="bg-white rounded-lg p-3 xs:p-4 border border-orange-100">
-                      <label className="block text-sm font-medium text-orange-700 mb-1">
-                        {t('tasks.form.points')}
-                      </label>
-                      <input
-                        type="number"
-                        min="1"
-                        max="10"
-                        value={formData.points}
-                        onChange={e => setFormData({ ...formData, points: parseInt(e.target.value) })}
-                        className="w-full bg-white border border-orange-100 rounded-lg px-3 py-2 text-orange-800 text-sm focus:outline-none focus:ring-2 focus:ring-orange-400/20"
-                        required
-                      />
-                    </div>
-                  </div>
-                  
-                  <div className="bg-white rounded-lg p-3 xs:p-4 border border-orange-100">
-                    <label className="block text-sm font-medium text-orange-700 mb-1">
-                      {t('tasks.form.description')}
-                    </label>
-                    <textarea
-                      value={formData.description}
-                      onChange={e => setFormData({ ...formData, description: e.target.value })}
-                      className="w-full h-24 bg-white border border-orange-100 rounded-lg px-3 py-2 text-orange-800 text-sm focus:outline-none focus:ring-2 focus:ring-orange-400/20"
-                      placeholder={t('tasks.form.descriptionPlaceholder')}
-                    ></textarea>
-                  </div>
-                </div>
+        {showForm && (
+          <div className="fixed inset-0 bg-black/70 z-50 flex items-center justify-center p-4">
+            <div className="bg-gray-900 rounded-xl max-w-lg w-full max-h-[90vh] overflow-y-auto">
+              <div className="p-4 border-b border-gray-800 flex items-center justify-between">
+                <h2 className="text-xl font-semibold text-white">
+                  {editingTaskId ? t('tasks.editTask') : t('tasks.addTask')}
+                </h2>
+                <button
+                  onClick={() => {
+                    setShowForm(false);
+                    setEditingTaskId(null);
+                    setFormData(initialFormData);
+                  }}
+                  className="p-1 rounded-full hover:bg-gray-800"
+                >
+                  <X size={20} />
+                </button>
               </div>
               
-              <div className="bg-orange-50/50 rounded-lg p-3 xs:p-4 border border-orange-100">
-                <h3 className="text-md font-medium text-orange-700 mb-3 border-b border-orange-100 pb-2">
-                  {t('tasks.configuration')}
-                </h3>
-                
+              <form onSubmit={handleSubmit} className="p-4">
                 <div className="space-y-4">
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 xs:gap-4">
-                    <div className="bg-white rounded-lg p-3 xs:p-4 border border-orange-100">
-                      <label className="block text-sm font-medium text-orange-700 mb-1">
-                        {t('tasks.form.priority')}
+                  <div>
+                    <label htmlFor="title" className="block text-sm font-medium text-gray-300 mb-1">
+                      {t('tasks.title')} *
+                    </label>
+                    <input
+                      id="title"
+                      type="text"
+                      value={formData.title}
+                      onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                      className="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-white"
+                      required
+                    />
+                  </div>
+                  
+                  <div>
+                    <label htmlFor="description" className="block text-sm font-medium text-gray-300 mb-1">
+                      {t('tasks.description')}
+                    </label>
+                    <textarea
+                      id="description"
+                      value={formData.description}
+                      onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                      className="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-white"
+                      rows={3}
+                    />
+                  </div>
+                  
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label htmlFor="points" className="block text-sm font-medium text-gray-300 mb-1">
+                        {t('tasks.points')}
+                      </label>
+                      <input
+                        id="points"
+                        type="number"
+                        min="1"
+                        value={formData.points}
+                        onChange={(e) => setFormData({ ...formData, points: parseInt(e.target.value) })}
+                        className="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-white"
+                      />
+                    </div>
+                    <div>
+                      <label htmlFor="priority" className="block text-sm font-medium text-gray-300 mb-1">
+                        {t('tasks.priority.label')}
                       </label>
                       <select
+                        id="priority"
                         value={formData.priority}
-                        onChange={e => setFormData({ ...formData, priority: e.target.value as Task['priority'] })}
-                        className="w-full bg-white border border-orange-100 rounded-lg px-3 py-2 text-orange-800 text-sm focus:outline-none focus:ring-2 focus:ring-orange-400/20"
-                        required
+                        onChange={(e) => setFormData({ ...formData, priority: e.target.value as Task['priority'] })}
+                        className="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-white"
                       >
                         <option value="low">{t('tasks.priority.low')}</option>
                         <option value="medium">{t('tasks.priority.medium')}</option>
                         <option value="high">{t('tasks.priority.high')}</option>
                       </select>
                     </div>
-                    
-                    <div className="bg-white rounded-lg p-3 xs:p-4 border border-orange-100">
-                      <label className="block text-sm font-medium text-orange-700 mb-1">
-                        {t('tasks.form.type')}
+                  </div>
+                  
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label htmlFor="dueDate" className="block text-sm font-medium text-gray-300 mb-1">
+                        {t('tasks.dueDate')}
+                      </label>
+                      <input
+                        id="dueDate"
+                        type="date"
+                        value={formData.dueDate}
+                        onChange={(e) => setFormData({ ...formData, dueDate: e.target.value })}
+                        className="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-white"
+                      />
+                    </div>
+                    <div>
+                      <label htmlFor="type" className="block text-sm font-medium text-gray-300 mb-1">
+                        {t('tasks.type')} *
                       </label>
                       <select
+                        id="type"
                         value={formData.type}
-                        onChange={e => setFormData({ ...formData, type: e.target.value as 'hostel' | 'personal' })}
-                        className="w-full bg-white border border-orange-100 rounded-lg px-3 py-2 text-orange-800 text-sm focus:outline-none focus:ring-2 focus:ring-orange-400/20"
-                        required
+                        onChange={(e) => setFormData({ ...formData, type: e.target.value as Task['type'] })}
+                        className="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-white"
                       >
                         <option value="hostel">{t('tasks.hostel')}</option>
                         <option value="personal">{t('tasks.personal')}</option>
@@ -909,366 +1104,100 @@ export default function Tasks() {
                     </div>
                   </div>
                   
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 xs:gap-4">
-                    <div className="bg-white rounded-lg p-3 xs:p-4 border border-orange-100">
-                      <label className="block text-sm font-medium text-orange-700 mb-1">
-                        {t('tasks.form.dueDate')}
-                      </label>
+                  <div className="flex items-center space-x-4">
+                    <div className="flex items-center">
                       <input
-                        type="date"
-                        value={formData.dueDate}
-                        onChange={e => setFormData({ ...formData, dueDate: e.target.value })}
-                        className="w-full bg-white border border-orange-100 rounded-lg px-3 py-2 text-orange-800 text-sm focus:outline-none focus:ring-2 focus:ring-orange-400/20"
-                        required
+                        id="isPrivate"
+                        type="checkbox"
+                        checked={formData.isPrivate}
+                        onChange={(e) => setFormData({ ...formData, isPrivate: e.target.checked })}
+                        className="w-4 h-4 rounded border-gray-700 bg-gray-800 text-blue-600"
                       />
-                    </div>
-                    
-                    <div className="bg-white rounded-lg p-3 xs:p-4 border border-orange-100">
-                      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-2">
-                        <div className="flex items-center gap-2">
-                          <div className={`w-4 h-4 rounded-full ${formData.isPrivate ? 'bg-red-400' : 'bg-green-400'}`}></div>
-                          <label className="block text-sm font-medium text-orange-700">
-                            {t('tasks.form.visibility')}
-                          </label>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <span className="text-xs">{formData.isPrivate ? t('tasks.form.private') : t('tasks.form.public')}</span>
-                          <label className="relative inline-flex items-center cursor-pointer">
-                            <input
-                              type="checkbox"
-                              checked={!!formData.isPrivate}
-                              onChange={e => setFormData({ ...formData, isPrivate: e.target.checked })}
-                              className="sr-only peer"
-                            />
-                            <div
-                              className={`w-10 h-6 bg-gray-300 rounded-full peer peer-checked:bg-orange-400 
-                              peer-focus:ring-2 peer-focus:ring-orange-300`}
-                            >
-                              <span 
-                                className={`block h-6 w-6 rounded-full bg-white transform transition-transform duration-200 ease-in-out ${
-                                  formData.isPrivate ? 'translate-x-4' : 'translate-x-0'
-                                }`}
-                              />
-                            </div>
-                          </label>
-                        </div>
-                      </div>
-                      {formData.isPrivate && (
-                        <p className="text-xs text-orange-500 mt-2">
-                          <AlertTriangle size={12} className="inline mr-1" />
-                          {t('tasks.form.privateHint')}
-                        </p>
-                      )}
-                    </div>
-                  </div>
-                </div>
-              </div>
-              
-              <div className="bg-orange-50/50 rounded-lg p-3 xs:p-4 border border-orange-100">
-                <h3 className="text-md font-medium text-orange-700 mb-3 border-b border-orange-100 pb-2">
-                  {t('tasks.advancedOptions')}
-                </h3>
-                
-                <div className="space-y-4">
-                  <div className="bg-white rounded-lg p-3 xs:p-4 border border-orange-100">
-                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-2">
-                      <div className="flex items-center gap-2">
-                        <Camera size={16} className="text-orange-600" />
-                        <label className="block text-sm font-medium text-orange-700">
-                          {t('tasks.form.requirePhoto')}
-                        </label>
-                      </div>
-                      <label className="relative inline-flex items-center cursor-pointer">
-                        <input
-                          type="checkbox"
-                          checked={formData.requirePhoto}
-                          onChange={e => setFormData({ ...formData, requirePhoto: e.target.checked })}
-                          className="sr-only peer"
-                        />
-                        <div
-                          className={`w-10 h-6 bg-gray-300 rounded-full peer peer-checked:bg-orange-400 
-                          peer-focus:ring-2 peer-focus:ring-orange-300`}
-                        >
-                          <span 
-                            className={`block h-6 w-6 rounded-full bg-white transform transition-transform duration-200 ease-in-out ${
-                              formData.requirePhoto ? 'translate-x-4' : 'translate-x-0'
-                            }`}
-                          />
-                        </div>
+                      <label htmlFor="isPrivate" className="ml-2 text-sm font-medium text-gray-300">
+                        {t('tasks.privateTask')}
                       </label>
                     </div>
-                    {formData.requirePhoto && (
-                      <p className="text-xs text-orange-500 mt-2">
-                        <AlertTriangle size={12} className="inline mr-1" />
-                        {t('tasks.form.requirePhotoHint')}
-                      </p>
-                    )}
-                  </div>
-                  
-                  <div className="bg-white rounded-lg p-3 xs:p-4 border border-orange-100">
-                    <label className="block text-sm font-medium text-orange-700 mb-1 flex items-center gap-2">
-                      <Users size={16} className="text-orange-600" />
-                      {t('tasks.form.assignTo')}
-                    </label>
-                    <div className="space-y-2">
-                      <div className="flex flex-wrap gap-2 mb-2 max-h-20 overflow-y-auto">
-                        {formData.assignedTo?.length ? (
-                          formData.assignedTo?.map(userId => {
-                            const volunteer = volunteers.find(v => v.id === userId);
-                            return volunteer ? (
-                              <div
-                                key={userId}
-                                className="flex items-center gap-2 bg-orange-50 rounded-lg p-2"
-                              >
-                                <div className="w-6 h-6 rounded-full bg-orange-100 flex items-center justify-center text-orange-700 text-sm">
-                                  {volunteer.name[0]}
-                                </div>
-                                <span className="text-sm text-orange-700">{volunteer.name}</span>
-                                <button
-                                  type="button"
-                                  onClick={() => {
-                                    const newAssignedTo = formData.assignedTo?.filter(id => id !== userId) || [];
-                                    setFormData({ ...formData, assignedTo: newAssignedTo });
-                                  }}
-                                  className="text-red-400 hover:text-red-500 p-1"
-                                >
-                                  <X size={14} />
-                                </button>
-                              </div>
-                            ) : null;
-                          })
-                        ) : (
-                          <p className="text-xs text-orange-400 italic">{t('tasks.form.noAssignees')}</p>
-                        )}
-                      </div>
-                      <select
-                        className="w-full bg-white border border-orange-100 rounded-lg px-3 sm:px-4 py-2 text-orange-800 text-sm focus:outline-none focus:ring-2 focus:ring-orange-400/20"
-                        onChange={(e) => {
-                          const userId = e.target.value;
-                          if (userId && !formData.assignedTo?.includes(userId)) {
-                            const newAssignedTo = [...(formData.assignedTo || []), userId];
-                            setFormData({ ...formData, assignedTo: newAssignedTo });
-                          }
-                          e.target.value = '';
-                        }}
-                        value=""
-                      >
-                        <option value="">{t('tasks.form.addVolunteer')}</option>
-                        {volunteers
-                          .filter(v => !formData.assignedTo?.includes(v.id))
-                          .map(volunteer => (
-                            <option key={volunteer.id} value={volunteer.id}>
-                              {volunteer.name}
-                            </option>
-                          ))}
-                      </select>
+                    <div className="flex items-center">
+                      <input
+                        id="requirePhoto"
+                        type="checkbox"
+                        checked={formData.requirePhoto}
+                        onChange={(e) => setFormData({ ...formData, requirePhoto: e.target.checked })}
+                        className="w-4 h-4 rounded border-gray-700 bg-gray-800 text-blue-600"
+                      />
+                      <label htmlFor="requirePhoto" className="ml-2 text-sm font-medium text-gray-300">
+                        {t('tasks.requirePhoto')}
+                      </label>
                     </div>
                   </div>
                   
-                  <div className="bg-white rounded-lg p-3 xs:p-4 border border-orange-100">
-                    <label className="block text-sm font-medium text-orange-700 mb-1 flex items-center gap-2">
-                      <Tag size={16} className="text-orange-600" />
-                      {t('tasks.form.tags')}
-                    </label>
-                    <div className="flex flex-wrap gap-2 mb-2 max-h-20 overflow-y-auto">
-                      {formData.tags?.length ? formData.tags?.map(tag => (
-                        <span
-                          key={tag}
-                          className="text-xs sm:text-sm px-2 py-1 rounded-full bg-orange-50 text-orange-700 flex items-center gap-1"
-                        >
-                          {tag}
-                          <button
-                            type="button"
-                            onClick={() => setFormData({
-                              ...formData,
-                              tags: formData.tags?.filter(t => t !== tag)
-                            })}
-                            className="hover:text-orange-800"
-                          >
-                            <X size={14} />
-                          </button>
-                        </span>
-                      )) : (
-                        <p className="text-xs text-orange-400 italic">{t('tasks.form.noTags')}</p>
-                      )}
-                    </div>
-                    <div className="flex gap-2">
-                      <input
-                        type="text"
-                        value={newTag}
-                        onChange={e => setNewTag(e.target.value)}
-                        placeholder={t('tasks.form.addTagPlaceholder')}
-                        className="flex-1 bg-white border border-orange-100 rounded-lg px-3 sm:px-4 py-2 text-orange-800 text-sm placeholder-orange-300 focus:outline-none focus:ring-2 focus:ring-orange-400/20"
-                        onKeyPress={e => {
-                          if (e.key === 'Enter') {
-                            e.preventDefault();
-                            if (newTag.trim()) {
-                              setFormData({
-                                ...formData,
-                                tags: [...(formData.tags || []), newTag.trim()]
-                              });
-                              setNewTag('');
-                            }
-                          }
-                        }}
-                      />
-                      <button
-                        type="button"
-                        onClick={() => {
-                          if (newTag.trim()) {
-                            setFormData({
-                              ...formData,
-                              tags: [...(formData.tags || []), newTag.trim()]
-                            });
-                            setNewTag('');
-                          }
-                        }}
-                        className="px-3 sm:px-4 py-2 bg-orange-500 hover:bg-orange-600 text-white rounded-lg hover:shadow-lg hover:shadow-orange-500/20 transition-all duration-300 text-sm"
-                      >
-                        {t('tasks.form.add')}
-                      </button>
-                    </div>
+                  <div className="pt-2 flex justify-end">
+                    <button
+                      type="submit"
+                      className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition-colors"
+                    >
+                      {editingTaskId ? t('common.update') : t('common.create')}
+                    </button>
                   </div>
                 </div>
-              </div>
-              
-              <div className="flex justify-end gap-3 pt-2">
+              </form>
+            </div>
+          </div>
+        )}
+        
+        {selectedTask && (
+          <div className="fixed inset-0 bg-black/70 z-50 flex items-center justify-center p-4">
+            <div className="bg-gray-900 rounded-xl max-w-3xl w-full max-h-[90vh] overflow-y-auto">
+              <TaskDetail />
+            </div>
+          </div>
+        )}
+        
+        {showConfirmDelete && (
+          <div className="fixed inset-0 bg-black/70 z-50 flex items-center justify-center p-4">
+            <div className="bg-gray-900 rounded-xl max-w-md w-full p-6">
+              <h2 className="text-xl font-semibold text-white mb-4">{t('tasks.confirmDelete')}</h2>
+              <p className="text-gray-300 mb-6">{t('tasks.confirmDeleteText')}</p>
+              <div className="flex justify-end gap-3">
                 <button
-                  type="button"
-                  onClick={() => {
-                    setShowForm(false);
-                    setFormData(initialFormData);
-                    setEditingTaskId(null);
-                  }}
-                  className="px-3 xs:px-4 py-2 text-orange-600 border border-orange-100 rounded-lg hover:bg-orange-50 transition-colors text-sm"
+                  onClick={() => setShowConfirmDelete(null)}
+                  className="bg-gray-800 hover:bg-gray-700 text-white px-4 py-2 rounded-lg transition-colors"
                 >
                   {t('common.cancel')}
                 </button>
                 <button
-                  type="submit"
-                  className="px-3 xs:px-4 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition-colors text-sm shadow-md shadow-orange-400/10"
+                  onClick={() => handleDelete(showConfirmDelete)}
+                  className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg transition-colors"
                 >
-                  {editingTaskId ? t('tasks.form.updateTask') : t('tasks.form.createTask')}
+                  {t('common.delete')}
                 </button>
               </div>
-            </form>
+            </div>
           </div>
-        </div>
-      )}
+        )}
+      </div>
+    );
+  };
 
-      {selectedTask && (
-        <TaskDetail />
-      )}
+  const styles = `
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
 
-      {showConfirmDelete && (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-3 xs:p-4">
-          <div className="bg-white rounded-lg p-4 xs:p-6 w-full max-w-md shadow-xl">
-            <div className="flex items-center gap-3 mb-4">
-              <div className="w-10 h-10 rounded-full bg-red-100 flex items-center justify-center flex-shrink-0">
-                <Trash2 size={20} className="text-red-600" />
-              </div>
-              <h2 className="text-lg xs:text-xl font-medium text-gray-700">
-                {t('tasks.confirmDelete')}
-              </h2>
-            </div>
-            
-            <p className="text-sm text-gray-600 mb-6">
-              {t('tasks.deleteWarning')}
-            </p>
-            
-            <div className="flex justify-end gap-3">
-              <button
-                onClick={() => setShowConfirmDelete(null)}
-                className="px-4 py-2.5 border border-gray-200 text-gray-600 hover:text-gray-700 hover:border-gray-300 rounded-lg transition-colors text-sm"
-              >
-                {t('common.cancel')}
-              </button>
-              <button
-                onClick={() => handleDelete(showConfirmDelete)}
-                className="px-4 py-2.5 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors text-sm shadow-sm"
-              >
-                {t('tasks.confirmDeleteButton')}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+  .animate-fadeIn {
+    animation: fadeIn 0.3s ease-out forwards;
+  }
+  `;
 
-      {showConfirmAllDelete && (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-3 xs:p-4">
-          <div className="bg-white rounded-lg p-4 xs:p-6 w-full max-w-md">
-            <h2 className="text-lg xs:text-xl font-semibold text-orange-600 mb-3">
-              Excluir Todas as Tarefas
-            </h2>
-            <p className="text-sm text-orange-700/80 mb-4 xs:mb-6">
-              Tem certeza de que deseja excluir <strong>todas</strong> as tarefas? Esta ação não pode ser desfeita.
-            </p>
-            <div className="flex justify-end gap-3">
-              <button
-                onClick={() => setShowConfirmAllDelete(false)}
-                className="px-3 xs:px-4 py-2 text-orange-600 hover:text-orange-700 transition-colors text-sm"
-                disabled={isLoadingAction}
-              >
-                Cancelar
-              </button>
-              <button
-                onClick={handleDeleteAllTasks}
-                className="px-3 xs:px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors text-sm flex items-center gap-2"
-                disabled={isLoadingAction}
-              >
-                {isLoadingAction ? (
-                  <>
-                    <span className="animate-pulse">Processando...</span>
-                  </>
-                ) : (
-                  <>
-                    <AlertTriangle size={14} />
-                    <span>Excluir Todas</span>
-                  </>
-                )}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-      
-      {showConfirmCleanup && (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-3 xs:p-4">
-          <div className="bg-white rounded-lg p-4 xs:p-6 w-full max-w-md">
-            <h2 className="text-lg xs:text-xl font-semibold text-orange-600 mb-3">
-              Limpar Tarefas Excluídas
-            </h2>
-            <p className="text-sm text-orange-700/80 mb-4 xs:mb-6">
-              Esta ação removerá permanentemente todas as tarefas marcadas como excluídas do banco de dados. Deseja continuar?
-            </p>
-            <div className="flex justify-end gap-3">
-              <button
-                onClick={() => setShowConfirmCleanup(false)}
-                className="px-3 xs:px-4 py-2 text-orange-600 hover:text-orange-700 transition-colors text-sm"
-                disabled={isLoadingAction}
-              >
-                Cancelar
-              </button>
-              <button
-                onClick={handleCleanupDeletedTasks}
-                className="px-3 xs:px-4 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition-colors text-sm flex items-center gap-2"
-                disabled={isLoadingAction}
-              >
-                {isLoadingAction ? (
-                  <>
-                    <span className="animate-pulse">Processando...</span>
-                  </>
-                ) : (
-                  <>
-                    <Trash2 size={14} />
-                    <span>Limpar</span>
-                  </>
-                )}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-    </div>
+  // Add the animation styles to the document
+  if (typeof document !== 'undefined') {
+    const styleEl = document.createElement('style');
+    styleEl.innerHTML = styles;
+    document.head.appendChild(styleEl);
+  }
+
+  return (
+    <TasksPage />
   );
 }

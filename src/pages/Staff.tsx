@@ -2,10 +2,11 @@ import React, { useState, useEffect } from 'react';
 import { useStore } from '../store/useStore';
 import { useTranslation } from '../hooks/useTranslation';
 import { useAuth } from '../hooks/useAuth';
-import { Plus, Trash2, Edit, Mail, Phone, MapPin, Calendar, Shield, ShieldOff, Users, RefreshCw } from 'lucide-react';
+import { Plus, Trash2, Edit, Mail, Phone, MapPin, Calendar, Shield, ShieldOff, Users, RefreshCw, Search, PlusCircle, X, CheckCircle, AlertTriangle, Loader2, UserPlus, UserCog } from 'lucide-react';
 import type { UserData, User } from '../types';
 import * as authService from '../services/auth.service';
 import SimpleDatePicker from '../components/SimpleDatePicker';
+import toast from 'react-hot-toast';
 
 interface StaffFormData {
   name: string;
@@ -56,6 +57,9 @@ export default function Staff() {
   const [showConfirmDelete, setShowConfirmDelete] = useState<string | null>(null);
   const [showConfirmRole, setShowConfirmRole] = useState<{id: string, action: 'make' | 'remove'} | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [search, setSearch] = useState('');
+  const [showAddModal, setShowAddModal] = useState(false);
+  const [selectedUser, setSelectedUser] = useState<any>(null);
 
   // Carregar todos os usuários quando o componente for montado
   useEffect(() => {
@@ -142,7 +146,7 @@ export default function Staff() {
             setEditingId(null);
             setIsLoading(false);
             
-            alert(t('staff.userRegistered'));
+            toast.success(t('staff.userRegistered'));
           } else {
             throw new Error(t('staff.registerFailed'));
           }
@@ -211,273 +215,517 @@ export default function Staff() {
 
   const isAdmin = currentUser?.role === 'admin';
 
+  // Filtrar usuários baseado na pesquisa
+  const filteredUsers = users.filter(u => 
+    u.name.toLowerCase().includes(search.toLowerCase()) || 
+    u.email.toLowerCase().includes(search.toLowerCase()) ||
+    (u.phone && u.phone.toLowerCase().includes(search.toLowerCase()))
+  );
+
+  // Ordenar usuários: administradores primeiro, depois por nome
+  const sortedUsers = [...filteredUsers].sort((a, b) => {
+    if (a.role === 'admin' && b.role !== 'admin') return -1;
+    if (a.role !== 'admin' && b.role === 'admin') return 1;
+    return a.name.localeCompare(b.name);
+  });
+
+  const handleOpenAddModal = () => {
+    setFormData({
+      name: '',
+      email: '',
+      phone: '',
+      role: 'staff',
+      password: '',
+    });
+    setShowAddModal(true);
+  };
+
+  const handleOpenEditModal = (user: any) => {
+    setSelectedUser(user);
+    setFormData({
+      name: user.name,
+      email: user.email,
+      phone: user.phone || '',
+      role: user.role,
+      password: '', // Não preenchemos a senha ao editar
+    });
+    setShowForm(true);
+  };
+
+  const handleOpenDeleteConfirm = (user: any) => {
+    setSelectedUser(user);
+    setShowConfirmDelete(true);
+  };
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+    setFormData({
+      ...formData,
+      [e.target.name]: e.target.value,
+    });
+  };
+
+  const handleAddUser = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!formData.name || !formData.email || !formData.password) {
+      toast.error(t('staff.fillRequiredFields'));
+      return;
+    }
+
+    try {
+      setIsLoading(true);
+      const toastId = toast.loading(t('staff.addingUser'));
+
+      await addStaff({
+        name: formData.name,
+        email: formData.email,
+        phone: formData.phone,
+        role: formData.role as 'admin' | 'staff',
+        password: formData.password,
+      });
+
+      toast.success(t('staff.userAdded'), { id: toastId });
+      setShowAddModal(false);
+    } catch (error: any) {
+      toast.error(error.message || t('staff.errorAddingUser'));
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleUpdateUser = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!formData.name || !formData.email) {
+      toast.error(t('staff.fillRequiredFields'));
+      return;
+    }
+
+    try {
+      setIsLoading(true);
+      const toastId = toast.loading(t('staff.updatingUser'));
+
+      const updateData: any = {
+        name: formData.name,
+        email: formData.email,
+        phone: formData.phone,
+        role: formData.role as 'admin' | 'staff',
+      };
+
+      // Apenas incluir a senha se foi fornecida
+      if (formData.password) {
+        updateData.password = formData.password;
+      }
+
+      await updateStaff(selectedUser.id, updateData);
+
+      toast.success(t('staff.userUpdated'), { id: toastId });
+      setShowForm(false);
+    } catch (error: any) {
+      toast.error(error.message || t('staff.errorUpdatingUser'));
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleDeleteUser = async () => {
+    if (!selectedUser) return;
+
+    try {
+      setIsLoading(true);
+      const toastId = toast.loading(t('staff.removingUser'));
+
+      await removeStaff(selectedUser.id);
+
+      toast.success(t('staff.userRemoved'), { id: toastId });
+      setShowConfirmDelete(false);
+    } catch (error: any) {
+      toast.error(error.message || t('staff.errorRemovingUser'));
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const getRoleText = (role: string) => {
+    switch (role) {
+      case 'admin': return t('staff.admin');
+      case 'staff': return t('staff.staff');
+      default: return role;
+    }
+  };
+
   return (
-    <div className="p-4 h-full overflow-auto">
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-light text-orange-700">{t('staff.title')}</h1>
-        <div className="flex gap-2">
+    <div className="bg-gray-900 min-h-full p-4">
+      <div className="max-w-5xl mx-auto">
+        <h1 className="text-2xl font-light text-blue-300 mb-4">{t('staff.title')}</h1>
+        
+        {/* Barra de ferramentas */}
+        <div className="flex justify-between items-center mb-6 flex-wrap gap-4">
+          <div className="relative w-full md:w-72">
+            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+              <Search size={18} className="text-gray-400" />
+            </div>
+            <input
+              type="text"
+              placeholder={t('search')}
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              className="bg-gray-800 border border-gray-700 focus:border-blue-500 block w-full pl-10 pr-3 py-2 rounded-lg text-gray-300 focus:outline-none focus:ring-1 focus:ring-blue-500"
+            />
+          </div>
+          
           <button
-            onClick={loadUsers}
-            className="p-2 bg-orange-100 text-orange-600 rounded-lg hover:bg-orange-200 transition-colors"
-            disabled={isLoading}
+            onClick={handleOpenAddModal}
+            className="bg-blue-700 hover:bg-blue-800 text-white px-4 py-2 rounded-lg flex items-center gap-2"
           >
-            <RefreshCw size={20} className={isLoading ? 'animate-spin' : ''} />
+            <UserPlus size={18} />
+            <span>{t('staff.addUser')}</span>
           </button>
-          <button
-            onClick={() => {
-              setFormData(initialFormData);
-              setEditingId(null);
-              setShowForm(true);
-            }}
-            className="bg-orange-600 hover:bg-orange-700 text-white p-2 rounded-lg transition-colors flex items-center"
-          >
-            <Plus size={20} />
-          </button>
+        </div>
+        
+        {/* Lista de usuários */}
+        <div className="bg-gray-800 border border-gray-700 rounded-xl overflow-hidden">
+          <div className="bg-gray-800 p-4 border-b border-gray-700 flex items-center gap-2">
+            <Users size={18} className="text-blue-400" />
+            <h2 className="font-medium text-blue-300">
+              {t('staff.allUsers')} ({sortedUsers.length})
+            </h2>
+          </div>
+          
+          {sortedUsers.length === 0 ? (
+            <div className="p-6 text-center text-gray-400">
+              {search ? t('staff.noUsersFound') : t('staff.noUsers')}
+            </div>
+          ) : (
+            <ul className="divide-y divide-gray-700">
+              {sortedUsers.map(user => (
+                <li key={user.id} className="p-4 hover:bg-gray-750 transition-colors">
+                  <div className="flex justify-between items-center">
+                    <div>
+                      <h3 className="text-gray-200 font-medium">{user.name}</h3>
+                      <div className="text-sm text-gray-400">{user.email}</div>
+                      {user.phone && (
+                        <div className="text-sm text-gray-400">{user.phone}</div>
+                      )}
+                    </div>
+                    
+                    <div className="flex items-center">
+                      <span className={`px-2 py-1 text-xs rounded-full ${
+                        user.role === 'admin' 
+                          ? 'bg-blue-900/50 text-blue-300 border border-blue-700/50' 
+                          : 'bg-gray-700 text-gray-300'
+                      } mr-4`}>
+                        {getRoleText(user.role)}
+                      </span>
+                      
+                      <div className="flex gap-2">
+                        {/* Não permitir editar o próprio usuário */}
+                        {user.id !== currentUser?.id && (
+                          <>
+                            <button
+                              onClick={() => handleOpenEditModal(user)}
+                              className="p-1.5 hover:bg-gray-700 rounded-full text-gray-400 hover:text-blue-400"
+                              aria-label={t('edit')}
+                            >
+                              <Edit size={18} />
+                            </button>
+                            
+                            <button
+                              onClick={() => handleOpenDeleteConfirm(user)}
+                              className="p-1.5 hover:bg-gray-700 rounded-full text-gray-400 hover:text-red-400"
+                              aria-label={t('remove')}
+                            >
+                              <Trash2 size={18} />
+                            </button>
+                          </>
+                        )}
+                        
+                        {user.id === currentUser?.id && (
+                          <span className="p-1.5 rounded-full text-orange-400">
+                            <UserCog size={18} />
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                </li>
+              ))}
+            </ul>
+          )}
         </div>
       </div>
-
-      {error && (
-        <div className="bg-red-100 text-red-600 p-3 rounded-lg mb-4">
-          {error}
-        </div>
-      )}
-
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {/* Admin Section */}
-        <div className="bg-white/80 backdrop-blur-sm rounded-xl overflow-hidden shadow-sm border border-orange-100">
-          <div className="p-4 border-b border-orange-100 flex items-center justify-between">
-            <h2 className="text-lg font-medium text-orange-700 flex items-center gap-2">
-              <Shield size={18} className="text-orange-600" />
-              {t('staff.admins')}
-            </h2>
-            <span className="bg-orange-100 text-orange-600 text-xs rounded-full px-2 py-0.5">
-              {admins.length}
-            </span>
-          </div>
-          <div className="divide-y divide-orange-100">
-            {admins.map(admin => (
-              <StaffInfo 
-                key={admin.id} 
-                staff={admin} 
-                onEdit={handleEdit}
-                onDelete={handleDelete}
-                onRoleChange={handleRoleChange}
-              />
-            ))}
-          </div>
-        </div>
-
-        {/* Volunteers Section */}
-        <div className="bg-white/80 backdrop-blur-sm rounded-xl overflow-hidden shadow-sm border border-orange-100">
-          <div className="p-4 border-b border-orange-100 flex items-center justify-between">
-            <h2 className="text-lg font-medium text-orange-700 flex items-center gap-2">
-              <Users size={18} className="text-orange-600" />
-              {t('staff.volunteers')}
-            </h2>
-            <span className="bg-orange-100 text-orange-600 text-xs rounded-full px-2 py-0.5">
-              {volunteers.length}
-            </span>
-          </div>
-          <div className="divide-y divide-orange-100">
-            {volunteers.map(volunteer => (
-              <StaffInfo 
-                key={volunteer.id} 
-                staff={volunteer} 
-                onEdit={handleEdit}
-                onDelete={handleDelete}
-                onRoleChange={handleRoleChange}
-              />
-            ))}
-          </div>
-        </div>
-      </div>
-
-      {/* Staff Form Modal */}
-      {showForm && (
-        <div className="fixed inset-0 bg-black/20 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-xl shadow-lg w-full max-w-md max-h-[90vh] overflow-y-auto">
-            <div className="p-4 border-b border-orange-100">
-              <h3 className="text-lg font-medium text-orange-700">
-                {editingId ? t('staff.editStaff') : t('staff.addStaff')}
-              </h3>
+      
+      {/* Modal de adicionar usuário */}
+      {showAddModal && (
+        <div className="fixed inset-0 bg-black/60 flex items-center justify-center p-4 z-50">
+          <div className="bg-gray-800 border border-gray-700 rounded-xl shadow-xl w-full max-w-md">
+            <div className="flex justify-between items-center p-4 border-b border-gray-700">
+              <h2 className="text-lg font-medium text-blue-300">{t('staff.addUser')}</h2>
+              <button 
+                onClick={() => setShowAddModal(false)}
+                className="text-gray-500 hover:text-gray-300"
+              >
+                <X size={20} />
+              </button>
             </div>
             
-            <form onSubmit={handleSubmit} className="p-4 space-y-4">
+            <form onSubmit={handleAddUser} className="p-4 space-y-4">
               <div>
-                <label className="block text-sm font-medium text-orange-700 mb-1">
-                  {t('staff.name')}
+                <label className="block text-sm text-gray-400 mb-1">
+                  {t('staff.name')} *
                 </label>
                 <input
                   type="text"
+                  name="name"
                   value={formData.name}
-                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                  className="w-full p-2 border border-orange-100 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-300"
+                  onChange={handleInputChange}
+                  className="w-full px-3 py-2 rounded-lg bg-gray-700 border border-gray-600 text-gray-200 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
                   required
                 />
               </div>
-
+              
               <div>
-                <label className="block text-sm font-medium text-orange-700 mb-1">
-                  {t('staff.email')}
+                <label className="block text-sm text-gray-400 mb-1">
+                  {t('staff.email')} *
                 </label>
                 <input
                   type="email"
+                  name="email"
                   value={formData.email}
-                  onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                  className="w-full p-2 border border-orange-100 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-300"
+                  onChange={handleInputChange}
+                  className="w-full px-3 py-2 rounded-lg bg-gray-700 border border-gray-600 text-gray-200 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
                   required
-                  disabled={!!editingId}
                 />
               </div>
-
-              {!editingId && (
-                <div>
-                  <label className="block text-sm font-medium text-orange-700 mb-1">
-                    {t('staff.password')}
-                  </label>
-                  <input
-                    type="password"
-                    value={formData.password}
-                    onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                    className="w-full p-2 border border-orange-100 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-300"
-                    required={!editingId}
-                  />
-                </div>
-              )}
-
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-orange-700 mb-1">
-                    {t('staff.country')}
-                  </label>
-                  <input
-                    type="text"
-                    value={formData.country}
-                    onChange={(e) => setFormData({ ...formData, country: e.target.value })}
-                    className="w-full p-2 border border-orange-100 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-300"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-orange-700 mb-1">
-                    {t('staff.age')}
-                  </label>
-                  <input
-                    type="number"
-                    value={formData.age}
-                    onChange={(e) => setFormData({ ...formData, age: e.target.value })}
-                    className="w-full p-2 border border-orange-100 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-300"
-                  />
-                </div>
-              </div>
-
+              
               <div>
-                <label className="block text-sm font-medium text-orange-700 mb-1">
+                <label className="block text-sm text-gray-400 mb-1">
                   {t('staff.phone')}
                 </label>
                 <input
                   type="tel"
+                  name="phone"
                   value={formData.phone}
-                  onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                  className="w-full p-2 border border-orange-100 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-300"
+                  onChange={handleInputChange}
+                  className="w-full px-3 py-2 rounded-lg bg-gray-700 border border-gray-600 text-gray-200 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
                 />
               </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-orange-700 mb-1">
-                    {t('staff.arrivalDate')}
-                  </label>
-                  <SimpleDatePicker 
-                    value={formData.arrivalDate} 
-                    onChange={(date) => setFormData({ ...formData, arrivalDate: date || new Date() })}
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-orange-700 mb-1">
-                    {t('staff.departureDate')}
-                  </label>
-                  <SimpleDatePicker 
-                    value={formData.departureDate} 
-                    onChange={(date) => setFormData({ ...formData, departureDate: date || new Date() })}
-                  />
-                </div>
+              
+              <div>
+                <label className="block text-sm text-gray-400 mb-1">
+                  {t('staff.role')}
+                </label>
+                <select
+                  name="role"
+                  value={formData.role}
+                  onChange={handleInputChange}
+                  className="w-full px-3 py-2 rounded-lg bg-gray-700 border border-gray-600 text-gray-200 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                >
+                  <option value="staff">{t('staff.staff')}</option>
+                  <option value="admin">{t('staff.admin')}</option>
+                </select>
               </div>
-
-              <div className="flex justify-end space-x-2 pt-4">
+              
+              <div>
+                <label className="block text-sm text-gray-400 mb-1">
+                  {t('staff.password')} *
+                </label>
+                <input
+                  type="password"
+                  name="password"
+                  value={formData.password}
+                  onChange={handleInputChange}
+                  className="w-full px-3 py-2 rounded-lg bg-gray-700 border border-gray-600 text-gray-200 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                  required
+                />
+              </div>
+              
+              <div className="flex justify-end gap-2 mt-6">
                 <button
                   type="button"
-                  onClick={() => setShowForm(false)}
-                  className="px-4 py-2 text-orange-600 hover:bg-orange-50 rounded-lg transition-colors"
+                  onClick={() => setShowAddModal(false)}
+                  className="px-4 py-2 bg-gray-700 text-gray-300 rounded-lg hover:bg-gray-600"
                 >
                   {t('cancel')}
                 </button>
                 <button
                   type="submit"
-                  className="px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition-colors"
                   disabled={isLoading}
+                  className="px-4 py-2 bg-blue-700 text-white rounded-lg hover:bg-blue-800 flex items-center gap-2"
                 >
-                  {isLoading ? t('loading') : editingId ? t('staff.update') : t('staff.add')}
+                  {isLoading ? (
+                    <>
+                      <Loader2 size={16} className="animate-spin" />
+                      {t('saving')}
+                    </>
+                  ) : (
+                    <>
+                      <CheckCircle size={16} />
+                      {t('save')}
+                    </>
+                  )}
                 </button>
               </div>
             </form>
           </div>
         </div>
       )}
-
-      {/* Delete Confirmation Modal */}
-      {showConfirmDelete && (
-        <div className="fixed inset-0 bg-black/20 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-xl shadow-lg w-full max-w-md">
-            <div className="p-4 border-b border-orange-100">
-              <h3 className="text-lg font-medium text-orange-700">{t('staff.confirmDelete')}</h3>
-            </div>
-            <div className="p-4">
-              <p className="text-orange-600">{t('staff.deleteWarning')}</p>
-            </div>
-            <div className="p-4 flex justify-end space-x-2 border-t border-orange-100">
-              <button
-                onClick={() => setShowConfirmDelete(null)}
-                className="px-4 py-2 text-orange-600 hover:bg-orange-50 rounded-lg transition-colors"
+      
+      {/* Modal de editar usuário */}
+      {showForm && (
+        <div className="fixed inset-0 bg-black/60 flex items-center justify-center p-4 z-50">
+          <div className="bg-gray-800 border border-gray-700 rounded-xl shadow-xl w-full max-w-md">
+            <div className="flex justify-between items-center p-4 border-b border-gray-700">
+              <h2 className="text-lg font-medium text-blue-300">{t('staff.editUser')}</h2>
+              <button 
+                onClick={() => setShowForm(false)}
+                className="text-gray-500 hover:text-gray-300"
               >
-                {t('cancel')}
-              </button>
-              <button
-                onClick={confirmDelete}
-                className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
-              >
-                {t('staff.delete')}
+                <X size={20} />
               </button>
             </div>
+            
+            <form onSubmit={handleSubmit} className="p-4 space-y-4">
+              <div>
+                <label className="block text-sm text-gray-400 mb-1">
+                  {t('staff.name')} *
+                </label>
+                <input
+                  type="text"
+                  name="name"
+                  value={formData.name}
+                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                  className="w-full px-3 py-2 rounded-lg bg-gray-700 border border-gray-600 text-gray-200 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                  required
+                />
+              </div>
+              
+              <div>
+                <label className="block text-sm text-gray-400 mb-1">
+                  {t('staff.email')} *
+                </label>
+                <input
+                  type="email"
+                  name="email"
+                  value={formData.email}
+                  onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                  className="w-full px-3 py-2 rounded-lg bg-gray-700 border border-gray-600 text-gray-200 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                  required
+                />
+              </div>
+              
+              <div>
+                <label className="block text-sm text-gray-400 mb-1">
+                  {t('staff.phone')}
+                </label>
+                <input
+                  type="tel"
+                  name="phone"
+                  value={formData.phone}
+                  onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                  className="w-full px-3 py-2 rounded-lg bg-gray-700 border border-gray-600 text-gray-200 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                />
+              </div>
+              
+              <div>
+                <label className="block text-sm text-gray-400 mb-1">
+                  {t('staff.role')}
+                </label>
+                <select
+                  name="role"
+                  value={formData.role}
+                  onChange={(e) => setFormData({ ...formData, role: e.target.value as 'admin' | 'staff' })}
+                  className="w-full px-3 py-2 rounded-lg bg-gray-700 border border-gray-600 text-gray-200 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                >
+                  <option value="staff">{t('staff.staff')}</option>
+                  <option value="admin">{t('staff.admin')}</option>
+                </select>
+              </div>
+              
+              <div>
+                <label className="block text-sm text-gray-400 mb-1">
+                  {t('staff.password')} *
+                </label>
+                <input
+                  type="password"
+                  name="password"
+                  value={formData.password}
+                  onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                  className="w-full px-3 py-2 rounded-lg bg-gray-700 border border-gray-600 text-gray-200 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                  required
+                />
+              </div>
+              
+              <div className="flex justify-end gap-2 mt-6">
+                <button
+                  type="button"
+                  onClick={() => setShowForm(false)}
+                  className="px-4 py-2 bg-gray-700 text-gray-300 rounded-lg hover:bg-gray-600"
+                >
+                  {t('cancel')}
+                </button>
+                <button
+                  type="submit"
+                  disabled={isLoading}
+                  className="px-4 py-2 bg-blue-700 text-white rounded-lg hover:bg-blue-800 flex items-center gap-2"
+                >
+                  {isLoading ? (
+                    <>
+                      <Loader2 size={16} className="animate-spin" />
+                      {t('saving')}
+                    </>
+                  ) : (
+                    <>
+                      <CheckCircle size={16} />
+                      {t('save')}
+                    </>
+                  )}
+                </button>
+              </div>
+            </form>
           </div>
         </div>
       )}
-
-      {/* Role Change Confirmation Modal */}
-      {showConfirmRole && (
-        <div className="fixed inset-0 bg-black/20 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-xl shadow-lg w-full max-w-md">
-            <div className="p-4 border-b border-orange-100">
-              <h3 className="text-lg font-medium text-orange-700">
-                {showConfirmRole.action === 'make' ? t('staff.confirmMakeAdmin') : t('staff.confirmRemoveAdmin')}
-              </h3>
+      
+      {/* Modal de confirmação para excluir */}
+      {showConfirmDelete && (
+        <div className="fixed inset-0 bg-black/60 flex items-center justify-center p-4 z-50">
+          <div className="bg-gray-800 border border-gray-700 rounded-xl w-full max-w-md shadow-xl">
+            <div className="flex items-center gap-3 p-4 border-b border-gray-700">
+              <AlertTriangle className="text-orange-500" size={20} />
+              <h2 className="text-lg font-medium text-orange-300">{t('staff.confirmDelete')}</h2>
             </div>
+            
             <div className="p-4">
-              <p className="text-orange-600">
-                {showConfirmRole.action === 'make' ? t('staff.makeAdminWarning') : t('staff.removeAdminWarning')}
+              <p className="text-gray-300 mb-2">
+                {t('staff.confirmDeleteText', { name: selectedUser?.name })}
               </p>
+              <p className="text-sm text-gray-400">{t('staff.cantBeUndone')}</p>
             </div>
-            <div className="p-4 flex justify-end space-x-2 border-t border-orange-100">
+            
+            <div className="flex justify-end gap-2 p-4 border-t border-gray-700">
               <button
-                onClick={() => setShowConfirmRole(null)}
-                className="px-4 py-2 text-orange-600 hover:bg-orange-50 rounded-lg transition-colors"
+                onClick={() => setShowConfirmDelete(false)}
+                className="px-4 py-2 bg-gray-700 text-gray-300 rounded-lg hover:bg-gray-600"
               >
                 {t('cancel')}
               </button>
               <button
-                onClick={confirmRoleChange}
-                className="px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition-colors"
+                onClick={handleDeleteUser}
+                disabled={isLoading}
+                className="px-4 py-2 bg-red-700 text-white rounded-lg hover:bg-red-800 flex items-center gap-2"
               >
-                {t('confirm')}
+                {isLoading ? (
+                  <>
+                    <Loader2 size={16} className="animate-spin" />
+                    {t('removing')}
+                  </>
+                ) : (
+                  <>
+                    <Trash2 size={16} />
+                    {t('remove')}
+                  </>
+                )}
               </button>
             </div>
           </div>
