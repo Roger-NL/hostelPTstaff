@@ -311,7 +311,7 @@ const Login: React.FC = () => {
           {/* Login Form */}
           <div className="glass-morphism rounded-2xl p-8 space-y-8">
             {error && (
-              <div className="text-red-400 text-sm text-center bg-black/30 py-2 rounded">{error}</div>
+              <div className="text-white text-sm text-center bg-black/30 py-2 rounded">{error}</div>
             )}
             
             {/* Login rápido com último usuário */}

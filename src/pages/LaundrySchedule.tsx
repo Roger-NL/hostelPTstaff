@@ -237,7 +237,7 @@ export default function LaundrySchedule() {
                                 </span>
                                 <button
                                   onClick={() => handleRemoveReservation(dateKey, slot, slotData.name)}
-                                  className="text-red-500 hover:text-red-600"
+                                  className="text-white hover:text-white"
                                   title={t('common.remove')}
                                 >
                                   <Trash2 size={16} />

@@ -113,7 +113,7 @@ const PhotoCapture: React.FC<PhotoCaptureProps> = ({ task, currentUser, onPhotoU
       )}
 
       {error && (
-        <div className="text-red-500 bg-red-100/10 p-3 rounded-lg mt-2">
+        <div className="text-white bg-red-100/10 p-3 rounded-lg mt-2">
           {error}
         </div>
       )}

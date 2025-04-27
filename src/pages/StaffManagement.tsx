@@ -148,7 +148,7 @@ const StaffManagement: React.FC = () => {
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center gap-3">
                 <div className="w-12 h-12 rounded-full bg-yellow-500/20 flex items-center justify-center">
-                  <User size={24} className="text-yellow-500" />
+                  <User size={24} className="text-white" />
                 </div>
                 <div>
                   <h3 className="text-white font-medium">{staffMember.name}</h3>
@@ -174,7 +174,7 @@ const StaffManagement: React.FC = () => {
                           e.stopPropagation();
                           handleDeleteUser(staffMember.id);
                         }}
-                        className="text-red-400 hover:text-red-300 transition-colors duration-300"
+                        className="text-white hover:text-white transition-colors duration-300"
                         title={t('staff.delete')}
                       >
                         <Trash2 size={18} />

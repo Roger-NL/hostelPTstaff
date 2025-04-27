@@ -127,7 +127,7 @@ export default function Register() {
           {/* Registration Form */}
           <div className="glass-morphism rounded-2xl p-6 space-y-6">
             {error && (
-              <div className="text-red-400 text-sm text-center bg-black/30 py-2 rounded font-arial">{error}</div>
+              <div className="text-white text-sm text-center bg-black/30 py-2 rounded font-arial">{error}</div>
             )}
             <form onSubmit={handleSubmit} className="grid grid-cols-1 gap-6">
               {/* Personal Information */}

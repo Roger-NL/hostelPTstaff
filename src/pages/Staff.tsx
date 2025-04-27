@@ -424,7 +424,7 @@ export default function Staff() {
                           <>
                             <button
                               onClick={() => handleOpenEditModal(user)}
-                              className="p-1.5 hover:bg-gray-700 rounded-full text-gray-400 hover:text-blue-400"
+                              className="p-1.5 hover:bg-gray-700 rounded-full text-gray-400 hover:text-white"
                               aria-label={t('edit')}
                             >
                               <Edit size={18} />
@@ -432,7 +432,7 @@ export default function Staff() {
                             
                             <button
                               onClick={() => handleOpenDeleteConfirm(user)}
-                              className="p-1.5 hover:bg-gray-700 rounded-full text-gray-400 hover:text-red-400"
+                              className="p-1.5 hover:bg-gray-700 rounded-full text-gray-400 hover:text-white"
                               aria-label={t('remove')}
                             >
                               <Trash2 size={18} />
@@ -441,7 +441,7 @@ export default function Staff() {
                         )}
                         
                         {user.id === currentUser?.id && (
-                          <span className="p-1.5 rounded-full text-orange-400">
+                          <span className="p-1.5 rounded-full text-white">
                             <UserCog size={18} />
                           </span>
                         )}
@@ -806,7 +806,7 @@ function StaffInfo({ staff, onEdit, onDelete, onRoleChange }: {
             </button>
             <button
               onClick={() => onDelete(staff.id)}
-              className="p-1.5 bg-red-100 text-red-600 rounded-lg hover:bg-red-200 transition-colors"
+              className="p-1.5 bg-red-100 text-white rounded-lg hover:bg-red-200 transition-colors"
               title={t('staff.delete')}
             >
               <Trash2 size={16} />
@@ -822,7 +822,7 @@ function StaffInfo({ staff, onEdit, onDelete, onRoleChange }: {
             ) : (
               <button
                 onClick={() => onRoleChange(staff.id, 'remove')}
-                className="p-1.5 bg-amber-100 text-amber-600 rounded-lg hover:bg-amber-200 transition-colors"
+                className="p-1.5 bg-amber-100 text-white rounded-lg hover:bg-amber-200 transition-colors"
                 title={t('staff.removeAdmin')}
               >
                 <ShieldOff size={16} />

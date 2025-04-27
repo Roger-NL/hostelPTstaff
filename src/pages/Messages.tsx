@@ -203,7 +203,7 @@ export default function Messages() {
                 {(user?.id === message.userId || user?.role === 'admin') && (
                   <button 
                     onClick={() => handleDeleteMessage(message.id)}
-                    className="text-gray-500 hover:text-red-400 transition-colors"
+                    className="text-gray-500 hover:text-white transition-colors"
                     aria-label={t('messages.delete')}
                   >
                     <Trash2 size={16} />

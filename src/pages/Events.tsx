@@ -151,30 +151,30 @@ export default function Events() {
   const getEventStatusColor = (event: Event) => {
     switch (event.status) {
       case 'upcoming':
-        return 'bg-orange-500/20 text-orange-500';
+        return 'bg-orange-500/20 text-white';
       case 'ongoing':
         return 'bg-green-500/20 text-green-500';
       case 'completed':
-        return 'bg-orange-300/20 text-orange-400';
+        return 'bg-orange-300/20 text-white';
       case 'cancelled':
-        return 'bg-red-500/20 text-red-500';
+        return 'bg-red-500/20 text-white';
       default:
-        return 'bg-orange-200/20 text-orange-400';
+        return 'bg-orange-200/20 text-white';
     }
   };
 
   const getEventStatusIcon = (status: Event['status']) => {
     switch (status) {
       case 'upcoming':
-        return <Clock className="text-orange-500" />;
+        return <Clock className="text-white" />;
       case 'ongoing':
         return <CheckCircle className="text-green-500" />;
       case 'completed':
-        return <CheckCircle className="text-orange-400" />;
+        return <CheckCircle className="text-white" />;
       case 'cancelled':
-        return <XCircle className="text-red-500" />;
+        return <XCircle className="text-white" />;
       default:
-        return <AlertTriangle className="text-orange-500" />;
+        return <AlertTriangle className="text-white" />;
     }
   };
 
@@ -271,7 +271,7 @@ export default function Events() {
             <>
               <button
                 onClick={() => setShowConfirmDeleteAll(true)}
-                className="p-2 bg-red-100 text-red-600 rounded-lg hover:bg-red-200 transition-colors"
+                className="p-2 bg-red-100 text-white rounded-lg hover:bg-red-200 transition-colors"
                 disabled={isDeletingAll}
               >
                 {isDeletingAll ? <RefreshCw className="animate-spin" size={20} /> : <Trash2 size={20} />}
@@ -279,7 +279,7 @@ export default function Events() {
               
               <button
                 onClick={handleCleanupEvents}
-                className="p-2 bg-orange-100 text-orange-600 rounded-lg hover:bg-orange-200 transition-colors"
+                className="p-2 bg-orange-100 text-white rounded-lg hover:bg-orange-200 transition-colors"
                 disabled={isCleaningUp}
               >
                 {isCleaningUp ? <RefreshCw className="animate-spin" size={20} /> : <Trash size={20} />}
@@ -379,7 +379,7 @@ export default function Events() {
                         </button>
                         <button
                       onClick={() => setShowConfirmDelete(event.id)}
-                      className="p-1.5 bg-red-100 text-red-600 rounded-lg hover:bg-red-200 transition-colors"
+                      className="p-1.5 bg-red-100 text-white rounded-lg hover:bg-red-200 transition-colors"
                     >
                       <Trash2 size={16} />
                         </button>

@@ -66,7 +66,7 @@ const Login: React.FC = () => {
           {/* Login Form */}
           <div className="glass-morphism rounded-2xl p-8 space-y-8">
             {error && (
-              <div className="text-red-400 text-sm text-center bg-black/30 py-2 rounded">{error}</div>
+              <div className="text-white text-sm text-center bg-black/30 py-2 rounded">{error}</div>
             )}
             <form onSubmit={handleSubmit} className="space-y-6">
               <div>
@@ -93,12 +93,12 @@ const Login: React.FC = () => {
 
               <div className="flex items-center justify-between">
                 <div className="text-sm">
-                  <Link to="/forgot-password" className="text-yellow-500 hover:text-yellow-400">
+                  <Link to="/forgot-password" className="text-white hover:text-white">
                     {t('forgotPassword')}
                   </Link>
                 </div>
                 <div className="text-sm">
-                  <Link to="/register" className="text-yellow-500 hover:text-yellow-400">
+                  <Link to="/register" className="text-white hover:text-white">
                     {t('register')}
                   </Link>
                 </div>

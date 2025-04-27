@@ -203,9 +203,9 @@ export default function Tasks() {
   const getPriorityColor = (priority: Task['priority']) => {
     switch (priority) {
       case 'high':
-        return 'bg-red-400/15 text-red-400';
+        return 'bg-red-400/15 text-white';
       case 'medium':
-        return 'bg-amber-400/15 text-amber-400';
+        return 'bg-amber-400/15 text-white';
       case 'low':
         return 'bg-emerald-400/15 text-emerald-400';
       default:
@@ -218,7 +218,7 @@ export default function Tasks() {
       case 'done':
         return <CheckCircle className="text-emerald-400" />;
       case 'inProgress':
-        return <AlertTriangle className="text-amber-400" />;
+        return <AlertTriangle className="text-white" />;
       default:
         return <AlertCircle className="text-gray-400" />;
     }
@@ -366,7 +366,7 @@ export default function Tasks() {
             {task.requirePhoto && (
               <div className={`p-1 rounded-full ${
                 task.photo?.approved ? 'bg-green-500/20 text-green-400' : 
-                task.photo ? 'bg-amber-500/20 text-amber-400' : 'bg-blue-500/20 text-blue-400'
+                task.photo ? 'bg-amber-500/20 text-white' : 'bg-blue-500/20 text-blue-400'
               }`}>
                 <Camera size={14} />
               </div>
@@ -452,7 +452,7 @@ export default function Tasks() {
                   handleStatusChange(task.id, task.status === 'todo' ? 'inProgress' : 'done');
                   setShowOptions(false);
                 }}
-                className="w-full text-left px-3 py-2 text-sm hover:bg-gray-700 transition-colors flex items-center gap-2"
+                className="w-full text-left px-3 py-2 text-sm hover:bg-gray-700 transition-colors flex items-center gap-2 text-white"
               >
                 {task.status === 'todo' ? (
                   <>
@@ -475,7 +475,7 @@ export default function Tasks() {
                   startCapture();
                   setShowOptions(false);
                 }}
-                className="w-full text-left px-3 py-2 text-sm hover:bg-gray-700 transition-colors flex items-center gap-2"
+                className="w-full text-left px-3 py-2 text-sm hover:bg-gray-700 transition-colors flex items-center gap-2 text-white"
               >
                 <Camera size={14} className="text-blue-400" />
                 <span>{t('tasks.capturePhoto')}</span>
@@ -488,9 +488,9 @@ export default function Tasks() {
                 handleEdit(task);
                 setShowOptions(false);
               }}
-              className="w-full text-left px-3 py-2 text-sm hover:bg-gray-700 transition-colors flex items-center gap-2"
+              className="w-full text-left px-3 py-2 text-sm hover:bg-gray-700 transition-colors flex items-center gap-2 text-white"
             >
-              <Edit size={14} className="text-amber-400" />
+              <Edit size={14} className="text-white" />
               <span>{t('common.edit')}</span>
             </button>
             
@@ -500,9 +500,9 @@ export default function Tasks() {
                 handleDelete(task.id);
                 setShowOptions(false);
               }}
-              className="w-full text-left px-3 py-2 text-sm hover:bg-gray-700 transition-colors flex items-center gap-2"
+              className="w-full text-left px-3 py-2 text-sm hover:bg-gray-700 transition-colors flex items-center gap-2 text-white"
             >
-              <Trash2 size={14} className="text-red-400" />
+              <Trash2 size={14} className="text-white" />
               <span>{t('common.delete')}</span>
             </button>
           </div>
@@ -693,14 +693,14 @@ export default function Tasks() {
           <div className="flex-1 overflow-y-auto scrollbar-thin scrollbar-thumb-gray-600 scrollbar-track-transparent p-3 xs:p-4 content-scrollable space-y-3 overscroll-contain -webkit-overflow-scrolling-touch">
             <div className="bg-gray-700 rounded-lg p-3 xs:p-4 border border-gray-600">
               <h4 className="text-sm font-medium text-gray-300 mb-2 flex items-center gap-2">
-                <Clock size={16} className="text-amber-400" />
+                <Clock size={16} className="text-white" />
                 {format(new Date(selectedTask.dueDate || new Date()), 'MMM d, yyyy')}
               </h4>
             </div>
             
             <div className="bg-gray-700 rounded-lg p-3 xs:p-4 border border-gray-600">
               <h4 className="text-sm font-medium text-gray-300 mb-2 flex items-center gap-2">
-                <Award size={16} className="text-amber-400" />
+                <Award size={16} className="text-white" />
                 {selectedTask.points} points
               </h4>
             </div>
@@ -713,7 +713,7 @@ export default function Tasks() {
             {selectedTask.requirePhoto && (
               <div className="bg-gray-700/30 rounded-lg p-4 border border-gray-600">
                 <h4 className="text-sm font-medium text-gray-300 mb-2 flex items-center gap-2">
-                  <Camera size={16} className="text-amber-400" />
+                  <Camera size={16} className="text-white" />
                   Foto necessária para conclusão
                 </h4>
                 
@@ -735,7 +735,7 @@ export default function Tasks() {
                           Foto aprovada por {users.find(u => u.id === selectedTask.photo?.approvedBy)?.name || 'Administrador'}
                         </div>
                       ) : (
-                        <div className="bg-amber-500/20 text-amber-400 p-2 rounded-lg mt-2 flex items-center gap-2">
+                        <div className="bg-amber-500/20 text-white p-2 rounded-lg mt-2 flex items-center gap-2">
                           <AlertTriangle size={14} />
                           Aguardando aprovação de administrador
                         </div>
@@ -905,7 +905,7 @@ export default function Tasks() {
                           handleDeleteAllTasks();
                           setShowAdminMenu(false);
                         }}
-                        className="w-full text-left px-3 py-2 text-sm hover:bg-gray-700 transition-colors flex items-center gap-2 text-red-400"
+                        className="w-full text-left px-3 py-2 text-sm hover:bg-gray-700 transition-colors flex items-center gap-2 text-white"
                       >
                         <Trash2 size={14} />
                         <span>{t('tasks.deleteAll')}</span>
@@ -915,7 +915,7 @@ export default function Tasks() {
                           handleCleanupDeletedTasks();
                           setShowAdminMenu(false);
                         }}
-                        className="w-full text-left px-3 py-2 text-sm hover:bg-gray-700 transition-colors flex items-center gap-2 text-orange-400"
+                        className="w-full text-left px-3 py-2 text-sm hover:bg-gray-700 transition-colors flex items-center gap-2 text-white"
                       >
                         <Trash2 size={14} />
                         <span>{t('tasks.cleanup')}</span>

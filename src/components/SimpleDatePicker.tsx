@@ -160,7 +160,7 @@ const SimpleDatePicker: React.FC<SimpleDatePickerProps> = memo(({
       <div className="relative">
         {label && (
           <label className="block text-sm font-medium text-gray-300 mb-1">
-            {label} {required && <span className="text-red-500">*</span>}
+            {label} {required && <span className="text-white">*</span>}
           </label>
         )}
         <input
@@ -182,7 +182,7 @@ const SimpleDatePicker: React.FC<SimpleDatePickerProps> = memo(({
     <div className="relative" ref={containerRef}>
       {label && (
         <label className="block text-sm font-medium text-gray-300 mb-1">
-          {label} {required && <span className="text-red-500">*</span>}
+          {label} {required && <span className="text-white">*</span>}
         </label>
       )}
       
