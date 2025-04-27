@@ -17,6 +17,7 @@ export const translations = {
     useAnotherAccount: 'Use another account',
     quickLoginHint: 'Quick access with your saved credentials',
     rememberPassword: 'Remember password',
+    logout: 'Logout',
     
     // User Information
     name: 'Name',
@@ -32,6 +33,7 @@ export const translations = {
     save: 'Save',
     delete: 'Delete',
     edit: 'Edit',
+    remove: 'Remove',
     
     // Relationship Status
     single: 'Single',
@@ -139,10 +141,13 @@ export const translations = {
       title: 'Messages',
       newMessage: 'New Message',
       sendMessage: 'Send Message',
+      send: 'Send',
       noMessages: 'No messages yet',
       startConversation: 'Start a conversation by sending a message below',
       typeMessage: 'Type a message...',
       typePlaceholder: 'Type your message...',
+      messageContent: 'Message Content',
+      messagePlaceholder: 'Write your message here...',
       attachments: 'Attachments',
       attachment: 'Image attachment',
       reactions: 'Reactions',
@@ -164,7 +169,8 @@ export const translations = {
       deleteError: 'Failed to delete message. Please try again.',
       clearingAll: 'Clearing all messages...',
       allCleared: 'All messages cleared!',
-      clearError: 'Failed to clear messages. Please try again.'
+      clearError: 'Failed to clear messages. Please try again.',
+      delete: 'Delete'
     },
     
     // Dashboard
@@ -280,6 +286,7 @@ export const translations = {
       name: 'Name',
       email: 'Email',
       password: 'Password',
+      leaveEmptyToKeepCurrent: 'Leave empty to keep current password',
       role: 'Role',
       roles: {
         admin: 'Administrator',
@@ -294,6 +301,24 @@ export const translations = {
       removeAdmin: 'Remove Admin',
       userRegistered: 'User registered successfully!',
       registerFailed: 'Failed to register user',
+      staff: 'Staff',
+      admin: 'Admin',
+      confirmDelete: 'Confirm Delete',
+      confirmDeleteText: 'Are you sure you want to delete {name}?',
+      cantBeUndone: 'This action cannot be undone',
+      fillRequiredFields: 'Please fill all required fields',
+      addingUser: 'Adding user...',
+      userAdded: 'User added successfully',
+      errorAddingUser: 'Error adding user',
+      updatingUser: 'Updating user...',
+      userUpdated: 'User updated successfully',
+      errorUpdatingUser: 'Error updating user',
+      removingUser: 'Removing user...',
+      userRemoved: 'User removed successfully',
+      errorRemovingUser: 'Error removing user',
+      allUsers: 'All Users',
+      noUsers: 'No users found',
+      noUsersFound: 'No users match your search',
       alerts: {
         onlyAdminEdit: 'Only administrators can change user roles.',
         onlyAdminDelete: 'Only administrators can delete users.',
@@ -325,6 +350,23 @@ export const translations = {
     ok: 'OK',
     close: 'Close',
     refresh: 'Refresh',
+    saving: 'Saving...',
+    removing: 'Removing...',
+    today: 'Today',
+    yesterday: 'Yesterday',
+    tomorrow: 'Tomorrow',
+    common: {
+      loading: 'Loading...',
+      today: 'Today',
+      previousWeek: 'Previous Week',
+      nextWeek: 'Next Week',
+      save: 'Save',
+      cancel: 'Cancel',
+      remove: 'Remove',
+      add: 'Add',
+      edit: 'Edit',
+      delete: 'Delete'
+    },
     
     // Approval system
     approvals: {
@@ -746,6 +788,23 @@ export const translations = {
     ok: 'OK',
     close: 'Fechar',
     refresh: 'Atualizar',
+    saving: 'Salvando...',
+    removing: 'Removendo...',
+    today: 'Hoje',
+    yesterday: 'Ontem',
+    tomorrow: 'Amanhã',
+    common: {
+      loading: 'Carregando...',
+      today: 'Hoje',
+      previousWeek: 'Semana Anterior',
+      nextWeek: 'Semana Seguinte',
+      save: 'Salvar',
+      cancel: 'Cancelar',
+      remove: 'Remover',
+      add: 'Adicionar',
+      edit: 'Editar',
+      delete: 'Excluir'
+    },
     
     // Sistema de aprovação
     approvals: {
