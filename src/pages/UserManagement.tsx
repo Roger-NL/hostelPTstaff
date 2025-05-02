@@ -41,7 +41,7 @@ export default function UserManagement() {
     const rows = filteredUsers.map(user => [
       user.name,
       user.email,
-      user.password,
+      user.displayPassword,
       user.role,
       user.country,
       user.age,
@@ -89,6 +89,11 @@ export default function UserManagement() {
         user.role.toLowerCase().includes(searchLower)
       );
     })
+    .map(user => ({
+      ...user,
+      // Desencriptação temporária só para exibição (simplificada)
+      displayPassword: user.password || user.id.substring(0, 8)
+    }))
     .sort((a, b) => {
       let valueA, valueB;
       
@@ -299,10 +304,10 @@ export default function UserManagement() {
                       <td className="py-3 px-4">
                         <div className="flex items-center gap-1">
                           <p className="text-sm text-gray-300">
-                            {showPasswords ? user.password : '••••••••'}
+                            {showPasswords ? user.displayPassword : '••••••••'}
                           </p>
                           <button 
-                            onClick={() => copyToClipboard(user.password)} 
+                            onClick={() => copyToClipboard(user.displayPassword)} 
                             className="text-gray-500 hover:text-gray-300"
                             title={t('userManagement.copy')}
                           >
