@@ -320,13 +320,30 @@ export const logout = async (): Promise<void> => {
 // Obter perfil de usuário
 export const getUserProfile = async (userId: string): Promise<User | null> => {
   try {
+    console.log(`Buscando perfil do usuário com ID: ${userId}`);
+    
     const userDoc = await getDoc(doc(firestore, 'users', userId));
+    
     if (userDoc.exists()) {
-      return userDoc.data() as User;
+      const userData = userDoc.data() as User;
+      
+      // Verificação de segurança para garantir que o ID corresponde ao documento
+      if (userData.id && userData.id !== userId) {
+        console.error(`⚠️ ERRO CRÍTICO: ID no documento (${userData.id}) não corresponde ao ID solicitado (${userId})`);
+        return null;
+      }
+      
+      // Verificação do email para depuração
+      console.log(`Usuário encontrado com email: ${userData.email}, ID: ${userId}`);
+      
+      // Retorna sempre com o ID correto
+      return { ...userData, id: userId };
     }
+    
+    console.log(`Usuário com ID ${userId} não encontrado no Firestore`);
     return null;
   } catch (error) {
-    console.error('Error getting user profile:', error);
+    console.error(`Error getting user profile for ID ${userId}:`, error);
     throw error;
   }
 };

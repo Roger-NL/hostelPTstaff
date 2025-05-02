@@ -145,6 +145,13 @@ export const useAuth = () => {
             throw new Error('Perfil de usuário não encontrado');
           }
           
+          // ⚠️ VERIFICAÇÃO DE SEGURANÇA: garantir que o email do perfil é o mesmo que tentamos acessar
+          if (userProfile.email !== attemptedUser.email) {
+            console.error('⚠️ ERRO DE SEGURANÇA: Email do perfil recuperado não corresponde ao email tentado!');
+            console.error(`Email esperado: ${attemptedUser.email}, Email recebido: ${userProfile.email}`);
+            throw new Error('Erro de segurança: emails não correspondem');
+          }
+          
           console.log('Perfil de usuário encontrado no Firestore:', userProfile);
           console.log('Email no perfil:', userProfile.email);
           
@@ -177,6 +184,13 @@ export const useAuth = () => {
         const userProfile = await authService.login(email, password);
         
         if (userProfile) {
+          // ⚠️ VERIFICAÇÃO DE SEGURANÇA: garantir que o email do perfil é o mesmo que tentamos acessar
+          if (userProfile.email !== email) {
+            console.error('⚠️ ERRO DE SEGURANÇA: Email do perfil recuperado não corresponde ao email tentado!');
+            console.error(`Email esperado: ${email}, Email recebido: ${userProfile.email}`);
+            throw new Error('Erro de segurança: emails não correspondem');
+          }
+          
           storeLogin(email, password);
           setAuthState({
             isAuthenticated: true,
