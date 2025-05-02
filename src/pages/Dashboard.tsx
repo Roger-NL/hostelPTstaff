@@ -106,9 +106,9 @@ export default function MainDashboard() {
 
   const baseMenuItems: MenuItem[] = [
     { icon: LayoutDashboard, label: t('dashboard.title'), view: 'dashboard' },
-    { icon: Calendar, label: t('schedule.title'), view: 'schedule' },
-    { icon: ClipboardList, label: t('taskManagement'), view: 'tasks' },
-    { icon: Users, label: t('staff.title'), view: 'staff' },
+    { icon: Calendar, label: user?.role === 'admin' ? t('schedule.title') : t('schedule.simpleTitle'), view: 'schedule' },
+    { icon: ClipboardList, label: user?.role === 'admin' ? t('taskManagement') : t('tasks.simpleTitle'), view: 'tasks' },
+    { icon: Users, label: user?.role === 'admin' ? t('staff.title') : t('staff.simpleTitle'), view: 'staff' },
     { icon: PartyPopper, label: t('events.title'), view: 'events' },
     { icon: MessageCircle, label: t('messages.title'), view: 'messages', badge: unreadCount },
     { icon: HomeIcon, label: t('laundry.title'), view: 'laundry' }

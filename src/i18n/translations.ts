@@ -116,6 +116,7 @@ export const translations = {
     // Schedule
     schedule: {
       title: 'Schedule Management',
+      simpleTitle: 'Schedule',
       assign: 'Assign Volunteer',
       remove: 'Remove Assignment',
       shifts: {
@@ -304,8 +305,9 @@ export const translations = {
     // Staff
     staff: {
       title: 'Staff Management',
-      addUser: 'Add User',
-      editUser: 'Edit Staff Member',
+      simpleTitle: 'Staff',
+      addStaff: 'Add Staff',
+      editStaff: 'Edit Staff',
       name: 'Name',
       email: 'Email',
       password: 'Password',
@@ -493,7 +495,8 @@ export const translations = {
         add: 'Add',
         createTask: 'Create Task',
         updateTask: 'Update Task'
-      }
+      },
+      simpleTitle: 'Tasks'
     },
     
     // Work Hours Management
@@ -679,6 +682,7 @@ export const translations = {
     // Schedule
     schedule: {
       title: 'Gerenciamento de Escala',
+      simpleTitle: 'Escala',
       assign: 'Atribuir Voluntário',
       remove: 'Remover Atribuição',
       shifts: {
@@ -862,9 +866,10 @@ export const translations = {
     
     // Staff
     staff: {
-      title: 'Gerenciamento de Staff',
-      addUser: 'Adicionar Usuário',
-      editUser: 'Editar Membro da Staff',
+      title: 'Gerenciamento de Equipe',
+      simpleTitle: 'Equipe',
+      addStaff: 'Adicionar Membro',
+      editStaff: 'Editar Membro',
       name: 'Nome',
       email: 'Email',
       password: 'Senha',
@@ -1033,7 +1038,8 @@ export const translations = {
         add: 'Adicionar',
         createTask: 'Criar Tarefa',
         updateTask: 'Atualizar Tarefa'
-      }
+      },
+      simpleTitle: 'Tarefas'
     },
     
     // Work Hours Management
