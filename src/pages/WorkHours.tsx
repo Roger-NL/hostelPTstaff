@@ -495,11 +495,29 @@ export default function WorkHours() {
                     ))}
                     
                     {userLogs.length === 0 && (
-                      <tr>
-                        <td colSpan={isAdmin ? 6 : 5} className="py-4 text-center text-gray-400 text-sm">
-                          {t('workHours.noShifts')}
-                        </td>
-                      </tr>
+                      <>
+                        <tr className="border-b border-gray-700 opacity-50">
+                          <td className="py-2 px-3 text-sm">{format(new Date(), 'dd/MM/yyyy')}</td>
+                          <td className="py-2 px-3 text-sm">09:00-12:00</td>
+                          <td className="py-2 px-3 text-sm">09:00</td>
+                          <td className="py-2 px-3 text-sm">12:00</td>
+                          <td className="py-2 px-3 text-sm">3h 00m</td>
+                          {isAdmin && <td className="py-2 px-3 text-sm">-</td>}
+                        </tr>
+                        <tr className="border-b border-gray-700 opacity-50">
+                          <td className="py-2 px-3 text-sm">{format(new Date(), 'dd/MM/yyyy')}</td>
+                          <td className="py-2 px-3 text-sm">14:00-17:00</td>
+                          <td className="py-2 px-3 text-sm">14:00</td>
+                          <td className="py-2 px-3 text-sm">17:00</td>
+                          <td className="py-2 px-3 text-sm">3h 00m</td>
+                          {isAdmin && <td className="py-2 px-3 text-sm">-</td>}
+                        </tr>
+                        <tr>
+                          <td colSpan={isAdmin ? 6 : 5} className="py-4 text-center text-gray-400 text-sm">
+                            {t('workHours.noShifts')} - <span className="italic">{t('workHours.exampleDisplay')}</span>
+                          </td>
+                        </tr>
+                      </>
                     )}
                   </tbody>
                 </table>
