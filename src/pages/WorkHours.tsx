@@ -50,6 +50,15 @@ export default function WorkHours() {
     const loadUserLogs = async () => {
       try {
         console.log(`Carregando histórico de turnos para ${selectedUserId}`);
+        console.log(`Usuário logado: ${currentUser?.id}, Visualizando usuário: ${selectedUserId}`);
+        
+        // Depurando a função que carrega os logs
+        console.log('Estado dos usuários:', users.map(u => ({ id: u.id, name: u.name })));
+        
+        // Verificando se o usuário existe
+        const selectedUser = users.find(u => u.id === selectedUserId);
+        console.log('Usuário selecionado:', selectedUser?.name || 'Não encontrado');
+        
         const logs = await getUserWorkLogs(selectedUserId);
         console.log(`Recebidos ${logs.length} registros de turnos para o usuário ${selectedUserId}`);
         
@@ -61,6 +70,13 @@ export default function WorkHours() {
           });
         } else {
           console.log('Nenhum registro de turno encontrado para este usuário');
+          
+          // Tentar carregar logs para o próprio usuário atual para comparação
+          if (currentUser?.id && currentUser.id !== selectedUserId) {
+            console.log('Tentando carregar logs para o usuário atual para comparação');
+            const currentUserLogs = await getUserWorkLogs(currentUser.id);
+            console.log(`Logs do usuário atual (${currentUser.id}): ${currentUserLogs.length}`);
+          }
         }
         
         setUserLogs(logs);
@@ -70,7 +86,7 @@ export default function WorkHours() {
     };
     
     loadUserLogs();
-  }, [selectedUserId, getUserWorkLogs]);
+  }, [selectedUserId, getUserWorkLogs, currentUser?.id, users]);
   
   // Encontrar o nome do usuário pelo ID
   const getUserName = (userId: string): string => {

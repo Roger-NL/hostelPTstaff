@@ -58,7 +58,8 @@ export default function DashboardContent() {
     setUser,
     startShift,
     endShift,
-    getActiveShift
+    getActiveShift,
+    getUserWorkLogs
   } = useStore();
   const { t } = useTranslation();
   const [isPromoting, setIsPromoting] = useState(false);
@@ -73,7 +74,25 @@ export default function DashboardContent() {
   useEffect(() => {
     const loadActiveShift = async () => {
       if (user?.id) {
-        await getActiveShift();
+        // Carregar o turno ativo
+        const activeShift = await getActiveShift();
+        
+        // Depuração para verificar se há turnos registrados
+        if (user.id) {
+          console.log('Depuração de turnos: Verificando logs para', user.id);
+          try {
+            // Usar a função do hook diretamente
+            const logs = await getUserWorkLogs(user.id);
+            console.log('Logs de turnos encontrados:', logs.length);
+            if (logs.length > 0) {
+              console.log('Primeiro log:', logs[0]);
+            } else {
+              console.log('Nenhum log de turno encontrado para este usuário');
+            }
+          } catch (error) {
+            console.error('Erro ao verificar logs:', error);
+          }
+        }
       }
     };
     
