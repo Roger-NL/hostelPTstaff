@@ -62,6 +62,7 @@ export const startShift = async (userId: string, shiftTime: ShiftTime): Promise<
     const now = new Date();
     const shiftDate = format(now, 'yyyy-MM-dd');
     
+    // Base do objeto WorkLog
     const newWorkLog: WorkLog = {
       id: '', // Será preenchido após a criação no Firestore
       userId,
@@ -69,12 +70,26 @@ export const startShift = async (userId: string, shiftTime: ShiftTime): Promise<
       shiftTime,
       startTime: now.toISOString(),
     };
+    
+    // Adiciona forceClosed apenas se houver um turno ativo anterior
+    if (activeShift) {
+      (newWorkLog as any).forceClosed = true;
+    }
 
-    // Criar o documento no Firestore
-    const docRef = await addDoc(collection(firestore, WORK_LOGS_COLLECTION), {
-      ...newWorkLog,
-      startTime: Timestamp.fromDate(now)
-    });
+    // Criar o documento no Firestore - usando objeto simplificado para evitar campos undefined
+    const firestoreData = {
+      userId,
+      shiftDate,
+      shiftTime,
+      startTime: Timestamp.fromDate(now),
+    };
+    
+    // Adicionar forceClosed apenas se houve um turno ativo anterior
+    if (activeShift) {
+      (firestoreData as any).forceClosed = true;
+    }
+    
+    const docRef = await addDoc(collection(firestore, WORK_LOGS_COLLECTION), firestoreData);
 
     // Atualizar o ID do log
     newWorkLog.id = docRef.id;
@@ -185,7 +200,8 @@ export const getActiveShift = async (userId: string): Promise<WorkLog | null> =>
       startTime: activeShiftDoc.startTime.toDate().toISOString(),
       endTime: activeShiftDoc.endTime ? activeShiftDoc.endTime.toDate().toISOString() : undefined,
       totalMinutes: activeShiftDoc.totalMinutes,
-      notes: activeShiftDoc.notes
+      notes: activeShiftDoc.notes,
+      forceClosed: activeShiftDoc.forceClosed
     };
   } catch (error) {
     console.error('Erro ao obter turno ativo:', error);
@@ -250,7 +266,10 @@ export const updateWorkSummary = async (userId: string): Promise<WorkHoursSummar
             startTime: data.startTime.toDate().toISOString(),
             endTime: data.endTime.toDate().toISOString(),
             totalMinutes: data.totalMinutes,
-            notes: data.notes
+            // Verifica se notes existe antes de atribuir, para evitar valores undefined no Firestore
+            ...(data.notes !== undefined ? { notes: data.notes } : {}),
+            // Também passa o forceClosed apenas se estiver definido
+            ...(data.forceClosed !== undefined ? { forceClosed: data.forceClosed } : {})
           };
         }
       }
@@ -321,7 +340,9 @@ export const getUserWorkLogs = async (userId: string, limitCount = 100): Promise
         startTime: data.startTime.toDate().toISOString(),
         endTime: data.endTime ? data.endTime.toDate().toISOString() : undefined,
         totalMinutes: data.totalMinutes,
-        notes: data.notes
+        // Use spread operator para incluir campos opcionais apenas se existirem
+        ...(data.notes !== undefined ? { notes: data.notes } : {}),
+        ...(data.forceClosed !== undefined ? { forceClosed: data.forceClosed } : {})
       });
     });
     
