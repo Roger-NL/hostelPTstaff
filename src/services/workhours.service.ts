@@ -320,6 +320,7 @@ export const getWorkSummary = async (userId: string): Promise<WorkHoursSummary |
 // Obter todos os logs de trabalho de um usuário
 export const getUserWorkLogs = async (userId: string, limitCount = 100): Promise<WorkLog[]> => {
   try {
+    // Consulta: obter todos os logs do usuário, ordenados do mais recente para o mais antigo
     const q = query(
       collection(firestore, WORK_LOGS_COLLECTION),
       where('userId', '==', userId),
@@ -328,17 +329,25 @@ export const getUserWorkLogs = async (userId: string, limitCount = 100): Promise
     );
     
     const querySnapshot = await getDocs(q);
+    console.log(`Encontrados ${querySnapshot.size} logs para o usuário ${userId}`);
+    
     const logs: WorkLog[] = [];
     
     querySnapshot.forEach(doc => {
       const data = doc.data();
+      // Converter timestamps para strings ISO
+      const startTimeISO = data.startTime.toDate().toISOString();
+      const endTimeISO = data.endTime ? data.endTime.toDate().toISOString() : undefined;
+      
+      console.log(`Log ${doc.id}: Início=${startTimeISO}, Fim=${endTimeISO || 'não finalizado'}, Minutos=${data.totalMinutes || 0}`);
+      
       logs.push({
         id: doc.id,
         userId: data.userId,
         shiftDate: data.shiftDate,
         shiftTime: data.shiftTime,
-        startTime: data.startTime.toDate().toISOString(),
-        endTime: data.endTime ? data.endTime.toDate().toISOString() : undefined,
+        startTime: startTimeISO,
+        endTime: endTimeISO,
         totalMinutes: data.totalMinutes,
         // Use spread operator para incluir campos opcionais apenas se existirem
         ...(data.notes !== undefined ? { notes: data.notes } : {}),

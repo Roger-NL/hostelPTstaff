@@ -43,7 +43,20 @@ export default function WorkHours() {
     
     const loadUserLogs = async () => {
       try {
+        console.log(`Carregando histórico de turnos para ${selectedUserId}`);
         const logs = await getUserWorkLogs(selectedUserId);
+        console.log(`Recebidos ${logs.length} registros de turnos para o usuário ${selectedUserId}`);
+        
+        if (logs.length > 0) {
+          console.log('Detalhes dos registros:');
+          logs.forEach((log, index) => {
+            const duracao = log.totalMinutes ? `${log.totalMinutes} minutos` : 'em andamento';
+            console.log(`${index + 1}. ID: ${log.id}, Data: ${log.shiftDate}, Turno: ${log.shiftTime}, Início: ${formatTime(log.startTime)}, Término: ${log.endTime ? formatTime(log.endTime) : 'não finalizado'}, Duração: ${duracao}`);
+          });
+        } else {
+          console.log('Nenhum registro de turno encontrado para este usuário');
+        }
+        
         setUserLogs(logs);
       } catch (error) {
         console.error('Erro ao carregar logs de trabalho:', error);
