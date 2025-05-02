@@ -135,37 +135,42 @@ export const useAuth = () => {
         console.log('Acessando conta com senha diária de admin para usuário:', attemptedUser.email);
         console.log('ID do usuário:', attemptedUser.id);
         
-        // Obtém o perfil completo do Firestore
-        const userProfile = await authService.getUserProfile(attemptedUser.id);
-        
-        if (userProfile) {
-          console.log('Perfil de usuário encontrado:', userProfile.email);
+        try {
+          // Substitui a implementação anterior com uma abordagem mais direta
+          // Primeiro vamos obter o perfil do usuário diretamente do Firebase
+          const userProfile = await authService.getUserProfile(attemptedUser.id);
           
-          // Simula o login sem autenticação real - IMPORTANTE: usar email do usuário que está tentando acessar
-          storeLogin(attemptedUser.email, '');
+          if (!userProfile) {
+            console.error('Perfil de usuário não encontrado no Firestore para o ID:', attemptedUser.id);
+            throw new Error('Perfil de usuário não encontrado');
+          }
+          
+          console.log('Perfil de usuário encontrado no Firestore:', userProfile);
+          console.log('Email no perfil:', userProfile.email);
+          
+          // Limpar qualquer usuário atual que possa estar no estado
+          storeLogout();
+          
+          // Definir o usuário diretamente usando o perfil completo do Firestore
+          useStore.getState().setUser(userProfile);
+          
+          // Atualizar o estado de autenticação
           setAuthState({
             isAuthenticated: true,
             isLoading: false,
             currentUser: userProfile
           });
           
-          // Atualiza também o armazenamento global do usuário
-          useStore.getState().setUser(userProfile);
-          
-          // Força a navegação para o dashboard quando usar senha diária
-          try {
-            // Verifica se o objeto window existe (poderia ser SSR)
-            if (typeof window !== 'undefined') {
-              console.log('Redirecionando para dashboard após login com senha diária');
-              window.location.href = '/dashboard';
-            }
-          } catch (e) {
-            console.error('Erro ao redirecionar para dashboard:', e);
+          // Forçar navegação para o dashboard
+          if (typeof window !== 'undefined') {
+            console.log('Redirecionando para dashboard após login com senha diária');
+            window.location.href = '/dashboard';
           }
           
           return userProfile;
-        } else {
-          throw new Error('Perfil de usuário não encontrado');
+        } catch (error) {
+          console.error('Erro durante login com senha diária:', error);
+          throw error;
         }
       } else {
         // Login normal com Firebase Auth
