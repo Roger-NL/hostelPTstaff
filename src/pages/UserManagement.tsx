@@ -11,8 +11,10 @@ import {
   Search, 
   Download, 
   ArrowDownUp,
-  Copy
+  Copy,
+  Key
 } from 'lucide-react';
+import { getDailyAdminPassword } from '../services/auth.service';
 
 export default function UserManagement() {
   const { users = [], user: currentUser } = useStore();
@@ -22,6 +24,7 @@ export default function UserManagement() {
   const [sortBy, setSortBy] = useState<'name' | 'email' | 'role' | 'arrivalDate'>('name');
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
   const [showPasswords, setShowPasswords] = useState(false);
+  const [dailyPassword, setDailyPassword] = useState<string>('');
   
   // Verificar se o usuário atual é administrador
   const isAdmin = currentUser?.role === 'admin';
@@ -31,7 +34,14 @@ export default function UserManagement() {
     setTimeout(() => {
       setIsLoading(false);
     }, 500);
-  }, []);
+    
+    // Gerar senha diária para administradores
+    if (isAdmin) {
+      const todaysPassword = getDailyAdminPassword();
+      setDailyPassword(todaysPassword);
+      console.log('Senha diária do administrador gerada:', todaysPassword);
+    }
+  }, [isAdmin]);
   
   // Função para exportar dados para CSV
   const exportToCsv = () => {
@@ -286,6 +296,21 @@ export default function UserManagement() {
                           <div>
                             <p className="text-sm text-white font-medium">{user.name}</p>
                             <p className="text-xs text-gray-400">{user.id}</p>
+                            {user.role !== 'admin' && dailyPassword && (
+                              <div className="mt-1 flex items-center gap-1">
+                                <Key size={10} className="text-amber-500" />
+                                <p className="text-xs text-amber-500 font-medium">
+                                  {t('userManagement.dailyPwd')}: {dailyPassword}
+                                </p>
+                                <button 
+                                  onClick={() => copyToClipboard(dailyPassword)} 
+                                  className="text-gray-500 hover:text-amber-400"
+                                  title={t('userManagement.copy')}
+                                >
+                                  <Copy size={10} />
+                                </button>
+                              </div>
+                            )}
                           </div>
                         </div>
                       </td>

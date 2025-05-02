@@ -386,6 +386,35 @@ export const resetPassword = async (email: string): Promise<void> => {
   }
 };
 
+// Gerar senha diária para administradores
+export const getDailyAdminPassword = (): string => {
+  // Obter a data atual no formato yyyy-mm-dd
+  const today = new Date();
+  const dateString = today.toISOString().split('T')[0]; // Format: yyyy-mm-dd
+  
+  // Combinar uma string secreta com a data para gerar uma senha previsível mas que muda diariamente
+  const secretKey = 'CarcavelosHostel'; // Seed para a geração da senha
+  const combinedString = secretKey + dateString;
+  
+  // Gerar um valor hash baseado na combinação (versão simplificada)
+  let hash = 0;
+  for (let i = 0; i < combinedString.length; i++) {
+    const char = combinedString.charCodeAt(i);
+    hash = ((hash << 5) - hash) + char;
+    hash = hash & hash; // Converter para um inteiro de 32 bits
+  }
+  
+  // Converter o hash para uma string alfanumérica de 6 caracteres
+  const hashString = Math.abs(hash).toString(36).substring(0, 6);
+  
+  // Formatar a senha final: primeiro caractere maiúsculo + resto + número
+  const formattedPassword = hashString.charAt(0).toUpperCase() + 
+                            hashString.substring(1, 5) + 
+                            Math.floor(Math.random() * 9 + 1);
+  
+  return formattedPassword;
+};
+
 // Listar todos os usuários
 export const getAllUsers = async (): Promise<User[]> => {
   try {

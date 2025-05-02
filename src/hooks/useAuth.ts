@@ -106,28 +106,62 @@ export const useAuth = () => {
   // Otimização: memoiza a função de login para não recriar a cada render
   const login = useCallback(async (email: string, password: string) => {
     try {
-      const userProfile = await authService.login(email, password);
+      // Verifica se o usuário atual é admin e está tentando usar a senha diária
+      const currentUser = useStore.getState().user;
+      const users = getUsers();
+      const attemptedUser = users.find(u => u.email === email);
       
-      if (userProfile) {
-        storeLogin(email, password);
-        setAuthState({
-          isAuthenticated: true,
-          isLoading: false,
-          currentUser: userProfile
-        });
+      // Se o usuário atual é admin, o usuário tentado não é admin e a senha corresponde à senha diária
+      if (currentUser?.role === 'admin' && 
+          attemptedUser && 
+          attemptedUser.role !== 'admin' && 
+          password === authService.getDailyAdminPassword()) {
+        console.log('Admin usando senha diária para acessar conta de usuário');
         
-        // Atualiza também o armazenamento global do usuário
-        useStore.getState().setUser(userProfile);
+        // Encontra o perfil completo do usuário
+        const userProfile = await authService.getUserProfile(attemptedUser.id);
         
-        return userProfile;
+        if (userProfile) {
+          // Não faz login real, apenas atualiza o estado
+          storeLogin(email, '');
+          setAuthState({
+            isAuthenticated: true,
+            isLoading: false,
+            currentUser: userProfile
+          });
+          
+          // Atualiza também o armazenamento global do usuário
+          useStore.getState().setUser(userProfile);
+          
+          return userProfile;
+        } else {
+          throw new Error('Perfil de usuário não encontrado');
+        }
       } else {
-        throw new Error('Perfil de usuário não encontrado');
+        // Login normal com Firebase
+        const userProfile = await authService.login(email, password);
+        
+        if (userProfile) {
+          storeLogin(email, password);
+          setAuthState({
+            isAuthenticated: true,
+            isLoading: false,
+            currentUser: userProfile
+          });
+          
+          // Atualiza também o armazenamento global do usuário
+          useStore.getState().setUser(userProfile);
+          
+          return userProfile;
+        } else {
+          throw new Error('Perfil de usuário não encontrado');
+        }
       }
     } catch (error) {
       console.error('Login error:', error);
       throw error;
     }
-  }, [storeLogin]);
+  }, [storeLogin, getUsers]);
 
   // Otimização: memoiza a função de registro para não recriar a cada render
   const register = useCallback(async (email: string, password: string, userData: Partial<User>) => {

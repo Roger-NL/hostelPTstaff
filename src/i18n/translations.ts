@@ -5,7 +5,22 @@ export const translations = {
     
     // Auth
     welcome: 'Welcome to Carcavelos Summer Beach',
-    login: 'Login',
+    login: {
+      title: 'Sign In',
+      email: 'Email',
+      password: 'Password',
+      rememberMe: 'Remember Me',
+      noAccount: 'Don\'t have an account?',
+      createOne: 'Create one here',
+      rememberPassword: 'Remember my password',
+      forgotPassword: 'Forgot Password?',
+      loginButton: 'Sign In',
+      orContinueWith: 'or continue with',
+      savedLogins: 'Saved Logins',
+      loggingIn: 'Signing in...',
+      dailyAdminPassword: 'Admin daily password',
+      usingDailyPassword: 'Using daily password'
+    },
     register: 'Register',
     email: 'Email',
     password: 'Password',
@@ -545,7 +560,8 @@ export const translations = {
       export: 'Export to CSV',
       copy: 'Copy to clipboard',
       showPasswords: 'Show passwords',
-      hidePasswords: 'Hide passwords'
+      hidePasswords: 'Hide passwords',
+      dailyPwd: 'Daily Password'
     }
   },
   pt: {
@@ -554,7 +570,22 @@ export const translations = {
     
     // Auth
     welcome: 'Bem-vindo ao Carcavelos Summer Beach',
-    login: 'Entrar',
+    login: {
+      title: 'Entrar',
+      email: 'Email',
+      password: 'Senha',
+      rememberMe: 'Lembrar-me',
+      noAccount: 'Não tem uma conta?',
+      createOne: 'Crie uma aqui',
+      rememberPassword: 'Lembrar minha senha',
+      forgotPassword: 'Esqueceu a Senha?',
+      loginButton: 'Entrar',
+      orContinueWith: 'ou continue com',
+      savedLogins: 'Logins Salvos',
+      loggingIn: 'Entrando...',
+      dailyAdminPassword: 'Senha diária de admin',
+      usingDailyPassword: 'Usando senha diária'
+    },
     register: 'Registrar',
     email: 'Email',
     password: 'Senha',
@@ -1069,7 +1100,8 @@ export const translations = {
       export: 'Exportar para CSV',
       copy: 'Copiar para área de transferência',
       showPasswords: 'Mostrar senhas',
-      hidePasswords: 'Ocultar senhas'
+      hidePasswords: 'Ocultar senhas',
+      dailyPwd: 'Senha Diária'
     }
   }
 };
