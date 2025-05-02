@@ -104,6 +104,8 @@ interface AppState {
   getActiveShift: () => Promise<WorkLog | null>;
   getUserWorkLogs: (userId: string, limitCount?: number) => Promise<WorkLog[]>;
   getAllWorkSummaries: () => Promise<WorkHoursSummary[]>;
+  deleteWorkLog: (logId: string) => Promise<boolean>;
+  deleteAllUserWorkLogs: (userId: string) => Promise<boolean>;
 }
 
 // Definindo dados padrão vazios
@@ -1698,6 +1700,26 @@ export const useStore = create<AppState>((set, get) => ({
     } catch (error) {
       console.error('Erro ao obter sumários de horas:', error);
       return [];
+    }
+  },
+  
+  deleteWorkLog: async (logId: string) => {
+    try {
+      const success = await workhoursService.deleteWorkLog(logId);
+      return success;
+    } catch (error) {
+      console.error('Erro ao excluir log de trabalho:', error);
+      return false;
+    }
+  },
+  
+  deleteAllUserWorkLogs: async (userId: string) => {
+    try {
+      const success = await workhoursService.deleteAllUserWorkLogs(userId);
+      return success;
+    } catch (error) {
+      console.error('Erro ao excluir todos os logs de trabalho do usuário:', error);
+      return false;
     }
   }
 }));

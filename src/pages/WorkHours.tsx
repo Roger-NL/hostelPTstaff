@@ -3,10 +3,11 @@ import { useStore } from '../store/useStore';
 import { useTranslation } from '../hooks/useTranslation';
 import type { WorkLog, WorkHoursSummary, UserData } from '../types';
 import { format, parseISO } from 'date-fns';
-import { Clock, User, Calendar, ChevronDown, ChevronUp, Search, Download, ArrowDownUp } from 'lucide-react';
+import { Clock, User, Calendar, ChevronDown, ChevronUp, Search, Download, ArrowDownUp, Trash2, AlertTriangle } from 'lucide-react';
+import { toast } from 'react-hot-toast';
 
 export default function WorkHours() {
-  const { users = [], getAllWorkSummaries, getUserWorkLogs } = useStore();
+  const { users = [], getAllWorkSummaries, getUserWorkLogs, deleteWorkLog, deleteAllUserWorkLogs, user: currentUser } = useStore();
   const { t } = useTranslation();
   const [summaries, setSummaries] = useState<WorkHoursSummary[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -16,6 +17,11 @@ export default function WorkHours() {
   const [searchTerm, setSearchTerm] = useState('');
   const [sortBy, setSortBy] = useState<'name' | 'weekTotal' | 'monthTotal'>('weekTotal');
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc');
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [showDeleteAllConfirm, setShowDeleteAllConfirm] = useState(false);
+  
+  // Verificar se o usuário atual é administrador
+  const isAdmin = currentUser?.role === 'admin';
   
   // Carregar sumários de horas de todos os usuários
   useEffect(() => {
@@ -182,6 +188,82 @@ export default function WorkHours() {
     document.body.removeChild(link);
   };
   
+  // Função para deletar um registro de turno específico
+  const handleDeleteLog = async (logId: string) => {
+    if (!isAdmin) return;
+    
+    if (window.confirm(t('workHours.confirmDeleteLog'))) {
+      setIsDeleting(true);
+      try {
+        const success = await deleteWorkLog(logId);
+        if (success) {
+          // Remover o log da lista local
+          setUserLogs(prevLogs => prevLogs.filter(log => log.id !== logId));
+          
+          // Recarregar os sumários para atualizar os totais
+          const updatedSummaries = await getAllWorkSummaries();
+          setSummaries(updatedSummaries);
+          
+          toast.success(t('workHours.logDeleted'), {
+            duration: 3000,
+            position: 'top-center'
+          });
+        } else {
+          toast.error(t('workHours.deleteError'), {
+            duration: 3000,
+            position: 'top-center'
+          });
+        }
+      } catch (error) {
+        console.error('Erro ao excluir registro:', error);
+        toast.error(t('workHours.deleteError'), {
+          duration: 3000,
+          position: 'top-center'
+        });
+      } finally {
+        setIsDeleting(false);
+      }
+    }
+  };
+  
+  // Função para deletar todos os registros de um usuário
+  const handleDeleteAllLogs = async () => {
+    if (!isAdmin || !selectedUserId) return;
+    
+    setIsDeleting(true);
+    try {
+      const success = await deleteAllUserWorkLogs(selectedUserId);
+      if (success) {
+        // Limpar a lista local
+        setUserLogs([]);
+        
+        // Recarregar os sumários para atualizar os totais
+        const updatedSummaries = await getAllWorkSummaries();
+        setSummaries(updatedSummaries);
+        
+        setShowDeleteAllConfirm(false);
+        
+        toast.success(t('workHours.allLogsDeleted'), {
+          duration: 3000,
+          position: 'top-center'
+        });
+      } else {
+        toast.error(t('workHours.deleteError'), {
+          duration: 3000,
+          position: 'top-center'
+        });
+      }
+    } catch (error) {
+      console.error('Erro ao excluir todos os registros:', error);
+      toast.error(t('workHours.deleteError'), {
+        duration: 3000,
+        position: 'top-center'
+      });
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+  
   return (
     <div className="space-y-6">
       <div className="bg-gray-800 rounded-xl p-4 shadow-lg">
@@ -328,6 +410,15 @@ export default function WorkHours() {
                 >
                   <Download size={18} />
                 </button>
+                {isAdmin && (
+                  <button
+                    onClick={() => setShowDeleteAllConfirm(true)}
+                    className="p-2 rounded-lg text-red-400 hover:text-red-300 hover:bg-red-900/30 transition-colors"
+                    title={t('workHours.deleteAllLogs')}
+                  >
+                    <Trash2 size={18} />
+                  </button>
+                )}
                 <button
                   onClick={() => setShowUserDetails(false)}
                   className="p-2 rounded-lg text-gray-300 hover:text-white hover:bg-gray-700 transition-colors"
@@ -352,6 +443,9 @@ export default function WorkHours() {
                       <th className="py-2 px-3 text-xs text-gray-400 font-medium">{t('workHours.startTime')}</th>
                       <th className="py-2 px-3 text-xs text-gray-400 font-medium">{t('workHours.endTime')}</th>
                       <th className="py-2 px-3 text-xs text-gray-400 font-medium">{t('workHours.duration')}</th>
+                      {isAdmin && (
+                        <th className="py-2 px-3 text-xs text-gray-400 font-medium">{t('workHours.actions')}</th>
+                      )}
                     </tr>
                   </thead>
                   <tbody>
@@ -366,12 +460,27 @@ export default function WorkHours() {
                         <td className="py-2 px-3 text-sm">
                           {log.totalMinutes ? formatMinutes(log.totalMinutes) : '-'}
                         </td>
+                        {isAdmin && (
+                          <td className="py-2 px-3 text-sm">
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleDeleteLog(log.id);
+                              }}
+                              disabled={isDeleting}
+                              className="p-1.5 rounded-md bg-red-500/20 text-red-500 hover:bg-red-500/30 transition-colors"
+                              title={t('workHours.deleteLog')}
+                            >
+                              <Trash2 size={14} />
+                            </button>
+                          </td>
+                        )}
                       </tr>
                     ))}
                     
                     {userLogs.length === 0 && (
                       <tr>
-                        <td colSpan={5} className="py-4 text-center text-gray-400 text-sm">
+                        <td colSpan={isAdmin ? 6 : 5} className="py-4 text-center text-gray-400 text-sm">
                           {t('workHours.noShifts')}
                         </td>
                       </tr>
@@ -387,6 +496,46 @@ export default function WorkHours() {
                 className="w-full py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-medium transition-colors"
               >
                 {t('workHours.close')}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+      
+      {/* Modal de confirmação para excluir todos os registros */}
+      {showDeleteAllConfirm && selectedUserId && (
+        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="bg-gray-800 rounded-xl shadow-xl max-w-lg w-full p-6">
+            <div className="flex items-center mb-4 text-red-500">
+              <AlertTriangle size={24} className="mr-3" />
+              <h3 className="text-lg font-medium">{t('workHours.confirmDeleteAllTitle')}</h3>
+            </div>
+            
+            <p className="text-gray-300 mb-6">{t('workHours.confirmDeleteAllMessage', { name: getUserName(selectedUserId) })}</p>
+            
+            <div className="flex items-center justify-end gap-4">
+              <button
+                onClick={() => setShowDeleteAllConfirm(false)}
+                className="px-4 py-2 rounded-lg bg-gray-700 text-white hover:bg-gray-600 transition-colors"
+              >
+                {t('common.cancel')}
+              </button>
+              <button
+                onClick={handleDeleteAllLogs}
+                disabled={isDeleting}
+                className="px-4 py-2 rounded-lg bg-red-600 text-white hover:bg-red-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center"
+              >
+                {isDeleting ? (
+                  <>
+                    <div className="h-4 w-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></div>
+                    {t('common.processing')}
+                  </>
+                ) : (
+                  <>
+                    <Trash2 size={16} className="mr-2" />
+                    {t('workHours.deleteAll')}
+                  </>
+                )}
               </button>
             </div>
           </div>

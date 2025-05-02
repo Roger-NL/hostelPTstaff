@@ -373,7 +373,16 @@ export const translations = {
       remove: 'Remove',
       add: 'Add',
       edit: 'Edit',
-      delete: 'Delete'
+      delete: 'Delete',
+      confirm: 'Confirm',
+      view: 'View',
+      back: 'Back',
+      next: 'Next',
+      error: 'Error',
+      info: 'Information',
+      warning: 'Warning',
+      processing: 'Processing...',
+      errorLoading: 'Error loading data'
     },
     
     // Approval system
@@ -473,13 +482,13 @@ export const translations = {
     // Work Hours Management
     workHours: {
       title: 'Work Hours Bank',
-      searchUsers: 'Search users',
+      searchUsers: 'Search users...',
       name: 'Name',
       weekTotal: 'Week Total',
       monthTotal: 'Month Total',
       totalShifts: 'Total Shifts',
       lastShift: 'Last Shift',
-      noData: 'No work hours data available',
+      noData: 'No data available',
       shiftHistory: 'Shift History',
       date: 'Date',
       shift: 'Shift',
@@ -489,7 +498,16 @@ export const translations = {
       export: 'Export to CSV',
       close: 'Close',
       noShifts: 'No shifts recorded yet',
-      exportFile: 'work_hours'
+      actions: 'Actions',
+      deleteLog: 'Delete record',
+      deleteAllLogs: 'Delete all records',
+      confirmDeleteLog: 'Are you sure you want to delete this shift record? This action cannot be undone.',
+      logDeleted: 'Record deleted successfully',
+      allLogsDeleted: 'All records deleted successfully',
+      deleteError: 'Error deleting record(s)',
+      confirmDeleteAllTitle: 'Delete all shift records',
+      confirmDeleteAllMessage: 'Are you sure you want to delete ALL shift records for {name}? This action cannot be undone.',
+      deleteAll: 'Delete All Records'
     },
     
     // Notifications
@@ -851,7 +869,16 @@ export const translations = {
       remove: 'Remover',
       add: 'Adicionar',
       edit: 'Editar',
-      delete: 'Excluir'
+      delete: 'Excluir',
+      confirm: 'Confirmar',
+      view: 'Visualizar',
+      back: 'Voltar',
+      next: 'Próximo',
+      error: 'Erro',
+      info: 'Informação',
+      warning: 'Atenção',
+      processing: 'Processando...',
+      errorLoading: 'Erro ao carregar dados'
     },
     
     // Sistema de aprovação
@@ -951,23 +978,32 @@ export const translations = {
     // Work Hours Management
     workHours: {
       title: 'Banco de Horas',
-      searchUsers: 'Buscar usuários',
       name: 'Nome',
-      weekTotal: 'Total da Semana',
-      monthTotal: 'Total do Mês',
+      weekTotal: 'Total Semanal',
+      monthTotal: 'Total Mensal',
       totalShifts: 'Total de Turnos',
       lastShift: 'Último Turno',
-      noData: 'Não há dados de horas de trabalho disponíveis',
-      shiftHistory: 'Histórico de Turnos',
+      searchUsers: 'Buscar usuários...',
+      noData: 'Nenhum dado disponível',
       date: 'Data',
       shift: 'Turno',
-      startTime: 'Hora de Início',
-      endTime: 'Hora de Término',
+      startTime: 'Início',
+      endTime: 'Término',
       duration: 'Duração',
       export: 'Exportar para CSV',
       close: 'Fechar',
       noShifts: 'Nenhum turno registrado ainda',
-      exportFile: 'horas_trabalhadas'
+      shiftHistory: 'Histórico de Turnos',
+      actions: 'Ações',
+      deleteLog: 'Excluir registro',
+      deleteAllLogs: 'Excluir todos os registros',
+      confirmDeleteLog: 'Tem certeza que deseja excluir este registro de turno? Esta ação não pode ser desfeita.',
+      logDeleted: 'Registro excluído com sucesso',
+      allLogsDeleted: 'Todos os registros foram excluídos com sucesso',
+      deleteError: 'Erro ao excluir registro(s)',
+      confirmDeleteAllTitle: 'Excluir todos os registros de turno',
+      confirmDeleteAllMessage: 'Tem certeza que deseja excluir TODOS os registros de turno de {name}? Esta ação não pode ser desfeita.',
+      deleteAll: 'Excluir Todos os Registros'
     },
     
     // Notifications

@@ -1,5 +1,5 @@
 import { firestore } from '../config/firebase';
-import { collection, doc, getDoc, setDoc, getDocs, updateDoc, query, where, orderBy, limit, Timestamp, addDoc, deleteDoc } from 'firebase/firestore';
+import { collection, doc, getDoc, setDoc, getDocs, updateDoc, query, where, orderBy, limit, Timestamp, addDoc, deleteDoc, writeBatch } from 'firebase/firestore';
 import type { WorkLog, WorkHoursSummary, ShiftTime } from '../types';
 import { format, parseISO, differenceInMinutes, startOfWeek, startOfMonth, endOfWeek, endOfMonth } from 'date-fns';
 
@@ -375,6 +375,83 @@ export const getAllWorkSummaries = async (): Promise<WorkHoursSummary[]> => {
     return summaries;
   } catch (error) {
     console.error('Erro ao obter todos os sumários de horas:', error);
+    throw error;
+  }
+};
+
+// Excluir um registro de turno específico (apenas administradores)
+export const deleteWorkLog = async (logId: string): Promise<boolean> => {
+  try {
+    console.log(`Excluindo registro de turno: ${logId}`);
+    
+    // Obter o documento para identificar o userId antes de excluí-lo
+    const logRef = doc(firestore, WORK_LOGS_COLLECTION, logId);
+    const logSnap = await getDoc(logRef);
+    
+    if (!logSnap.exists()) {
+      console.error('Registro de turno não encontrado');
+      return false;
+    }
+    
+    const logData = logSnap.data();
+    const userId = logData.userId;
+    
+    // Excluir o registro
+    await deleteDoc(logRef);
+    console.log(`Registro de turno ${logId} excluído com sucesso`);
+    
+    // Atualizar o sumário do usuário após a exclusão
+    await updateWorkSummary(userId);
+    console.log(`Sumário atualizado para o usuário ${userId} após exclusão`);
+    
+    return true;
+  } catch (error) {
+    console.error('Erro ao excluir registro de turno:', error);
+    throw error;
+  }
+};
+
+// Excluir todos os registros de turno de um usuário (apenas administradores)
+export const deleteAllUserWorkLogs = async (userId: string): Promise<boolean> => {
+  try {
+    console.log(`Excluindo todos os registros de turno para o usuário ${userId}`);
+    
+    // Obter todos os logs do usuário
+    const q = query(
+      collection(firestore, WORK_LOGS_COLLECTION),
+      where('userId', '==', userId)
+    );
+    
+    const querySnapshot = await getDocs(q);
+    console.log(`Encontrados ${querySnapshot.size} registros para excluir`);
+    
+    if (querySnapshot.empty) {
+      console.log('Nenhum registro encontrado para excluir');
+      return true;
+    }
+    
+    // Excluir cada documento usando WriteBatch
+    const batch = writeBatch(firestore);
+    querySnapshot.forEach(doc => {
+      batch.delete(doc.ref);
+    });
+    
+    await batch.commit();
+    console.log(`${querySnapshot.size} registros excluídos com sucesso`);
+    
+    // Atualizar ou excluir o sumário do usuário
+    const summaryRef = doc(firestore, WORK_SUMMARY_COLLECTION, userId);
+    await setDoc(summaryRef, {
+      userId,
+      weekTotal: 0,
+      monthTotal: 0,
+      totalLogs: 0
+    });
+    console.log(`Sumário zerado para o usuário ${userId}`);
+    
+    return true;
+  } catch (error) {
+    console.error('Erro ao excluir registros de turno:', error);
     throw error;
   }
 }; 
