@@ -6,13 +6,57 @@ import { format, parseISO, differenceInMinutes, startOfWeek, startOfMonth, endOf
 const WORK_LOGS_COLLECTION = 'workLogs';
 const WORK_SUMMARY_COLLECTION = 'workSummaries';
 
+// Forçar finalização de um turno ativo anterior
+export const forceEndPreviousShift = async (userId: string): Promise<void> => {
+  try {
+    console.log(`Verificando e finalizando turnos ativos anteriores para o usuário ${userId}`);
+    
+    // Obter o turno ativo do usuário
+    const activeShift = await getActiveShift(userId);
+    if (!activeShift) {
+      console.log('Nenhum turno ativo anterior encontrado');
+      return;
+    }
+    
+    console.log(`Finalizando turno ativo anterior: ${activeShift.id}`);
+    
+    const now = new Date();
+    const startTime = parseISO(activeShift.startTime);
+    const totalMinutes = differenceInMinutes(now, startTime);
+    
+    console.log(`Horário de início do turno anterior: ${startTime.toISOString()}`);
+    console.log(`Horário de término forçado: ${now.toISOString()}`);
+    console.log(`Total de minutos: ${totalMinutes}`);
+
+    // Atualizar o documento no Firestore
+    const workLogRef = doc(firestore, WORK_LOGS_COLLECTION, activeShift.id);
+    
+    await updateDoc(workLogRef, {
+      endTime: Timestamp.fromDate(now),
+      totalMinutes,
+      forceClosed: true // Marcando que este turno foi fechado automaticamente
+    });
+    
+    console.log(`Turno anterior ${activeShift.id} finalizado automaticamente`);
+
+    // Atualizar o sumário de horas do usuário
+    await updateWorkSummary(userId);
+    
+    console.log('Sumário de horas atualizado após finalização forçada');
+  } catch (error) {
+    console.error('Erro ao finalizar turno anterior:', error);
+    throw error;
+  }
+};
+
 // Iniciar um turno
 export const startShift = async (userId: string, shiftTime: ShiftTime): Promise<WorkLog> => {
   try {
     // Verificar se já existe um turno ativo para este usuário
     const activeShift = await getActiveShift(userId);
     if (activeShift) {
-      throw new Error('Usuário já possui um turno ativo');
+      console.log('Usuário já possui um turno ativo. Finalizando o turno anterior automaticamente.');
+      await forceEndPreviousShift(userId);
     }
 
     const now = new Date();
@@ -35,6 +79,8 @@ export const startShift = async (userId: string, shiftTime: ShiftTime): Promise<
     // Atualizar o ID do log
     newWorkLog.id = docRef.id;
     await updateDoc(docRef, { id: docRef.id });
+    
+    console.log(`Novo turno iniciado: ${docRef.id}`);
 
     return newWorkLog;
   } catch (error) {

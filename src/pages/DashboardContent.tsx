@@ -113,11 +113,28 @@ export default function DashboardContent() {
       const result = await startShift(currentShift);
       
       if (result) {
-        toast.success(t('notifications.shiftStarted'), {
-          duration: 3000,
-          position: 'top-center',
-          icon: '🏄‍♂️'
-        });
+        // Se o resultado contém forceClosed, significa que um turno anterior foi fechado automaticamente
+        if (result.forceClosed) {
+          toast.success(t('notifications.previousShiftClosed'), {
+            duration: 3000,
+            position: 'top-center',
+            icon: '⏱️'
+          });
+          // Um pequeno atraso para o usuário ver ambas as notificações
+          setTimeout(() => {
+            toast.success(t('notifications.shiftStarted'), {
+              duration: 3000,
+              position: 'top-center',
+              icon: '🏄‍♂️'
+            });
+          }, 1000);
+        } else {
+          toast.success(t('notifications.shiftStarted'), {
+            duration: 3000,
+            position: 'top-center',
+            icon: '🏄‍♂️'
+          });
+        }
         console.log('Turno iniciado com sucesso:', result);
       } else {
         toast.error(t('notifications.shiftStartFailed'), {

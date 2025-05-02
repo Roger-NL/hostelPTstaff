@@ -22,6 +22,7 @@ export interface WorkLog {
   endTime?: string; // ISO string, opcional pois pode estar ainda em andamento
   totalMinutes?: number; // Calculado quando o shift termina
   notes?: string;
+  forceClosed?: boolean;
 }
 
 export interface WorkHoursSummary {

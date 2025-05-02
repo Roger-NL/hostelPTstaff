@@ -497,7 +497,9 @@ export const translations = {
       shiftStarted: 'Shift started successfully!',
       shiftStartFailed: 'Failed to start shift. Please try again.',
       shiftEnded: 'Shift ended successfully! Hours recorded.',
-      shiftEndFailed: 'Failed to end shift. Please try again.'
+      shiftEndFailed: 'Failed to end shift. Please try again.',
+      previousShiftClosed: 'Previous active shift was automatically ended.',
+      shiftAutoEnded: 'Your previous shift has been automatically ended and recorded.'
     }
   },
   pt: {
@@ -973,7 +975,9 @@ export const translations = {
       shiftStarted: 'Turno iniciado com sucesso!',
       shiftStartFailed: 'Falha ao iniciar turno. Tente novamente.',
       shiftEnded: 'Turno finalizado com sucesso! Horas registradas.',
-      shiftEndFailed: 'Falha ao finalizar turno. Tente novamente.'
+      shiftEndFailed: 'Falha ao finalizar turno. Tente novamente.',
+      previousShiftClosed: 'Turno ativo anterior foi finalizado automaticamente.',
+      shiftAutoEnded: 'Seu turno anterior foi finalizado automaticamente e registrado.'
     }
   }
 };
