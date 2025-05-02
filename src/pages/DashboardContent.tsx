@@ -35,6 +35,7 @@ import { firestore } from '../config/firebase';
 import { doc, updateDoc, getDoc } from 'firebase/firestore';
 import * as authService from '../services/auth.service';
 import { useAuth } from '../hooks/useAuth';
+import { toast } from 'react-hot-toast';
 
 // Definindo um tipo para o usuário para substituir 'any[]'
 interface UserType {
@@ -109,9 +110,28 @@ export default function DashboardContent() {
     setIsStartingShift(true);
     try {
       const currentShift = getCurrentShift();
-      await startShift(currentShift);
+      const result = await startShift(currentShift);
+      
+      if (result) {
+        toast.success(t('notifications.shiftStarted'), {
+          duration: 3000,
+          position: 'top-center',
+          icon: '🏄‍♂️'
+        });
+        console.log('Turno iniciado com sucesso:', result);
+      } else {
+        toast.error(t('notifications.shiftStartFailed'), {
+          duration: 3000,
+          position: 'top-center'
+        });
+        console.error('Falha ao iniciar turno');
+      }
     } catch (error) {
       console.error('Erro ao iniciar turno:', error);
+      toast.error(t('notifications.shiftStartFailed'), {
+        duration: 3000,
+        position: 'top-center'
+      });
     } finally {
       setIsStartingShift(false);
     }
@@ -123,9 +143,28 @@ export default function DashboardContent() {
     
     setIsEndingShift(true);
     try {
-      await endShift();
+      const result = await endShift();
+      
+      if (result) {
+        toast.success(t('notifications.shiftEnded'), {
+          duration: 3000,
+          position: 'top-center',
+          icon: '🌊'
+        });
+        console.log('Turno finalizado com sucesso:', result);
+      } else {
+        toast.error(t('notifications.shiftEndFailed'), {
+          duration: 3000,
+          position: 'top-center'
+        });
+        console.error('Falha ao finalizar turno');
+      }
     } catch (error) {
       console.error('Erro ao finalizar turno:', error);
+      toast.error(t('notifications.shiftEndFailed'), {
+        duration: 3000,
+        position: 'top-center'
+      });
     } finally {
       setIsEndingShift(false);
     }

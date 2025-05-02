@@ -490,6 +490,14 @@ export const translations = {
       close: 'Close',
       noShifts: 'No shifts recorded yet',
       exportFile: 'work_hours'
+    },
+    
+    // Notifications
+    notifications: {
+      shiftStarted: 'Shift started successfully!',
+      shiftStartFailed: 'Failed to start shift. Please try again.',
+      shiftEnded: 'Shift ended successfully! Hours recorded.',
+      shiftEndFailed: 'Failed to end shift. Please try again.'
     }
   },
   pt: {
@@ -958,6 +966,14 @@ export const translations = {
       close: 'Fechar',
       noShifts: 'Nenhum turno registrado ainda',
       exportFile: 'horas_trabalhadas'
+    },
+    
+    // Notifications
+    notifications: {
+      shiftStarted: 'Turno iniciado com sucesso!',
+      shiftStartFailed: 'Falha ao iniciar turno. Tente novamente.',
+      shiftEnded: 'Turno finalizado com sucesso! Horas registradas.',
+      shiftEndFailed: 'Falha ao finalizar turno. Tente novamente.'
     }
   }
 };

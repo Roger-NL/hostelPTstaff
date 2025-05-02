@@ -46,25 +46,39 @@ export const startShift = async (userId: string, shiftTime: ShiftTime): Promise<
 // Finalizar um turno
 export const endShift = async (userId: string): Promise<WorkLog> => {
   try {
+    console.log(`Finalizando turno para o usuário ${userId}`);
+    
     // Obter o turno ativo do usuário
     const activeShift = await getActiveShift(userId);
     if (!activeShift) {
+      console.error('Nenhum turno ativo encontrado para este usuário');
       throw new Error('Nenhum turno ativo encontrado para este usuário');
     }
 
+    console.log(`Turno ativo encontrado: ${activeShift.id}`);
+    
     const now = new Date();
     const startTime = parseISO(activeShift.startTime);
     const totalMinutes = differenceInMinutes(now, startTime);
+    
+    console.log(`Horário de início: ${startTime.toISOString()}`);
+    console.log(`Horário de término: ${now.toISOString()}`);
+    console.log(`Total de minutos: ${totalMinutes}`);
 
     // Atualizar o documento no Firestore
     const workLogRef = doc(firestore, WORK_LOGS_COLLECTION, activeShift.id);
+    
     await updateDoc(workLogRef, {
       endTime: Timestamp.fromDate(now),
       totalMinutes
     });
+    
+    console.log(`Documento ${activeShift.id} atualizado no Firestore`);
 
     // Atualizar o sumário de horas do usuário
-    await updateWorkSummary(userId);
+    console.log('Atualizando sumário de horas do usuário');
+    const summary = await updateWorkSummary(userId);
+    console.log('Sumário atualizado:', summary);
 
     // Retornar o log atualizado
     const updatedLog: WorkLog = {
@@ -83,30 +97,49 @@ export const endShift = async (userId: string): Promise<WorkLog> => {
 // Obter o turno ativo do usuário (se houver)
 export const getActiveShift = async (userId: string): Promise<WorkLog | null> => {
   try {
+    console.log(`Buscando turno ativo para o usuário ${userId}`);
+    
+    // A consulta estava buscando documentos onde endTime é null, mas no Firestore,
+    // quando um campo não existe, ele não é igual a null, ele simplesmente não existe.
+    // Vamos ajustar a consulta para verificar isso corretamente.
     const q = query(
       collection(firestore, WORK_LOGS_COLLECTION),
-      where('userId', '==', userId),
-      where('endTime', '==', null)
+      where('userId', '==', userId)
     );
 
     const querySnapshot = await getDocs(q);
+    console.log(`Encontrados ${querySnapshot.size} logs para o usuário`);
+    
     if (querySnapshot.empty) {
+      console.log("Nenhum log encontrado para o usuário");
       return null;
     }
 
-    // Deve haver apenas um turno ativo por vez
-    const doc = querySnapshot.docs[0];
-    const data = doc.data();
+    // Filtrar manualmente para encontrar o log sem endTime
+    let activeShiftDoc: any = null;
+    querySnapshot.forEach(doc => {
+      const data = doc.data();
+      if (!data.endTime) {
+        console.log(`Turno ativo encontrado: ${doc.id}`);
+        activeShiftDoc = { id: doc.id, ...data };
+      }
+    });
     
+    if (!activeShiftDoc) {
+      console.log("Nenhum turno ativo encontrado");
+      return null;
+    }
+    
+    // Converter o documento para o formato WorkLog
     return {
-      id: doc.id,
-      userId: data.userId,
-      shiftDate: data.shiftDate,
-      shiftTime: data.shiftTime,
-      startTime: data.startTime.toDate().toISOString(),
-      endTime: data.endTime ? data.endTime.toDate().toISOString() : undefined,
-      totalMinutes: data.totalMinutes,
-      notes: data.notes
+      id: activeShiftDoc.id,
+      userId: activeShiftDoc.userId,
+      shiftDate: activeShiftDoc.shiftDate,
+      shiftTime: activeShiftDoc.shiftTime,
+      startTime: activeShiftDoc.startTime.toDate().toISOString(),
+      endTime: activeShiftDoc.endTime ? activeShiftDoc.endTime.toDate().toISOString() : undefined,
+      totalMinutes: activeShiftDoc.totalMinutes,
+      notes: activeShiftDoc.notes
     };
   } catch (error) {
     console.error('Erro ao obter turno ativo:', error);
@@ -117,62 +150,83 @@ export const getActiveShift = async (userId: string): Promise<WorkLog | null> =>
 // Atualizar o sumário de horas trabalhadas do usuário
 export const updateWorkSummary = async (userId: string): Promise<WorkHoursSummary> => {
   try {
+    console.log(`Atualizando sumário de horas para o usuário ${userId}`);
+    
     const now = new Date();
     const weekStart = startOfWeek(now, { weekStartsOn: 1 });
     const monthStart = startOfMonth(now);
+    
+    console.log(`Data atual: ${now.toISOString()}`);
+    console.log(`Início da semana: ${weekStart.toISOString()}`);
+    console.log(`Início do mês: ${monthStart.toISOString()}`);
 
     // Obter todos os logs de trabalho do usuário
     const q = query(
       collection(firestore, WORK_LOGS_COLLECTION),
-      where('userId', '==', userId),
-      where('endTime', '!=', null)
+      where('userId', '==', userId)
     );
 
     const querySnapshot = await getDocs(q);
+    console.log(`Encontrados ${querySnapshot.size} logs totais para o usuário`);
     
     let weekTotal = 0;
     let monthTotal = 0;
+    let totalLogCount = 0;
     let lastShift: WorkLog | undefined;
     
+    // Processar cada log
     querySnapshot.forEach(doc => {
       const data = doc.data();
-      const endTime = data.endTime.toDate();
       
-      // Verificar se está na semana ou mês atual
-      if (endTime >= weekStart) {
-        weekTotal += data.totalMinutes || 0;
-      }
-      
-      if (endTime >= monthStart) {
-        monthTotal += data.totalMinutes || 0;
-      }
-      
-      // Atualizar último turno
-      if (!lastShift || endTime > parseISO(lastShift.endTime!)) {
-        lastShift = {
-          id: doc.id,
-          userId: data.userId,
-          shiftDate: data.shiftDate,
-          shiftTime: data.shiftTime,
-          startTime: data.startTime.toDate().toISOString(),
-          endTime: data.endTime.toDate().toISOString(),
-          totalMinutes: data.totalMinutes,
-          notes: data.notes
-        };
+      // Contar apenas logs completados (que têm endTime)
+      if (data.endTime) {
+        totalLogCount++;
+        
+        const endTime = data.endTime.toDate();
+        console.log(`Log #${doc.id} - Data de término: ${endTime.toISOString()} - Minutos: ${data.totalMinutes || 0}`);
+        
+        // Verificar se está na semana ou mês atual
+        if (endTime >= weekStart) {
+          weekTotal += data.totalMinutes || 0;
+        }
+        
+        if (endTime >= monthStart) {
+          monthTotal += data.totalMinutes || 0;
+        }
+        
+        // Atualizar último turno
+        if (!lastShift || !lastShift.endTime || (data.endTime && endTime > parseISO(lastShift.endTime))) {
+          lastShift = {
+            id: doc.id,
+            userId: data.userId,
+            shiftDate: data.shiftDate,
+            shiftTime: data.shiftTime,
+            startTime: data.startTime.toDate().toISOString(),
+            endTime: data.endTime.toDate().toISOString(),
+            totalMinutes: data.totalMinutes,
+            notes: data.notes
+          };
+        }
       }
     });
+    
+    console.log(`Total de minutos na semana: ${weekTotal}`);
+    console.log(`Total de minutos no mês: ${monthTotal}`);
+    console.log(`Total de logs completados: ${totalLogCount}`);
+    console.log(`Último turno:`, lastShift ? `ID: ${lastShift.id}, Data: ${lastShift.shiftDate}` : 'Nenhum');
     
     // Criar ou atualizar o sumário
     const summary: WorkHoursSummary = {
       userId,
       weekTotal,
       monthTotal,
-      totalLogs: querySnapshot.size,
+      totalLogs: totalLogCount,
       lastShift
     };
     
     // Salvar no Firestore
     await setDoc(doc(firestore, WORK_SUMMARY_COLLECTION, userId), summary);
+    console.log(`Sumário salvo no Firestore para o usuário ${userId}`);
     
     return summary;
   } catch (error) {
