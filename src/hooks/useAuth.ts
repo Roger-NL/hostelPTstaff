@@ -149,6 +149,16 @@ export const useAuth = () => {
           // Atualiza também o armazenamento global do usuário
           useStore.getState().setUser(userProfile);
           
+          // Força a navegação para o dashboard quando usar senha diária
+          try {
+            // Verifica se o objeto window existe (poderia ser SSR)
+            if (typeof window !== 'undefined') {
+              window.location.href = '/dashboard';
+            }
+          } catch (e) {
+            console.error('Erro ao redirecionar para dashboard:', e);
+          }
+          
           return userProfile;
         } else {
           throw new Error('Perfil de usuário não encontrado');

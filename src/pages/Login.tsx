@@ -231,6 +231,12 @@ const Login: React.FC = () => {
         saveTempPassword(password);
       }
       
+      // Força a navegação diretamente pela URL em casos de problema com o navigate do React Router
+      if (typeof window !== 'undefined' && window.location.pathname !== '/dashboard') {
+        window.location.href = '/dashboard';
+        return; // Evita executar o navigate do React Router
+      }
+      
       navigate('/dashboard');
     } catch (err: any) {
       console.error('Login error:', err);
