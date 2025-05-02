@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import type { Schedule, ShiftTime, UserData, Task, TaskComment, TaskChecklistItem, Event, Message, UserSettings, SystemSettings, User } from '../types';
+import type { Schedule, ShiftTime, UserData, Task, TaskComment, TaskChecklistItem, Event, Message, UserSettings, SystemSettings, User, WorkLog, WorkHoursSummary } from '../types';
 import * as authService from '../services/auth.service';
 import { doc, updateDoc, setDoc, getDoc } from 'firebase/firestore';
 import { firestore } from '../config/firebase';
@@ -20,6 +20,7 @@ import {
   approveTaskPhoto,
   rejectTaskPhoto
 } from '../services/task.service';
+import * as workhoursService from '../services/workhours.service';
 
 interface AppState {
   theme: 'light' | 'dark';
@@ -96,6 +97,13 @@ interface AppState {
   
   // Função para rejeitar foto de tarefa
   rejectPhoto: (taskId: string, adminId: string) => void;
+  
+  // Funções para banco de horas
+  startShift: (shiftTime: ShiftTime) => Promise<WorkLog | null>;
+  endShift: () => Promise<WorkLog | null>;
+  getActiveShift: () => Promise<WorkLog | null>;
+  getUserWorkLogs: (userId: string, limitCount?: number) => Promise<WorkLog[]>;
+  getAllWorkSummaries: () => Promise<WorkHoursSummary[]>;
 }
 
 // Definindo dados padrão vazios
@@ -1601,5 +1609,95 @@ export const useStore = create<AppState>((set, get) => ({
       
       return { tasks: updatedTasks };
     });
+  },
+  
+  // Funções para banco de horas
+  startShift: async (shiftTime: ShiftTime) => {
+    const { user } = get();
+    if (!user) return null;
+    
+    try {
+      const workLog = await workhoursService.startShift(user.id, shiftTime);
+      // Atualizar o usuário com o turno ativo
+      set(state => ({
+        user: {
+          ...state.user!,
+          activeShift: workLog
+        }
+      }));
+      
+      return workLog;
+    } catch (error) {
+      console.error('Erro ao iniciar turno:', error);
+      return null;
+    }
+  },
+  
+  endShift: async () => {
+    const { user } = get();
+    if (!user) return null;
+    
+    try {
+      const workLog = await workhoursService.endShift(user.id);
+      
+      // Atualizar o sumário de horas do usuário
+      const summary = await workhoursService.getWorkSummary(user.id);
+      
+      // Atualizar o estado do usuário removendo o turno ativo e atualizando o sumário
+      set(state => ({
+        user: {
+          ...state.user!,
+          activeShift: undefined,
+          workHours: summary || undefined
+        }
+      }));
+      
+      return workLog;
+    } catch (error) {
+      console.error('Erro ao finalizar turno:', error);
+      return null;
+    }
+  },
+  
+  getActiveShift: async () => {
+    const { user } = get();
+    if (!user) return null;
+    
+    try {
+      const activeShift = await workhoursService.getActiveShift(user.id);
+      
+      // Atualizar o estado do usuário com o turno ativo (se houver)
+      if (activeShift) {
+        set(state => ({
+          user: {
+            ...state.user!,
+            activeShift
+          }
+        }));
+      }
+      
+      return activeShift;
+    } catch (error) {
+      console.error('Erro ao obter turno ativo:', error);
+      return null;
+    }
+  },
+  
+  getUserWorkLogs: async (userId, limitCount = 100) => {
+    try {
+      return await workhoursService.getUserWorkLogs(userId, limitCount);
+    } catch (error) {
+      console.error('Erro ao obter logs de trabalho:', error);
+      return [];
+    }
+  },
+  
+  getAllWorkSummaries: async () => {
+    try {
+      return await workhoursService.getAllWorkSummaries();
+    } catch (error) {
+      console.error('Erro ao obter sumários de horas:', error);
+      return [];
+    }
   }
 }));

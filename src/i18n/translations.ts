@@ -178,7 +178,7 @@ export const translations = {
       welcomeMorning: 'Good morning, {name}!',
       welcomeAfternoon: 'Good afternoon, {name}!',
       welcomeEvening: 'Good evening, {name}!',
-      currentShift: 'You are currently on shift: {shift}',
+      currentShiftWithName: 'You are currently on shift: {shift}',
       currentShiftSimple: 'Current Shift',
       nextShift: 'Next shift: {date} at {shift}',
       previousShift: 'Previous Shift',
@@ -197,6 +197,15 @@ export const translations = {
       dutyConfirmed: "Duty confirmed",
       noUpcomingShifts: "No upcoming shifts scheduled",
       noDaysOff: "No days off this week",
+      shiftControl: 'Shift Control',
+      startShift: 'Start Shift',
+      endShift: 'End Shift',
+      startingShift: 'Starting...',
+      endingShift: 'Ending...',
+      activeShift: 'Active Shift',
+      noActiveShift: 'No active shift',
+      startedAt: 'Started at',
+      timeActive: 'Time active',
       stats: {
         tasks: 'Tasks',
         points: 'Points',
@@ -204,13 +213,14 @@ export const translations = {
         messages: 'Messages'
       },
       weather: {
-        title: 'Current Conditions',
+        title: 'Beach Conditions',
         temperature: 'Temperature',
         wind: 'Wind',
         windSpeed: 'Wind Speed',
         waves: 'Waves',
         waveHeight: 'Wave Height',
-        humidity: 'Humidity'
+        humidity: 'Humidity',
+        surfCondition: 'Surf Condition'
       },
       recentActivity: 'Recent Activity',
       upcomingEvents: 'Upcoming Events',
@@ -458,6 +468,28 @@ export const translations = {
         createTask: 'Create Task',
         updateTask: 'Update Task'
       }
+    },
+    
+    // Work Hours Management
+    workHours: {
+      title: 'Work Hours Bank',
+      searchUsers: 'Search users',
+      name: 'Name',
+      weekTotal: 'Week Total',
+      monthTotal: 'Month Total',
+      totalShifts: 'Total Shifts',
+      lastShift: 'Last Shift',
+      noData: 'No work hours data available',
+      shiftHistory: 'Shift History',
+      date: 'Date',
+      shift: 'Shift',
+      startTime: 'Start Time',
+      endTime: 'End Time',
+      duration: 'Duration',
+      export: 'Export to CSV',
+      close: 'Close',
+      noShifts: 'No shifts recorded yet',
+      exportFile: 'work_hours'
     }
   },
   pt: {
@@ -628,12 +660,12 @@ export const translations = {
     
     // Dashboard
     dashboard: {
-      title: 'Painel',
-      welcome: 'Bem-vindo(a), {name}!',
+      title: 'Dashboard',
+      welcome: 'Bem-vindo, {name}!',
       welcomeMorning: 'Bom dia, {name}!',
       welcomeAfternoon: 'Boa tarde, {name}!',
       welcomeEvening: 'Boa noite, {name}!',
-      currentShift: 'Você está no seu turno atual: {shift}',
+      currentShiftWithName: 'Você está atualmente no turno: {shift}',
       currentShiftSimple: 'Turno Atual',
       nextShift: 'Próximo turno: {date} às {shift}',
       previousShift: 'Turno Anterior',
@@ -649,9 +681,18 @@ export const translations = {
       noTasks: "Nenhuma tarefa encontrada",
       yourNextShift: "Seu Próximo Turno",
       yourSchedule: "Sua Agenda",
-      dutyConfirmed: "Turno confirmado",
+      dutyConfirmed: "Plantão confirmado",
       noUpcomingShifts: "Nenhum turno agendado",
-      noDaysOff: "Nenhum dia de folga nesta semana",
+      noDaysOff: "Nenhum dia de folga esta semana",
+      shiftControl: 'Controle de Turno',
+      startShift: 'Iniciar Turno',
+      endShift: 'Finalizar Turno',
+      startingShift: 'Iniciando...',
+      endingShift: 'Finalizando...',
+      activeShift: 'Turno Ativo',
+      noActiveShift: 'Nenhum turno ativo',
+      startedAt: 'Iniciado às',
+      timeActive: 'Tempo ativo',
       stats: {
         tasks: 'Tarefas',
         points: 'Pontos',
@@ -659,13 +700,14 @@ export const translations = {
         messages: 'Mensagens'
       },
       weather: {
-        title: 'Condições Atuais',
+        title: 'Condições da Praia',
         temperature: 'Temperatura',
         wind: 'Vento',
         windSpeed: 'Velocidade do Vento',
         waves: 'Ondas',
         waveHeight: 'Altura das Ondas',
-        humidity: 'Umidade'
+        humidity: 'Umidade',
+        surfCondition: 'Condição para Surf'
       },
       recentActivity: 'Atividade Recente',
       upcomingEvents: 'Próximos Eventos',
@@ -894,6 +936,28 @@ export const translations = {
         createTask: 'Criar Tarefa',
         updateTask: 'Atualizar Tarefa'
       }
+    },
+    
+    // Work Hours Management
+    workHours: {
+      title: 'Banco de Horas',
+      searchUsers: 'Buscar usuários',
+      name: 'Nome',
+      weekTotal: 'Total da Semana',
+      monthTotal: 'Total do Mês',
+      totalShifts: 'Total de Turnos',
+      lastShift: 'Último Turno',
+      noData: 'Não há dados de horas de trabalho disponíveis',
+      shiftHistory: 'Histórico de Turnos',
+      date: 'Data',
+      shift: 'Turno',
+      startTime: 'Hora de Início',
+      endTime: 'Hora de Término',
+      duration: 'Duração',
+      export: 'Exportar para CSV',
+      close: 'Fechar',
+      noShifts: 'Nenhum turno registrado ainda',
+      exportFile: 'horas_trabalhadas'
     }
   }
 };

@@ -13,6 +13,25 @@ export interface User {
   role: 'user' | 'admin';
 }
 
+export interface WorkLog {
+  id: string;
+  userId: string;
+  shiftDate: string;
+  shiftTime: ShiftTime;
+  startTime: string; // ISO string
+  endTime?: string; // ISO string, opcional pois pode estar ainda em andamento
+  totalMinutes?: number; // Calculado quando o shift termina
+  notes?: string;
+}
+
+export interface WorkHoursSummary {
+  userId: string;
+  weekTotal: number; // total de minutos na semana
+  monthTotal: number; // total de minutos no mês
+  totalLogs: number; // número de logs de trabalho
+  lastShift?: WorkLog; // último turno registrado
+}
+
 export interface UserData {
   id: string;
   email: string;
@@ -30,6 +49,8 @@ export interface UserData {
   points: number;
   shifts?: string[];
   settings?: UserSettings;
+  workHours?: WorkHoursSummary;
+  activeShift?: WorkLog; // Informações do shift atual em andamento, se houver
 }
 
 export interface UserSettings {

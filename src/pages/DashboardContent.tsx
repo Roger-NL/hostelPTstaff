@@ -1,8 +1,8 @@
 import React, { useState, useCallback, useEffect } from 'react';
 import { useStore } from '../store/useStore';
 import { useTranslation } from '../hooks/useTranslation';
-import { format, isToday, isYesterday, addDays, subDays, startOfWeek, parseISO } from 'date-fns';
-import type { Schedule, ShiftTime } from '../types';
+import { format, isToday, isYesterday, addDays, subDays, startOfWeek, parseISO, differenceInMinutes } from 'date-fns';
+import type { Schedule, ShiftTime, WorkLog } from '../types';
 import {
   Award,
   User,
@@ -22,7 +22,14 @@ import {
   CheckCircle,
   AlertCircle,
   Clock as ClockIcon,
-  Shield
+  Shield,
+  Play,
+  Square,
+  TimerOff,
+  Sunset,
+  Sunrise,
+  Umbrella,
+  WavesIcon
 } from 'lucide-react';
 import { firestore } from '../config/firebase';
 import { doc, updateDoc, getDoc } from 'firebase/firestore';
@@ -40,14 +47,105 @@ interface UserType {
 }
 
 export default function DashboardContent() {
-  const { user, tasks = [], events = [], messages = [], users = [], schedule = {} as Schedule, setUser } = useStore();
+  const { 
+    user, 
+    tasks = [], 
+    events = [], 
+    messages = [], 
+    users = [], 
+    schedule = {} as Schedule, 
+    setUser,
+    startShift,
+    endShift,
+    getActiveShift
+  } = useStore();
   const { t } = useTranslation();
   const [isPromoting, setIsPromoting] = useState(false);
   const { loadAllUsers } = useAuth();
+  const [isStartingShift, setIsStartingShift] = useState(false);
+  const [isEndingShift, setIsEndingShift] = useState(false);
+  
+  // Estado para controlar o timer do turno ativo
+  const [activeTime, setActiveTime] = useState<number | null>(null);
+  
+  // Efeito para carregar o turno ativo do usuário, se houver
+  useEffect(() => {
+    const loadActiveShift = async () => {
+      if (user?.id) {
+        await getActiveShift();
+      }
+    };
+    
+    loadActiveShift();
+  }, [user?.id, getActiveShift]);
+  
+  // Efeito para atualizar o timer do turno ativo
+  useEffect(() => {
+    if (!user?.activeShift) {
+      setActiveTime(null);
+      return;
+    }
+    
+    const updateTimer = () => {
+      const startTime = parseISO(user.activeShift!.startTime);
+      const now = new Date();
+      const minutesActive = differenceInMinutes(now, startTime);
+      setActiveTime(minutesActive);
+    };
+    
+    // Atualizar o timer imediatamente
+    updateTimer();
+    
+    // Atualizar o timer a cada minuto
+    const interval = setInterval(updateTimer, 60000);
+    
+    return () => clearInterval(interval);
+  }, [user?.activeShift]);
+  
+  // Manipulador para iniciar um turno
+  const handleStartShift = async () => {
+    if (!user) return;
+    
+    setIsStartingShift(true);
+    try {
+      const currentShift = getCurrentShift();
+      await startShift(currentShift);
+    } catch (error) {
+      console.error('Erro ao iniciar turno:', error);
+    } finally {
+      setIsStartingShift(false);
+    }
+  };
+  
+  // Manipulador para finalizar um turno
+  const handleEndShift = async () => {
+    if (!user) return;
+    
+    setIsEndingShift(true);
+    try {
+      await endShift();
+    } catch (error) {
+      console.error('Erro ao finalizar turno:', error);
+    } finally {
+      setIsEndingShift(false);
+    }
+  };
+  
+  // Formatar o tempo ativo em horas e minutos
+  const formatActiveTime = (minutes: number): string => {
+    const hours = Math.floor(minutes / 60);
+    const mins = minutes % 60;
+    
+    if (hours > 0) {
+      return `${hours}h ${mins}m`;
+    }
+    
+    return `${mins}m`;
+  };
 
   // Carrega todos os usuários quando o componente é montado
   useEffect(() => {
-    const loadUsers = async () => {
+    const fetchUsers = async () => {
       console.log('Carregando usuários no Dashboard...');
       try {
         const loadedUsers = await loadAllUsers();
@@ -57,7 +155,7 @@ export default function DashboardContent() {
       }
     };
     
-    loadUsers();
+    fetchUsers();
   }, [loadAllUsers]);
 
   // Get current weather data (mock data for now)
@@ -363,245 +461,367 @@ export default function DashboardContent() {
   const hasCurrentVolunteers = currentVolunteers && currentVolunteers.length > 0;
 
   return (
-    <div className="space-y-6 xs:space-y-8">
-      {/* User next shift - MOVED TO TOP */}
-      <div className="bg-gray-800 backdrop-blur-sm rounded-xl p-4 xs:p-5 sm:p-6 border border-gray-700 shadow-md">
-        <h2 className="text-lg xs:text-xl font-extralight text-blue-300 mb-3 xs:mb-4 flex items-center gap-2">
-          <Clock size={18} className="text-blue-400 xs:hidden" />
-          <Clock size={20} className="text-blue-400 hidden xs:block" />
-          {t('dashboard.yourNextShift') || "Your Next Shift"}
-        </h2>
-        
-        {userNextShift ? (
-          <div className="flex flex-col items-center justify-center py-6 text-center">
-            <div className="w-20 h-20 xs:w-24 xs:h-24 rounded-full bg-gradient-to-br from-blue-600 to-blue-900 flex items-center justify-center text-white mb-4">
-              <Calendar size={32} className="xs:hidden" />
-              <Calendar size={40} className="hidden xs:block" />
-            </div>
-            <h3 className="text-md xs:text-lg font-light text-blue-300">{userNextShift.date}</h3>
-            <p className="text-xl xs:text-2xl font-extralight text-blue-400 mt-2">{userNextShift.shift}</p>
-            <div className="mt-6 px-4 py-2 bg-blue-900/50 text-blue-300 rounded-lg text-xs xs:text-sm font-light flex items-center gap-2">
-              <Shield size={14} className="xs:hidden" />
-              <Shield size={16} className="hidden xs:block" />
-              <span>{t('dashboard.dutyConfirmed')}</span>
-            </div>
-          </div>
-        ) : (
-          <div className="flex flex-col items-center justify-center py-10 text-center">
-            <div className="w-16 h-16 rounded-full bg-gray-700 flex items-center justify-center text-gray-400 mb-4">
-              <Calendar size={24} />
-            </div>
-            <p className="text-gray-400 font-light">
-              {t('dashboard.noUpcomingShifts')}
-            </p>
-          </div>
-        )}
-      </div>
-
-      {/* Today's team section - UPDATED */}
-      <div className="bg-gray-800 backdrop-blur-sm rounded-xl p-4 xs:p-5 sm:p-6 border border-gray-700 shadow-md">
-        <h2 className="text-lg xs:text-xl font-extralight text-blue-300 mb-3 xs:mb-4 flex items-center gap-2">
-          <Users size={18} className="text-blue-400 xs:hidden" />
-          <Users size={20} className="text-blue-400 hidden xs:block" />
-          {t('dashboard.todayTeam') || "Today's Team"}
-        </h2>
-        
-        <div className="space-y-3 xs:space-y-4">
-          {/* Last active shift with volunteers */}
-          <div className="space-y-2 xs:space-y-3">
-            <div className="flex items-center justify-between">
-              <h3 className="text-xs xs:text-sm font-medium text-blue-300 flex items-center gap-1.5">
-                <ClockIcon size={14} className="text-blue-400 xs:hidden" />
-                <ClockIcon size={16} className="text-blue-400 hidden xs:block" />
-                {t('dashboard.lastActiveShift')}
-              </h3>
-              <span className="text-xxs xs:text-xs font-light text-gray-400">
-                {formatDisplayDate(lastActiveShiftInfo.date)} - {lastActiveShiftInfo.shift}
-              </span>
-            </div>
-            
-            <div className="flex flex-wrap gap-2">
-              {lastActiveShiftInfo.volunteers && lastActiveShiftInfo.volunteers.length > 0 ? (
-                lastActiveShiftInfo.volunteers.map(volunteer => volunteer && (
-                  <div key={volunteer.id} className="flex items-center px-2 py-1 rounded-lg bg-gray-700 gap-1.5">
-                    <div className="w-5 h-5 xs:w-6 xs:h-6 rounded-full bg-gradient-to-br from-blue-600 to-blue-800 flex items-center justify-center text-white text-xs">
-                      {volunteer.name[0]}
-                    </div>
-                    <span className="text-xs font-light text-gray-300">
-                      {volunteer.name.split(' ')[0]}
-                      {volunteer.id === user?.id && ` (${t('dashboard.you')})`}
-                    </span>
-                  </div>
-                ))
-              ) : (
-                <span className="text-xs text-gray-400">{t('dashboard.noVolunteersAssigned')}</span>
-              )}
-            </div>
-          </div>
-
-          {/* Current shift - only show if there are volunteers */}
-          {hasCurrentVolunteers && (
-            <div className="space-y-2 xs:space-y-3">
-              <div className="flex items-center justify-between">
-                <h3 className="text-xs xs:text-sm font-medium text-blue-300 flex items-center gap-1.5">
-                  <ClockIcon size={14} className="text-blue-400 xs:hidden" />
-                  <ClockIcon size={16} className="text-blue-400 hidden xs:block" />
-                  {getShiftName(currentShift)} {/* Current */}
-                </h3>
-                <span className="text-xxs xs:text-xs font-medium text-orange-400">{currentShift}</span>
-              </div>
-              
-              <div className="flex flex-wrap gap-2">
-                {currentVolunteers.map(volunteer => volunteer && (
-                  <div key={volunteer.id} className="flex items-center px-2 py-1 rounded-lg bg-blue-900/40 gap-1.5">
-                    <div className="w-5 h-5 xs:w-6 xs:h-6 rounded-full bg-blue-700 flex items-center justify-center text-white text-xs">
-                      {volunteer.name[0]}
-                    </div>
-                    <span className="text-xs font-medium text-blue-300">
-                      {volunteer.name.split(' ')[0]}
-                      {volunteer.id === user?.id && ` (${t('dashboard.you')})`}
-                    </span>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {/* Next shift with volunteers */}
-          <div className="space-y-2 xs:space-y-3">
-            <div className="flex items-center justify-between">
-              <h3 className="text-xs xs:text-sm font-medium text-blue-300 flex items-center gap-1.5">
-                <ClockIcon size={14} className="text-blue-400 xs:hidden" />
-                <ClockIcon size={16} className="text-blue-400 hidden xs:block" />
-                {t('dashboard.nextShiftWithVolunteers')}
-              </h3>
-              <span className="text-xxs xs:text-xs font-light text-gray-400">
-                {formatDisplayDate(nextShiftWithVolunteersInfo.date)} - {nextShiftWithVolunteersInfo.shift}
-              </span>
-            </div>
-            
-            <div className="flex flex-wrap gap-2">
-              {nextShiftWithVolunteersInfo.volunteers && nextShiftWithVolunteersInfo.volunteers.length > 0 ? (
-                nextShiftWithVolunteersInfo.volunteers.map(volunteer => volunteer && (
-                  <div key={volunteer.id} className="flex items-center px-2 py-1 rounded-lg bg-gray-700 gap-1.5">
-                    <div className="w-5 h-5 xs:w-6 xs:h-6 rounded-full bg-gradient-to-br from-blue-600 to-blue-800 flex items-center justify-center text-white text-xs">
-                      {volunteer.name[0]}
-                    </div>
-                    <span className="text-xs font-light text-gray-300">
-                      {volunteer.name.split(' ')[0]}
-                      {volunteer.id === user?.id && ` (${t('dashboard.you')})`}
-                    </span>
-                  </div>
-                ))
-              ) : (
-                <span className="text-xs text-gray-400">{t('dashboard.noVolunteersAssigned')}</span>
-              )}
-            </div>
-          </div>
+    <div className="space-y-6">
+      {/* Seção para controle de turno - MOVIDA PARA O TOPO */}
+      <div className="bg-gradient-to-r from-blue-900 to-blue-800 rounded-xl p-5 shadow-lg border border-blue-700/50 relative overflow-hidden">
+        {/* Decoração em estilo surf */}
+        <div className="absolute -right-6 -top-6 text-blue-500/20 transform rotate-12">
+          <Sunset size={100} />
         </div>
-      </div>
-
-      {/* Weather and Other sections */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 xs:gap-6">
-        {/* Weather section */}
-        <div className="bg-gray-800 backdrop-blur-sm rounded-xl p-4 xs:p-5 sm:p-6 border border-gray-700 shadow-md lg:col-span-1">
-          <h2 className="text-lg xs:text-xl font-extralight text-orange-300 mb-3 xs:mb-4 flex items-center gap-2">
-            <Sun size={18} className="text-orange-400 xs:hidden" />
-            <Sun size={20} className="text-orange-400 hidden xs:block" />
-            {t('dashboard.weather.title') || "Beach Conditions"}
-          </h2>
-          <div className="space-y-3 xs:space-y-4">
-            <div className="flex items-center justify-between px-3 xs:px-4 py-2 rounded-lg bg-gray-700 border border-gray-600">
-              <div className="flex items-center gap-1.5 xs:gap-2">
-                <Thermometer size={16} className="text-orange-400 xs:hidden" />
-                <Thermometer size={18} className="text-orange-400 hidden xs:block" />
-                <span className="text-orange-300 font-light text-xs xs:text-sm">{t('dashboard.weather.temperature') || "Temperature"}</span>
-              </div>
-              <span className="font-medium text-orange-300 text-xs xs:text-sm">{weather.temperature}°C</span>
-            </div>
-            <div className="flex items-center justify-between px-3 xs:px-4 py-2 rounded-lg bg-gray-700 border border-gray-600">
-              <div className="flex items-center gap-1.5 xs:gap-2">
-                <Wind size={16} className="text-blue-400 xs:hidden" />
-                <Wind size={18} className="text-blue-400 hidden xs:block" />
-                <span className="text-blue-300 font-light text-xs xs:text-sm">{t('dashboard.weather.windSpeed') || "Wind Speed"}</span>
-              </div>
-              <span className="font-medium text-blue-300 text-xs xs:text-sm">{weather.windSpeed} km/h</span>
-            </div>
-            <div className="flex items-center justify-between px-3 xs:px-4 py-2 rounded-lg bg-gray-700 border border-gray-600">
-              <div className="flex items-center gap-1.5 xs:gap-2">
-                <Waves size={16} className="text-blue-400 xs:hidden" />
-                <Waves size={18} className="text-blue-400 hidden xs:block" />
-                <span className="text-blue-300 font-light text-xs xs:text-sm">{t('dashboard.weather.waveHeight') || "Wave Height"}</span>
-              </div>
-              <span className="font-medium text-blue-300 text-xs xs:text-sm">{weather.waveHeight}m</span>
-            </div>
-            <div className="flex items-center justify-between px-3 xs:px-4 py-2 rounded-lg bg-gray-700 border border-gray-600">
-              <div className="flex items-center gap-1.5 xs:gap-2">
-                <CloudRain size={16} className="text-gray-400 xs:hidden" />
-                <CloudRain size={18} className="text-gray-400 hidden xs:block" />
-                <span className="text-gray-300 font-light text-xs xs:text-sm">{t('dashboard.weather.humidity') || "Humidity"}</span>
-              </div>
-              <span className="font-medium text-gray-300 text-xs xs:text-sm">{weather.humidity}%</span>
-            </div>
-          </div>
+        <div className="absolute -left-5 bottom-0 text-blue-500/10 transform">
+          <Waves size={80} />
         </div>
-
-        {/* User Schedule */}
-        <div className="bg-gray-800 backdrop-blur-sm rounded-xl p-4 xs:p-5 sm:p-6 border border-gray-700 shadow-md md:col-span-3">
-          <h2 className="text-lg xs:text-xl font-extralight text-blue-300 mb-3 xs:mb-4 flex items-center gap-2">
-            <Calendar size={18} className="text-blue-400 xs:hidden" />
-            <Calendar size={20} className="text-blue-400 hidden xs:block" />
-            {t('dashboard.yourSchedule')}
+        
+        <div className="relative z-10">
+          <h2 className="text-xl font-medium text-blue-300 mb-4 flex items-center drop-shadow-md">
+            <WavesIcon size={20} className="mr-2 text-blue-400" />
+            {t('dashboard.shiftControl')}
           </h2>
           
-          <div className="space-y-4">
-            <div className="p-3 xs:p-4 rounded-lg bg-gray-700 border border-gray-600 space-y-3">
-              <h3 className="text-sm xs:text-base font-medium text-blue-300">
-                {t('dashboard.nextShiftSimple')}
-              </h3>
-              
-              {userNextShift ? (
-                <div className="space-y-2">
-                  <div className="flex items-center gap-2">
-                    <Calendar size={14} className="text-blue-400 xs:hidden" />
-                    <Calendar size={16} className="text-blue-400 hidden xs:block" />
-                    <span className="text-xs xs:text-sm text-gray-300">{userNextShift.date}</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Clock size={14} className="text-blue-400 xs:hidden" />
-                    <Clock size={16} className="text-blue-400 hidden xs:block" />
-                    <span className="text-xs xs:text-sm text-gray-300">{userNextShift.shift} ({getShiftName(userNextShift.shift as ShiftTime)})</span>
+          <div className="bg-gradient-to-b from-gray-800/80 to-gray-900/80 backdrop-blur-sm rounded-lg p-5 border border-blue-800/50 shadow-inner">
+            {user?.activeShift ? (
+              <>
+                <div className="mb-4">
+                  <p className="text-green-400 font-medium flex items-center text-lg">
+                    <Activity size={18} className="mr-2" />
+                    {t('dashboard.activeShift')}
+                  </p>
+                  <div className="mt-3 grid grid-cols-1 sm:grid-cols-3 gap-3">
+                    <div className="bg-gray-800/50 p-3 rounded-lg border border-gray-700/50">
+                      <span className="text-gray-400 text-sm block mb-1">{t('dashboard.startedAt')}:</span>
+                      <span className="text-white text-lg font-medium">
+                        {format(parseISO(user.activeShift.startTime), 'HH:mm')}
+                      </span>
+                    </div>
+                    <div className="bg-gray-800/50 p-3 rounded-lg border border-gray-700/50">
+                      <span className="text-gray-400 text-sm block mb-1">{t('dashboard.currentShift')}:</span>
+                      <span className="text-white text-lg font-medium">{getShiftName(user.activeShift.shiftTime)}</span>
+                    </div>
+                    <div className="bg-gray-800/50 p-3 rounded-lg border border-gray-700/50">
+                      <span className="text-gray-400 text-sm block mb-1">{t('dashboard.timeActive')}:</span>
+                      <span className="text-white text-lg font-medium">
+                        {activeTime !== null ? formatActiveTime(activeTime) : '--:--'}
+                      </span>
+                    </div>
                   </div>
                 </div>
-              ) : (
-                <p className="text-xs xs:text-sm text-blue-600 font-light">
-                  {t('dashboard.noUpcomingShifts')}
-                </p>
-              )}
+                
+                <button
+                  onClick={handleEndShift}
+                  disabled={isEndingShift}
+                  className="w-full sm:w-auto py-3 px-6 rounded-lg bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 text-white font-medium flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-lg"
+                >
+                  {isEndingShift ? (
+                    <>
+                      <div className="h-4 w-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                      {t('dashboard.endingShift')}
+                    </>
+                  ) : (
+                    <>
+                      <Square size={18} />
+                      {t('dashboard.endShift')}
+                    </>
+                  )}
+                </button>
+              </>
+            ) : (
+              <>
+                <div className="flex items-center mb-3">
+                  <div className="w-10 h-10 flex-shrink-0 bg-blue-900/60 rounded-lg flex items-center justify-center text-blue-300 mr-3">
+                    <Sunrise size={22} />
+                  </div>
+                  <p className="text-gray-300">{t('dashboard.noActiveShift')}</p>
+                </div>
+                <button
+                  onClick={handleStartShift}
+                  disabled={isStartingShift}
+                  className="w-full sm:w-auto py-3 px-6 rounded-lg bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white font-medium flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-lg"
+                >
+                  {isStartingShift ? (
+                    <>
+                      <div className="h-4 w-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                      {t('dashboard.startingShift')}
+                    </>
+                  ) : (
+                    <>
+                      <Play size={18} />
+                      {t('dashboard.startShift')}
+                    </>
+                  )}
+                </button>
+              </>
+            )}
+          </div>
+        </div>
+      </div>
+      
+      {/* Weather conditions - Estilo surf */}
+      <div className="bg-gradient-to-r from-gray-800 to-gray-900 rounded-xl p-5 shadow-lg border border-gray-700/50 relative overflow-hidden">
+        <div className="absolute -right-6 top-0 text-yellow-500/10 transform">
+          <Sun size={80} />
+        </div>
+        <div className="absolute left-0 -bottom-8 text-blue-500/10 transform">
+          <Waves size={100} />
+        </div>
+        
+        <div className="relative z-10">
+          <h2 className="text-lg font-medium text-blue-300 mb-3 flex items-center">
+            <Waves size={18} className="mr-2" />
+            {t('dashboard.weather.title')}
+          </h2>
+          
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div className="bg-gray-800/60 backdrop-blur-sm p-3 rounded-lg border border-blue-900/30 shadow-inner flex items-center">
+              <div className="w-10 h-10 bg-yellow-500/20 rounded-lg flex items-center justify-center text-yellow-500 mr-3">
+                <Thermometer size={20} />
+              </div>
+              <div>
+                <p className="text-xs text-gray-400">{t('dashboard.weather.temperature')}</p>
+                <p className="text-lg font-medium text-white">{weather.temperature}°C</p>
+              </div>
             </div>
             
-            <div>
-              <h3 className="text-xs xs:text-sm font-medium text-blue-700 mb-2">
-                {t('dashboard.daysOff')}
-              </h3>
-              
-              <div className="flex flex-wrap gap-2">
-                {daysOff.length > 0 ? (
-                  daysOff.map((day, index) => (
-                    <div 
+            <div className="bg-gray-800/60 backdrop-blur-sm p-3 rounded-lg border border-blue-900/30 shadow-inner flex items-center">
+              <div className="w-10 h-10 bg-blue-500/20 rounded-lg flex items-center justify-center text-blue-500 mr-3">
+                <Wind size={20} />
+              </div>
+              <div>
+                <p className="text-xs text-gray-400">{t('dashboard.weather.windSpeed')}</p>
+                <p className="text-lg font-medium text-white">{weather.windSpeed} km/h</p>
+              </div>
+            </div>
+            
+            <div className="bg-gray-800/60 backdrop-blur-sm p-3 rounded-lg border border-blue-900/30 shadow-inner flex items-center">
+              <div className="w-10 h-10 bg-cyan-500/20 rounded-lg flex items-center justify-center text-cyan-500 mr-3">
+                <Waves size={20} />
+              </div>
+              <div>
+                <p className="text-xs text-gray-400">{t('dashboard.weather.waveHeight')}</p>
+                <p className="text-lg font-medium text-white">{weather.waveHeight}m</p>
+              </div>
+            </div>
+            
+            <div className="bg-gray-800/60 backdrop-blur-sm p-3 rounded-lg border border-blue-900/30 shadow-inner flex items-center">
+              <div className="w-10 h-10 bg-blue-600/20 rounded-lg flex items-center justify-center text-blue-600 mr-3">
+                <CloudRain size={20} />
+              </div>
+              <div>
+                <p className="text-xs text-gray-400">{t('dashboard.weather.humidity')}</p>
+                <p className="text-lg font-medium text-white">{weather.humidity}%</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      {/* Next shift and today's team - com estilo surf */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="bg-gradient-to-br from-gray-800 to-gray-900 rounded-xl p-4 shadow-lg border border-gray-700/50 relative overflow-hidden">
+          <div className="absolute -right-6 -bottom-6 text-blue-500/10 transform rotate-12">
+            <Calendar size={80} />
+          </div>
+          
+          <div className="relative z-10">
+            <h2 className="text-lg font-medium text-blue-300 mb-3 flex items-center">
+              <Calendar size={18} className="mr-2" />
+              {t('dashboard.yourNextShift')}
+            </h2>
+            
+            {userNextShift ? (
+              <div className="bg-gray-800/60 backdrop-blur-sm p-3 rounded-lg border border-blue-900/30 shadow-inner">
+                <div className="flex items-center mb-2">
+                  <div className="w-10 h-10 bg-blue-900/60 rounded-lg flex items-center justify-center text-blue-400 mr-3">
+                    <Clock size={20} />
+                  </div>
+                  <div>
+                    <p className="text-white font-medium">{userNextShift.date}</p>
+                    <p className="text-sm text-gray-400">{getShiftName(userNextShift.shift)}</p>
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <div className="bg-gray-800/60 backdrop-blur-sm p-3 rounded-lg border border-blue-900/30 shadow-inner">
+                <p className="text-gray-400 text-sm">{t('dashboard.noShiftsScheduled')}</p>
+              </div>
+            )}
+          </div>
+        </div>
+        
+        {/* Dias de folga do usuário */}
+        <div className="bg-gradient-to-br from-gray-800 to-gray-900 rounded-xl p-4 shadow-lg border border-gray-700/50 relative overflow-hidden">
+          <div className="absolute -right-6 -bottom-6 text-blue-500/10 transform rotate-12">
+            <Umbrella size={80} />
+          </div>
+          
+          <div className="relative z-10">
+            <h2 className="text-lg font-medium text-blue-300 mb-3 flex items-center">
+              <Umbrella size={18} className="mr-2" />
+              {t('dashboard.daysOff')}
+            </h2>
+            
+            <div className="bg-gray-800/60 backdrop-blur-sm p-3 rounded-lg border border-blue-900/30 shadow-inner max-h-32 overflow-y-auto scrollbar-thin">
+              {daysOff.length > 0 ? (
+                <div className="flex flex-wrap gap-2">
+                  {daysOff.map((day, index) => (
+                    <span
                       key={index}
-                      className="px-3 py-1 rounded-full bg-white text-xxs xs:text-xs font-light text-blue-700 border border-blue-100"
+                      className="px-3 py-1.5 rounded-lg bg-blue-900/40 text-sm text-blue-300 border border-blue-900/60"
                     >
                       {format(day, 'EEE, dd MMM')}
-                    </div>
-                  ))
+                    </span>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-gray-400 text-sm">{t('dashboard.noDaysOff')}</p>
+              )}
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      {/* Today's team - mostrar todos os turnos */}
+      <div className="bg-gradient-to-br from-gray-800 to-gray-900 rounded-xl p-4 shadow-lg border border-gray-700/50 relative overflow-hidden">
+        <div className="absolute -right-6 -bottom-6 text-blue-500/10 transform rotate-12">
+          <Users size={80} />
+        </div>
+        
+        <div className="relative z-10">
+          <h2 className="text-lg font-medium text-blue-300 mb-3 flex items-center">
+            <Users size={18} className="mr-2" />
+            {t('dashboard.todayTeam')}
+          </h2>
+          
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-3">
+            {/* Turno da Manhã */}
+            <div className="bg-gray-800/60 backdrop-blur-sm p-3 rounded-lg border border-blue-900/30 shadow-inner">
+              <h3 className="text-sm font-medium text-white mb-2 flex items-center">
+                <Sunrise size={16} className="mr-2 text-yellow-400" />
+                {t('schedule.shifts.morning')}
+              </h3>
+              
+              <div className="max-h-32 overflow-y-auto scrollbar-thin">
+                {getShiftVolunteers('09:00-12:00').length > 0 ? (
+                  <div className="space-y-2">
+                    {getShiftVolunteers('09:00-12:00').map(volunteer => (
+                      <div key={volunteer.id} className="flex items-center">
+                        <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-600 to-blue-900 flex items-center justify-center text-white font-medium shadow-md mr-2">
+                          {volunteer.name?.[0]?.toUpperCase() || 'U'}
+                        </div>
+                        <span className="text-sm text-gray-300">
+                          {volunteer.name} {volunteer.id === user?.id ? `(${t('dashboard.you')})` : ''}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
                 ) : (
-                  <p className="text-xs text-blue-600 font-light">
-                    {t('dashboard.noDaysOff')}
-                  </p>
+                  <p className="text-gray-400 text-sm">{t('dashboard.noVolunteersAssigned')}</p>
                 )}
               </div>
             </div>
+            
+            {/* Turno da Tarde */}
+            <div className="bg-gray-800/60 backdrop-blur-sm p-3 rounded-lg border border-blue-900/30 shadow-inner">
+              <h3 className="text-sm font-medium text-white mb-2 flex items-center">
+                <Sun size={16} className="mr-2 text-amber-400" />
+                {t('schedule.shifts.midMorning')}
+              </h3>
+              
+              <div className="max-h-32 overflow-y-auto scrollbar-thin">
+                {getShiftVolunteers('14:00-17:00').length > 0 ? (
+                  <div className="space-y-2">
+                    {getShiftVolunteers('14:00-17:00').map(volunteer => (
+                      <div key={volunteer.id} className="flex items-center">
+                        <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-600 to-blue-900 flex items-center justify-center text-white font-medium shadow-md mr-2">
+                          {volunteer.name?.[0]?.toUpperCase() || 'U'}
+                        </div>
+                        <span className="text-sm text-gray-300">
+                          {volunteer.name} {volunteer.id === user?.id ? `(${t('dashboard.you')})` : ''}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-gray-400 text-sm">{t('dashboard.noVolunteersAssigned')}</p>
+                )}
+              </div>
+            </div>
+            
+            {/* Turno da Noite */}
+            <div className="bg-gray-800/60 backdrop-blur-sm p-3 rounded-lg border border-blue-900/30 shadow-inner">
+              <h3 className="text-sm font-medium text-white mb-2 flex items-center">
+                <Sunset size={16} className="mr-2 text-orange-400" />
+                {t('schedule.shifts.evening')}
+              </h3>
+              
+              <div className="max-h-32 overflow-y-auto scrollbar-thin">
+                {getShiftVolunteers('19:00-22:00').length > 0 ? (
+                  <div className="space-y-2">
+                    {getShiftVolunteers('19:00-22:00').map(volunteer => (
+                      <div key={volunteer.id} className="flex items-center">
+                        <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-600 to-blue-900 flex items-center justify-center text-white font-medium shadow-md mr-2">
+                          {volunteer.name?.[0]?.toUpperCase() || 'U'}
+                        </div>
+                        <span className="text-sm text-gray-300">
+                          {volunteer.name} {volunteer.id === user?.id ? `(${t('dashboard.you')})` : ''}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-gray-400 text-sm">{t('dashboard.noVolunteersAssigned')}</p>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      {/* Today's tasks - com estilo surf */}
+      <div className="bg-gradient-to-br from-gray-800 to-gray-900 rounded-xl p-4 shadow-lg border border-gray-700/50 relative overflow-hidden">
+        <div className="absolute -right-6 -bottom-6 text-blue-500/10 transform rotate-12">
+          <ClipboardList size={80} />
+        </div>
+        
+        <div className="relative z-10">
+          <h2 className="text-lg font-medium text-blue-300 mb-3 flex items-center">
+            <ClipboardList size={18} className="mr-2" />
+            {t('dashboard.todaysTasks')}
+          </h2>
+          
+          <div className="bg-gray-800/60 backdrop-blur-sm p-1 rounded-lg border border-blue-900/30 shadow-inner max-h-60 overflow-y-auto scrollbar-thin">
+            {todayTasks.length > 0 ? (
+              <div className="divide-y divide-gray-700/50">
+                {todayTasks.map(task => (
+                  <div key={task.id} className="p-3 hover:bg-gray-700/30 rounded-md">
+                    <div className="flex items-start">
+                      <div className={`w-2 h-2 rounded-full mt-2 mr-2 ${
+                        task.priority === 'high' ? 'bg-red-500' :
+                        task.priority === 'medium' ? 'bg-yellow-500' : 'bg-green-500'
+                      }`} />
+                      <div className="flex-1">
+                        <h3 className="text-sm font-medium text-gray-200">{task.title}</h3>
+                        <p className="text-xs text-gray-400">{task.description.substring(0, 60)}{task.description.length > 60 ? '...' : ''}</p>
+                        <div className="flex items-center mt-1">
+                          <span className="text-xs text-blue-400 flex items-center">
+                            <Award size={12} className="mr-1" />
+                            {task.points} pts
+                          </span>
+                          <span className="mx-2 text-gray-600">•</span>
+                          <span className="text-xs text-gray-500">
+                            {task.status === 'todo' ? t('todo') : 
+                            task.status === 'inProgress' ? t('inProgress') : t('done')}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="p-3">
+                <p className="text-gray-400 text-sm">{t('dashboard.noTasks')}</p>
+              </div>
+            )}
           </div>
         </div>
       </div>

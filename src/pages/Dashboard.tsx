@@ -26,7 +26,8 @@ import {
   ChevronLeft,
   ChevronRight,
   CheckSquare,
-  ChevronLeft as ChevronsLeft
+  ChevronLeft as ChevronsLeft,
+  ClipboardCheck
 } from 'lucide-react';
 import { format } from 'date-fns';
 import Schedule from './Schedule';
@@ -36,6 +37,7 @@ import Events from './Events';
 import Messages from './Messages';
 import DashboardContent from './DashboardContent';
 import LaundrySchedule from './LaundrySchedule';
+import WorkHours from './WorkHours';
 import InstallPWA from '../components/InstallPWA';
 
 export default function MainDashboard() {
@@ -93,8 +95,15 @@ export default function MainDashboard() {
     }
   };
 
-  // Construir os itens do menu
-  const baseMenuItems = [
+  // Construir os itens do menu com tipagem correta
+  interface MenuItem {
+    icon: React.ElementType;
+    label: string;
+    view: string;
+    badge?: number;
+  }
+
+  const baseMenuItems: MenuItem[] = [
     { icon: LayoutDashboard, label: t('dashboard.title'), view: 'dashboard' },
     { icon: Calendar, label: t('schedule.title'), view: 'schedule' },
     { icon: ClipboardList, label: t('taskManagement'), view: 'tasks' },
@@ -104,9 +113,15 @@ export default function MainDashboard() {
     { icon: HomeIcon, label: t('laundry.title'), view: 'laundry' }
   ];
   
-  // Adicionar opção de autorizações se o usuário for admin
+  // Adicionar opções administrativas se o usuário for admin
+  const adminMenuItems: MenuItem[] = [
+    { icon: CheckSquare, label: t('approvals.title'), view: 'approvals' },
+    { icon: ClipboardCheck, label: t('workHours.title'), view: 'workhours' }
+  ];
+  
+  // Menu completo baseado no papel do usuário
   const menuItems = user?.role === 'admin' 
-    ? [...baseMenuItems, { icon: CheckSquare, label: t('approvals.title'), view: 'approvals' }]
+    ? [...baseMenuItems, ...adminMenuItems]
     : baseMenuItems;
 
   return (
@@ -226,6 +241,7 @@ export default function MainDashboard() {
           {view === 'messages' && <Messages />}
           {view === 'laundry' && <LaundrySchedule />}
           {view === 'approvals' && <div className="text-center py-12 text-blue-300">Approvals coming soon</div>}
+          {view === 'workhours' && <WorkHours />}
         </div>
       </div>
     </div>
