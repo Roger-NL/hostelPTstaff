@@ -407,10 +407,10 @@ export const getDailyAdminPassword = (): string => {
   // Converter o hash para uma string alfanumérica de 6 caracteres
   const hashString = Math.abs(hash).toString(36).substring(0, 6);
   
-  // Formatar a senha final: primeiro caractere maiúsculo + resto + número
+  // Formatar a senha final: primeiro caractere maiúsculo + resto + número fixo para consistência
   const formattedPassword = hashString.charAt(0).toUpperCase() + 
                             hashString.substring(1, 5) + 
-                            Math.floor(Math.random() * 9 + 1);
+                            '1';
   
   return formattedPassword;
 };
