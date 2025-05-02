@@ -320,11 +320,10 @@ export const getWorkSummary = async (userId: string): Promise<WorkHoursSummary |
 // Obter todos os logs de trabalho de um usuário
 export const getUserWorkLogs = async (userId: string, limitCount = 100): Promise<WorkLog[]> => {
   try {
-    // Consulta: obter todos os logs do usuário, ordenados do mais recente para o mais antigo
+    // Consulta: obter todos os logs do usuário, sem ordenação para evitar necessidade de índice composto
     const q = query(
       collection(firestore, WORK_LOGS_COLLECTION),
       where('userId', '==', userId),
-      orderBy('startTime', 'desc'),
       limit(limitCount)
     );
     
@@ -354,6 +353,9 @@ export const getUserWorkLogs = async (userId: string, limitCount = 100): Promise
         ...(data.forceClosed !== undefined ? { forceClosed: data.forceClosed } : {})
       });
     });
+    
+    // Ordenar os registros no cliente, do mais recente para o mais antigo
+    logs.sort((a, b) => new Date(b.startTime).getTime() - new Date(a.startTime).getTime());
     
     return logs;
   } catch (error) {
