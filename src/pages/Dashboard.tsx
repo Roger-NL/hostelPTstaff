@@ -39,6 +39,7 @@ import DashboardContent from './DashboardContent';
 import LaundrySchedule from './LaundrySchedule';
 import WorkHours from './WorkHours';
 import InstallPWA from '../components/InstallPWA';
+import UserManagement from './UserManagement';
 
 export default function MainDashboard() {
   const { user, users, tasks, messages, logout } = useStore();
@@ -116,7 +117,8 @@ export default function MainDashboard() {
   // Adicionar opções administrativas se o usuário for admin
   const adminMenuItems: MenuItem[] = [
     { icon: CheckSquare, label: t('approvals.title'), view: 'approvals' },
-    { icon: ClipboardCheck, label: t('workHours.title'), view: 'workhours' }
+    { icon: ClipboardCheck, label: t('workHours.title'), view: 'workhours' },
+    { icon: User, label: t('userManagement.title'), view: 'usermanagement' }
   ];
   
   // Menu completo baseado no papel do usuário
@@ -242,6 +244,7 @@ export default function MainDashboard() {
           {view === 'laundry' && <LaundrySchedule />}
           {view === 'approvals' && <div className="text-center py-12 text-blue-300">Approvals coming soon</div>}
           {view === 'workhours' && <WorkHours />}
+          {view === 'usermanagement' && <UserManagement />}
         </div>
       </div>
     </div>

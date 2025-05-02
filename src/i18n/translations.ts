@@ -382,7 +382,9 @@ export const translations = {
       info: 'Information',
       warning: 'Warning',
       processing: 'Processing...',
-      errorLoading: 'Error loading data'
+      errorLoading: 'Error loading data',
+      accessDenied: 'Access Denied',
+      adminOnly: 'This page is only available to administrators'
     },
     
     // Approval system
@@ -519,6 +521,31 @@ export const translations = {
       shiftEndFailed: 'Failed to end shift. Please try again.',
       previousShiftClosed: 'Previous active shift was automatically ended.',
       shiftAutoEnded: 'Your previous shift has been automatically ended and recorded.'
+    },
+
+    // User Management
+    userManagement: {
+      title: 'User Management',
+      description: 'View and manage all registered users',
+      searchUsers: 'Search users...',
+      noUsers: 'No users found',
+      noSearchResults: 'No users match your search',
+      name: 'Name',
+      email: 'Email',
+      password: 'Password',
+      role: 'Role',
+      country: 'Country',
+      age: 'Age',
+      relationshipStatus: 'Relationship Status',
+      gender: 'Gender',
+      phone: 'Phone',
+      arrivalDate: 'Arrival Date',
+      departureDate: 'Departure Date',
+      points: 'Points',
+      export: 'Export to CSV',
+      copy: 'Copy to clipboard',
+      showPasswords: 'Show passwords',
+      hidePasswords: 'Hide passwords'
     }
   },
   pt: {
@@ -879,7 +906,9 @@ export const translations = {
       info: 'Informação',
       warning: 'Atenção',
       processing: 'Processando...',
-      errorLoading: 'Erro ao carregar dados'
+      errorLoading: 'Erro ao carregar dados',
+      accessDenied: 'Acesso Negado',
+      adminOnly: 'Esta página está disponível apenas para administradores'
     },
     
     // Sistema de aprovação
@@ -1016,6 +1045,31 @@ export const translations = {
       shiftEndFailed: 'Falha ao finalizar turno. Tente novamente.',
       previousShiftClosed: 'Turno ativo anterior foi finalizado automaticamente.',
       shiftAutoEnded: 'Seu turno anterior foi finalizado automaticamente e registrado.'
+    },
+
+    // User Management
+    userManagement: {
+      title: 'Gerenciamento de Usuários',
+      description: 'Visualize e gerencie todos os usuários cadastrados',
+      searchUsers: 'Buscar usuários...',
+      noUsers: 'Nenhum usuário encontrado',
+      noSearchResults: 'Nenhum usuário corresponde à sua busca',
+      name: 'Nome',
+      email: 'Email',
+      password: 'Senha',
+      role: 'Função',
+      country: 'País',
+      age: 'Idade',
+      relationshipStatus: 'Estado Civil',
+      gender: 'Gênero',
+      phone: 'Telefone',
+      arrivalDate: 'Data de Chegada',
+      departureDate: 'Data de Saída',
+      points: 'Pontos',
+      export: 'Exportar para CSV',
+      copy: 'Copiar para área de transferência',
+      showPasswords: 'Mostrar senhas',
+      hidePasswords: 'Ocultar senhas'
     }
   }
 };
