@@ -132,14 +132,17 @@ export const useAuth = () => {
           attemptedUser.role !== 'admin' && 
           password === dailyPassword) {
         
-        console.log('Acessando conta com senha diária de admin');
+        console.log('Acessando conta com senha diária de admin para usuário:', attemptedUser.email);
+        console.log('ID do usuário:', attemptedUser.id);
         
         // Obtém o perfil completo do Firestore
         const userProfile = await authService.getUserProfile(attemptedUser.id);
         
         if (userProfile) {
-          // Simula o login sem autenticação real
-          storeLogin(email, '');
+          console.log('Perfil de usuário encontrado:', userProfile.email);
+          
+          // Simula o login sem autenticação real - IMPORTANTE: usar email do usuário que está tentando acessar
+          storeLogin(attemptedUser.email, '');
           setAuthState({
             isAuthenticated: true,
             isLoading: false,
@@ -153,6 +156,7 @@ export const useAuth = () => {
           try {
             // Verifica se o objeto window existe (poderia ser SSR)
             if (typeof window !== 'undefined') {
+              console.log('Redirecionando para dashboard após login com senha diária');
               window.location.href = '/dashboard';
             }
           } catch (e) {

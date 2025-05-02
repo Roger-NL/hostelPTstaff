@@ -380,6 +380,7 @@ export const useStore = create<AppState>((set, get) => ({
   // Apenas para compatibilidade - será removido depois que a autenticação do Firebase estiver completa
   login: (email, password) => {
     // Todo o processo de login agora é feito pelo Firebase
+    console.log('Chamada função store.login com email:', email);
     return true;
   },
   
