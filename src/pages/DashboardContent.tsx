@@ -58,7 +58,8 @@ export default function DashboardContent() {
     setUser,
     startShift,
     endShift,
-    getActiveShift
+    getActiveShift,
+    getUserWorkLogs
   } = useStore();
   const { t } = useTranslation();
   const [isPromoting, setIsPromoting] = useState(false);
@@ -68,6 +69,10 @@ export default function DashboardContent() {
   
   // Estado para controlar o timer do turno ativo
   const [activeTime, setActiveTime] = useState<number | null>(null);
+  
+  // Estado para controlar o modal de histórico de turnos
+  const [showShiftHistory, setShowShiftHistory] = useState(false);
+  const [userShiftLogs, setUserShiftLogs] = useState<WorkLog[]>([]);
   
   // Efeito para carregar o turno ativo do usuário, se houver
   useEffect(() => {
@@ -516,6 +521,55 @@ export default function DashboardContent() {
   const currentVolunteers = getShiftVolunteers(currentShift);
   const hasCurrentVolunteers = currentVolunteers && currentVolunteers.length > 0;
 
+  // Carregar histórico de turnos do usuário
+  const loadUserShiftHistory = async () => {
+    if (!user?.id) return;
+    
+    try {
+      console.log(`Carregando histórico de turnos para ${user.id}`);
+      const logs = await getUserWorkLogs(user.id);
+      console.log(`Logs carregados: ${logs.length}`);
+      setUserShiftLogs(logs);
+      setShowShiftHistory(true);
+    } catch (error) {
+      console.error('Erro ao carregar histórico de turnos:', error);
+      toast.error(t('common.errorLoading'), {
+        duration: 3000,
+        position: 'top-center'
+      });
+    }
+  };
+  
+  // Formatar data
+  const formatDate = (dateString: string): string => {
+    try {
+      return format(parseISO(dateString), 'dd/MM/yyyy');
+    } catch (error) {
+      return dateString;
+    }
+  };
+  
+  // Formatar hora
+  const formatTime = (timeString: string): string => {
+    try {
+      return format(parseISO(timeString), 'HH:mm');
+    } catch (error) {
+      return timeString;
+    }
+  };
+  
+  // Formattar minutos para horas e minutos
+  const formatMinutesToHours = (minutes: number): string => {
+    const hours = Math.floor(minutes / 60);
+    const mins = minutes % 60;
+    
+    if (hours === 0) {
+      return `${mins}m`;
+    }
+    
+    return `${hours}h ${mins.toString().padStart(2, '0')}m`;
+  };
+
   return (
     <div className="space-y-6">
       {/* Seção para controle de turno - MOVIDA PARA O TOPO */}
@@ -562,23 +616,36 @@ export default function DashboardContent() {
                   </div>
                 </div>
                 
-                <button
-                  onClick={handleEndShift}
-                  disabled={isEndingShift}
-                  className="w-full sm:w-auto py-3 px-6 rounded-lg bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 text-white font-medium flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-lg"
-                >
-                  {isEndingShift ? (
-                    <>
-                      <div className="h-4 w-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                      {t('dashboard.endingShift')}
-                    </>
-                  ) : (
-                    <>
-                      <Square size={18} />
-                      {t('dashboard.endShift')}
-                    </>
-                  )}
-                </button>
+                <div className="flex items-center mt-3">
+                  <div className="text-amber-500 font-medium flex items-center">
+                    <ClockIcon size={14} className="mr-1" />
+                    {t('dashboard.activeFor')}: {activeTime !== null ? formatActiveTime(activeTime) : '--:--'}
+                  </div>
+                  <button
+                    onClick={handleEndShift}
+                    disabled={isEndingShift}
+                    className="ml-3 flex items-center justify-center h-8 px-3 rounded-md bg-red-600/80 hover:bg-red-700 text-white text-xs font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {isEndingShift ? (
+                      <>
+                        <div className="h-3 w-3 border-2 border-white/60 border-t-transparent rounded-full animate-spin mr-1"></div>
+                        {t('dashboard.processing')}
+                      </>
+                    ) : (
+                      <>
+                        <Square size={12} className="mr-1" />
+                        {t('dashboard.endShift')}
+                      </>
+                    )}
+                  </button>
+                  <button 
+                    onClick={loadUserShiftHistory}
+                    className="ml-2 flex items-center justify-center h-8 px-3 rounded-md bg-blue-600/80 hover:bg-blue-700 text-white text-xs font-medium transition-colors"
+                  >
+                    <ClipboardList size={12} className="mr-1" />
+                    {t('workHours.shiftHistory')}
+                  </button>
+                </div>
               </>
             ) : (
               <>
@@ -588,23 +655,32 @@ export default function DashboardContent() {
                   </div>
                   <p className="text-gray-300">{t('dashboard.noActiveShift')}</p>
                 </div>
-                <button
-                  onClick={handleStartShift}
-                  disabled={isStartingShift}
-                  className="w-full sm:w-auto py-3 px-6 rounded-lg bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white font-medium flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-lg"
-                >
-                  {isStartingShift ? (
-                    <>
-                      <div className="h-4 w-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                      {t('dashboard.startingShift')}
-                    </>
-                  ) : (
-                    <>
-                      <Play size={18} />
-                      {t('dashboard.startShift')}
-                    </>
-                  )}
-                </button>
+                <div className="flex items-center mt-3">
+                  <button
+                    onClick={handleStartShift}
+                    disabled={isStartingShift}
+                    className="flex items-center justify-center h-8 px-3 rounded-md bg-green-600/80 hover:bg-green-700 text-white text-xs font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {isStartingShift ? (
+                      <>
+                        <div className="h-3 w-3 border-2 border-white/60 border-t-transparent rounded-full animate-spin mr-1"></div>
+                        {t('dashboard.processing')}
+                      </>
+                    ) : (
+                      <>
+                        <Play size={12} className="mr-1" />
+                        {t('dashboard.startShift')}
+                      </>
+                    )}
+                  </button>
+                  <button 
+                    onClick={loadUserShiftHistory}
+                    className="ml-2 flex items-center justify-center h-8 px-3 rounded-md bg-blue-600/80 hover:bg-blue-700 text-white text-xs font-medium transition-colors"
+                  >
+                    <ClipboardList size={12} className="mr-1" />
+                    {t('workHours.shiftHistory')}
+                  </button>
+                </div>
               </>
             )}
           </div>
@@ -882,5 +958,79 @@ export default function DashboardContent() {
         </div>
       </div>
     </div>
-  );
+    
+    {/* Modal de Histórico de Turnos */}
+    {showShiftHistory && (
+      <div className="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+        <div className="bg-gray-800 rounded-xl shadow-xl max-w-4xl w-full max-h-[90vh] flex flex-col">
+          <div className="p-4 border-b border-gray-700 flex items-center justify-between">
+            <h3 className="text-lg font-medium text-blue-300 flex items-center">
+              <User size={18} className="mr-2" />
+              {user?.name}
+            </h3>
+            <button
+              onClick={() => setShowShiftHistory(false)}
+              className="p-2 rounded-lg text-gray-300 hover:text-white hover:bg-gray-700 transition-colors"
+            >
+              &times;
+            </button>
+          </div>
+          
+          <div className="p-4 overflow-y-auto flex-1">
+            <h4 className="text-sm font-medium text-gray-300 mb-2 flex items-center">
+              <Calendar size={14} className="mr-1" />
+              {t('workHours.shiftHistory')}
+            </h4>
+            
+            <div className="overflow-x-auto">
+              <table className="w-full text-left">
+                <thead>
+                  <tr className="border-b border-gray-700">
+                    <th className="py-2 px-3 text-xs text-gray-400 font-medium">{t('workHours.date')}</th>
+                    <th className="py-2 px-3 text-xs text-gray-400 font-medium">{t('workHours.shift')}</th>
+                    <th className="py-2 px-3 text-xs text-gray-400 font-medium">{t('workHours.startTime')}</th>
+                    <th className="py-2 px-3 text-xs text-gray-400 font-medium">{t('workHours.endTime')}</th>
+                    <th className="py-2 px-3 text-xs text-gray-400 font-medium">{t('workHours.duration')}</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {userShiftLogs.map(log => (
+                    <tr key={log.id} className="border-b border-gray-700">
+                      <td className="py-2 px-3 text-sm">{formatDate(log.shiftDate)}</td>
+                      <td className="py-2 px-3 text-sm">{log.shiftTime}</td>
+                      <td className="py-2 px-3 text-sm">{formatTime(log.startTime)}</td>
+                      <td className="py-2 px-3 text-sm">
+                        {log.endTime ? formatTime(log.endTime) : '-'}
+                      </td>
+                      <td className="py-2 px-3 text-sm">
+                        {log.totalMinutes ? formatMinutesToHours(log.totalMinutes) : '-'}
+                      </td>
+                    </tr>
+                  ))}
+                  
+                  {userShiftLogs.length === 0 && (
+                    <tr>
+                      <td colSpan={5} className="py-4 text-center text-gray-400 text-sm">
+                        {t('workHours.noShifts')}
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </div>
+          
+          <div className="p-4 border-t border-gray-700">
+            <button
+              onClick={() => setShowShiftHistory(false)}
+              className="w-full py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-medium transition-colors"
+            >
+              {t('workHours.close')}
+            </button>
+          </div>
+        </div>
+      </div>
+    )}
+  </div>
+);
 } 
