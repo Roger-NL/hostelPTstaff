@@ -496,7 +496,17 @@ export const translations = {
         createTask: 'Create Task',
         updateTask: 'Update Task'
       },
-      simpleTitle: 'Tasks'
+      simpleTitle: 'Tasks',
+      tasks: 'Tasks',
+      manageYourTasks: 'Manage Your Tasks',
+      todo: 'To Do',
+      inProgress: 'In Progress',
+      done: 'Done',
+      all: 'All',
+      manage: 'Manage',
+      common: {
+        manage: 'Manage'
+      }
     },
     
     // Work Hours Management
@@ -1041,7 +1051,17 @@ export const translations = {
         createTask: 'Criar Tarefa',
         updateTask: 'Atualizar Tarefa'
       },
-      simpleTitle: 'Tarefas'
+      simpleTitle: 'Tarefas',
+      tasks: 'Tarefas',
+      manageYourTasks: 'Gerenciar Suas Tarefas',
+      todo: 'A Fazer',
+      inProgress: 'Em Andamento',
+      done: 'Concluído',
+      all: 'Todas',
+      manage: 'Gerenciar',
+      common: {
+        manage: 'Gerenciar'
+      }
     },
     
     // Work Hours Management

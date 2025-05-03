@@ -153,35 +153,48 @@ export async function deleteTaskFromFirebase(taskId: string): Promise<boolean> {
     }
     
     // Registra os detalhes da tarefa que será excluída para debug
-    console.log(`Excluindo tarefa: ${taskDoc.data().title}`);
+    console.log(`Excluindo tarefa "${taskDoc.data().title}" (status: ${taskDoc.data().status})`);
     
     // Exclui a tarefa
     await deleteDoc(taskRef);
     
-    // Verifica se a tarefa foi realmente excluída com várias tentativas
-    let checkAttempts = 0;
-    const maxAttempts = 3;
-    
-    while (checkAttempts < maxAttempts) {
-      checkAttempts++;
-      const checkDoc = await getDoc(taskRef);
-      
-      if (!checkDoc.exists()) {
-        console.log(`Tarefa ${taskId} excluída com sucesso (verificado na tentativa ${checkAttempts})`);
-        return true;
-      }
-      
-      console.warn(`Tarefa ${taskId} ainda existe após tentativa ${checkAttempts} de exclusão. Tentando novamente...`);
-      
-      // Pequena pausa antes de nova tentativa
-      await new Promise(resolve => setTimeout(resolve, 500));
-      
-      // Tenta excluir novamente
-      await deleteDoc(taskRef);
+    // Verifica se a tarefa foi realmente excluída
+    const checkDoc = await getDoc(taskRef);
+    if (!checkDoc.exists()) {
+      console.log(`Tarefa ${taskId} excluída com sucesso`);
+      return true;
     }
     
-    // Se chegou aqui, todas as tentativas falharam
-    console.error(`Falha na exclusão: tarefa ${taskId} ainda existe após ${maxAttempts} tentativas`);
+    // Se falhou na primeira tentativa, faz mais tentativas com força bruta
+    console.warn(`Primeira tentativa de exclusão falhou. Tentando novamente com força bruta...`);
+    
+    // Tenta marcar a tarefa como excluída antes de excluí-la definitivamente
+    try {
+      await updateDoc(taskRef, {
+        deleted: true,
+        title: `[DELETED] ${taskDoc.data().title || 'Tarefa'}`,
+        status: 'deleted' // Status inexistente, apenas para marcar
+      });
+      console.log(`Tarefa ${taskId} marcada como excluída`);
+    } catch (markError) {
+      console.error(`Erro ao marcar tarefa ${taskId} como excluída:`, markError);
+    }
+    
+    // Tenta excluir novamente após marcar
+    try {
+      await deleteDoc(taskRef);
+      
+      // Verifica se excluiu após a segunda tentativa
+      const finalCheck = await getDoc(taskRef);
+      if (!finalCheck.exists()) {
+        console.log(`Tarefa ${taskId} excluída com sucesso na segunda tentativa`);
+        return true;
+      }
+    } catch (secondDeleteError) {
+      console.error(`Erro na segunda tentativa de exclusão da tarefa ${taskId}:`, secondDeleteError);
+    }
+    
+    console.error(`Falha na exclusão: tarefa ${taskId} ainda existe após múltiplas tentativas`);
     return false;
   } catch (error) {
     console.error("Erro ao excluir tarefa:", error);

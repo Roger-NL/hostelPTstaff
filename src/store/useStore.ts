@@ -897,23 +897,29 @@ export const useStore = create<AppState>((set, get) => ({
     
     // Depois exclui do Firebase de forma assíncrona
     try {
-      // Marca a tarefa como excluída antes de excluí-la definitivamente
-      const markedTask = {
-        ...taskToDelete,
-        deleted: true,
-        title: `[DELETED] ${taskToDelete.title}`
-      };
+      console.log(`Excluindo tarefa ${taskId}: ${taskToDelete.title}`);
       
-      // Atualiza a tarefa como excluída e depois a exclui definitivamente
-      void taskService.updateTaskInFirebase(taskId, markedTask)
-        .then(() => {
-          return taskService.deleteTaskFromFirebase(taskId);
-        })
+      // Tenta excluir diretamente sem marcar como excluída primeiro
+      void taskService.deleteTaskFromFirebase(taskId)
         .catch(error => {
           console.error('Erro ao excluir tarefa do Firebase:', error);
+          
+          // Se falhar a exclusão direta, tenta marcar como excluída e depois excluir
+          console.log('Tentando marcar como excluída antes de excluir...');
+          const markedTask = {
+            ...taskToDelete,
+            deleted: true,
+            title: `[DELETED] ${taskToDelete.title}`
+          };
+          
+          return taskService.updateTaskInFirebase(taskId, markedTask)
+            .then(() => taskService.deleteTaskFromFirebase(taskId))
+            .catch(secondError => {
+              console.error('Falha também na segunda tentativa de exclusão:', secondError);
+            });
         });
     } catch (error) {
-      console.error('Erro ao chamar deleteTaskFromFirebase:', error);
+      console.error('Erro ao chamar funções de exclusão de tarefa:', error);
     }
   },
   
