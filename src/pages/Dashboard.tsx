@@ -43,7 +43,7 @@ import UserManagement from './UserManagement';
 
 export default function MainDashboard() {
   const { user, users, tasks, messages, logout } = useStore();
-  const { t } = useTranslation();
+  const { t, tExists } = useTranslation();
   const navigate = useNavigate();
   const [view, setView] = useState('dashboard');
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(window.innerWidth < 1024);
@@ -223,7 +223,13 @@ export default function MainDashboard() {
               <Menu size={20} />
             </button>
             <h2 className="text-xl font-medium text-blue-300">
-              {view === 'dashboard' ? getGreeting() : t(`${view}.title`)}
+              {view === 'dashboard' 
+                ? getGreeting() 
+                : user?.role === 'admin' 
+                  ? t(`${view}.title`) 
+                  : tExists(`${view}.simpleTitle`) 
+                    ? t(`${view}.simpleTitle`) 
+                    : t(`${view}.title`)}
             </h2>
           </div>
           <div className="flex items-center gap-2">

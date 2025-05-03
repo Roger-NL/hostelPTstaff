@@ -30,6 +30,22 @@ export const useTranslation = () => {
 
     return value;
   };
+  
+  // Helper function to check if a translation key exists
+  const tExists = (key: TranslationKey): boolean => {
+    const keys = key.split('.');
+    let value: any = translations[language];
 
-  return { t, language };
+    // Navigate through the translation object
+    for (const k of keys) {
+      value = value?.[k];
+      if (value === undefined) {
+        return false;
+      }
+    }
+
+    return true;
+  };
+
+  return { t, tExists, language };
 }; 

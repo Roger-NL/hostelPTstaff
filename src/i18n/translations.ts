@@ -842,6 +842,7 @@ export const translations = {
     // Laundry Schedule
     laundry: {
       title: 'Escala de Lavanderia',
+      simpleTitle: 'Lavanderia',
       add: 'Adicionar',
       staff: 'Staff',
       guest: 'Hóspede',
@@ -947,9 +948,10 @@ export const translations = {
       adminOnly: 'Esta página está disponível apenas para administradores'
     },
     
-    // Sistema de aprovação
+    // Approval system
     approvals: {
       title: 'Autorizações',
+      simpleTitle: 'Autorizações',
       photoApprovals: 'Aprovação de Fotos',
       pendingPhotos: 'Fotos Pendentes',
       approvePhoto: 'Aprovar Foto',
@@ -1045,6 +1047,7 @@ export const translations = {
     // Work Hours Management
     workHours: {
       title: 'Banco de Horas',
+      simpleTitle: 'Banco de Horas',
       name: 'Nome',
       weekTotal: 'Total Semanal',
       monthTotal: 'Total Mensal',
